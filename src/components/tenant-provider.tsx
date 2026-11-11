@@ -1,13 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { startTransition, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { TenantContext, type TenantContextValue } from "@/lib/tenant-context";
 import {
-  DEFAULT_TENANT,
-  localeForTenant,
   resolveTenant,
   tenantName,
   type Locale,
-  type TenantId,
+  type TenantResolution,
 } from "@/lib/tenant-rules";
 
 /*
@@ -29,37 +28,11 @@ import {
  * exists server-side and drive `status` from that call instead of the local known-list check.
  */
 
-interface TenantContextValue {
-  tenant: TenantId;
-  tenantName: string;
-  /** Active locale (tenant default unless the user switched it). */
-  locale: Locale;
-  /** Where the tenant id came from. */
-  source: "subdomain" | "query" | "default";
-  /** A tenant was explicitly requested via ?tenant= but is unknown; app fell back to default. */
-  requestedUnknown: string | null;
-  /** Switch the UI language (does not change the tenant). */
-  setLocale: (locale: Locale) => void;
-}
-
-const TenantContext = createContext<TenantContextValue | null>(null);
-
-export function useTenant(): TenantContextValue {
-  const ctx = useContext(TenantContext);
-  if (!ctx) throw new Error("useTenant must be used within <TenantProvider>");
-  return ctx;
-}
-
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation();
 
   // First render (SSR + hydration) uses the default tenant so server and client markup match.
-  const [resolution, setResolution] = useState(() => ({
-    tenant: DEFAULT_TENANT,
-    locale: localeForTenant(DEFAULT_TENANT),
-    source: "default" as const,
-    requestedUnknown: null as string | null,
-  }));
+  const [resolution, setResolution] = useState<TenantResolution>(() => resolveTenant(null, null));
   // A user-chosen locale overrides the tenant default once set.
   const [localeOverride, setLocaleOverride] = useState<Locale | null>(null);
 
@@ -68,11 +41,9 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     const { hostname, search } = window.location;
     const r = resolveTenant(hostname, search);
-    setResolution({
-      tenant: r.tenant,
-      locale: r.locale,
-      source: r.source,
-      requestedUnknown: r.requestedUnknown,
+    // Lazy route boundaries must hydrate before their tenant-dependent content changes.
+    startTransition(() => {
+      setResolution(r);
     });
   }, []);
 
@@ -87,7 +58,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }, [resolution.tenant, locale]);
 
   useEffect(() => {
-    if (i18n.language !== locale) void i18n.changeLanguage(locale);
+    if (i18n.language === locale) return;
+    // Translation updates must not interrupt hydration of a deferred route boundary.
+    startTransition(() => {
+      void i18n.changeLanguage(locale);
+    });
   }, [i18n, locale]);
 
   const value = useMemo<TenantContextValue>(

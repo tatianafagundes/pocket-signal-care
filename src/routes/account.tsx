@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { PageShell } from "@/components/page-shell";
 
 export const Route = createFileRoute("/account")({
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/account")({
 });
 
 function Page() {
-  const { t } = useTranslation();
+  const { t } = useLocalizedTranslation();
   return (
     <PageShell
       title={t("pages.account.title", "My account")}

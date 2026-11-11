@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
+import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { Home, Smartphone, Wallet, PackagePlus, User, LifeBuoy } from "lucide-react";
 
 /*
@@ -21,7 +21,7 @@ const TABS = [
 ] as const;
 
 export function BottomTabBar() {
-  const { t } = useTranslation();
+  const { t } = useLocalizedTranslation();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-hairline bg-surface pb-[env(safe-area-inset-bottom)]">
       <ul className="mx-auto grid w-full max-w-[390px] grid-cols-6">

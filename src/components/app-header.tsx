@@ -1,6 +1,6 @@
-import { useTranslation } from "react-i18next";
+import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 
-import { useTenant } from "@/components/tenant-provider";
+import { useTenant } from "@/hooks/use-tenant";
 import { LanguageSelector } from "@/components/language-selector";
 
 /*
@@ -13,7 +13,7 @@ import { LanguageSelector } from "@/components/language-selector";
  * the flat accent). Right side: the language selector. Everything sits in the 390px phone column.
  */
 export function AppHeader() {
-  const { t } = useTranslation();
+  const { t } = useLocalizedTranslation();
   const { tenantName } = useTenant();
 
   return (
