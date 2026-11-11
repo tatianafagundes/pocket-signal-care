@@ -28,3 +28,38 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+## Project rules — whitelabel MVNO self-care
+
+This is a prepaid mobile **self-care** PWA, white-labelled across two brands
+(**Drei** host + **DreiGo** MVNO) and integrated with the DXP **CPR** (the only real
+backend; every other system is mocked behind a seam). The design system is
+`design/DESIGN.md`.
+
+### Design tokens & colour
+- **Raw colours live only in `src/styles/tokens.css`.** `src/styles.css` binds them to
+  Tailwind utilities and shadcn role variables. A component NEVER hardcodes a colour —
+  use a utility (`bg-accent-tint`, `text-accent-ink`, `bg-primary`, …).
+- **The accent is the brand; buttons are ink.** Primary buttons use `bg-primary`
+  (= `--ink`), never the brand accent. Links/selection rings use `accent-ink`.
+- **A brand is a theme**, set with `<html data-brand="drei|dreigo">`. To add or change a
+  brand, edit the `[data-brand="…"]` block in `tokens.css` only — never a component.
+- **A brand must not change system tokens**: status (success/warning/danger + tints),
+  `focus`, `border-input`, `disabled`, `text-tertiary`, `text-inverse`, spacing, radii.
+- **No box-shadow, no gradient (except the brand hero band), no uppercase labels.** Depth
+  is hairline + surface contrast.
+- Status is always **colour + word**, never colour alone. A brand accent is never red
+  (it would collide with the `danger` system token).
+
+### i18n
+- Locales: **en-US (default) + de-AT**. Every UI string is a key in `src/locales/*.json`;
+  zero hardcoded strings. Money/dates format by the active locale (EUR).
+
+### Integration (seams)
+- **CPR is the only real system.** ECM / EOC / ECEV / DSIMA are mocked behind connectors
+  and flipped by env. Keep the canonical contracts and `SeamResult` discipline; never call
+  a backend directly from a component.
+
+### Build / verify
+- `export PATH="$HOME/.bun/bin:$PATH"` first (bun is not on the default PATH), then
+  `bun run build` and `bun test` before pushing. Keep the connected branch in a working
+  state (it syncs back to Lovable).

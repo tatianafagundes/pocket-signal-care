@@ -8,7 +8,10 @@ export const Route = createFileRoute("/add-ons")({
       { title: "Add-ons — whitelabel" },
       { name: "description", content: "Add-ons in your whitelabel prepaid mobile self-care app." },
       { property: "og:title", content: "Add-ons — whitelabel" },
-      { property: "og:description", content: "Add-ons in your whitelabel prepaid mobile self-care app." },
+      {
+        property: "og:description",
+        content: "Add-ons in your whitelabel prepaid mobile self-care app.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -18,5 +21,10 @@ export const Route = createFileRoute("/add-ons")({
 
 function Page() {
   const { t } = useTranslation();
-  return <PageShell title={t("pages.addOns.title", "Pacotes extras")} subtitle={t("pages.addOns.subtitle", "Pacotes de dados, minutos e roaming chegam em breve.")} />;
+  return (
+    <PageShell
+      title={t("pages.addOns.title", "Add-ons")}
+      subtitle={t("pages.addOns.subtitle", "Data, minutes and roaming bundles are coming soon.")}
+    />
+  );
 }

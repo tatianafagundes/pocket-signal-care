@@ -1,1 +1,37 @@
-{"app":{"name":"whitelabel","tagline":"Your prepaid mobile, your way"},"nav":{"home":"Home","myPlan":"My plan","topUp":"Top up","addOns":"Add-ons","account":"Account","support":"Support"},"pages":{"home":{"title":"Hi there, great to see you","subtitle":"Your balance and usage summary will appear here soon."},"myPlan":{"title":"My plan","subtitle":"Your plan details will appear here soon."},"topUp":{"title":"Top up","subtitle":"Soon you can top up in just a few taps."},"addOns":{"title":"Add-ons","subtitle":"Data, minutes and roaming bundles are coming soon."},"account":{"title":"My account","subtitle":"Your details and preferences will live here."},"support":{"title":"Support","subtitle":"We're here for you. The help center is coming soon."}}}
+{
+  "app": { "name": "whitelabel", "tagline": "Your prepaid mobile, your way" },
+  "nav": {
+    "home": "Home",
+    "myPlan": "My plan",
+    "topUp": "Top up",
+    "addOns": "Add-ons",
+    "account": "Account",
+    "support": "Support"
+  },
+  "pages": {
+    "home": {
+      "title": "Hi there, great to see you",
+      "subtitle": "Your balance and usage summary will appear here soon."
+    },
+    "myPlan": {
+      "title": "My plan",
+      "subtitle": "Your plan details will appear here soon."
+    },
+    "topUp": {
+      "title": "Top up",
+      "subtitle": "Soon you can top up in just a few taps."
+    },
+    "addOns": {
+      "title": "Add-ons",
+      "subtitle": "Data, minutes and roaming bundles are coming soon."
+    },
+    "account": {
+      "title": "My account",
+      "subtitle": "Your details and preferences will live here."
+    },
+    "support": {
+      "title": "Support",
+      "subtitle": "We're here for you. The help center is coming soon."
+    }
+  }
+}

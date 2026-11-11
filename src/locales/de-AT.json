@@ -1,0 +1,37 @@
+{
+  "app": { "name": "whitelabel", "tagline": "Dein Prepaid-Handy, ganz nach dir" },
+  "nav": {
+    "home": "Start",
+    "myPlan": "Mein Tarif",
+    "topUp": "Aufladen",
+    "addOns": "Zusatzpakete",
+    "account": "Konto",
+    "support": "Hilfe"
+  },
+  "pages": {
+    "home": {
+      "title": "Schön, dich zu sehen",
+      "subtitle": "Dein Guthaben und deine Nutzung erscheinen hier in Kürze."
+    },
+    "myPlan": {
+      "title": "Mein Tarif",
+      "subtitle": "Deine Tarifdetails erscheinen hier in Kürze."
+    },
+    "topUp": {
+      "title": "Aufladen",
+      "subtitle": "Bald lädst du dein Guthaben mit wenigen Tipps auf."
+    },
+    "addOns": {
+      "title": "Zusatzpakete",
+      "subtitle": "Daten-, Minuten- und Roaming-Pakete folgen in Kürze."
+    },
+    "account": {
+      "title": "Mein Konto",
+      "subtitle": "Deine Daten und Einstellungen findest du hier."
+    },
+    "support": {
+      "title": "Hilfe",
+      "subtitle": "Wir sind für dich da. Das Hilfecenter folgt in Kürze."
+    }
+  }
+}

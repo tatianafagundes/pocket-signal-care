@@ -86,8 +86,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "whitelabel — Prepaid mobile self-care" },
       { name: "description", content: "Manage your prepaid mobile plan, top ups and add-ons." },
-            { property: "og:title", content: "whitelabel — Prepaid mobile self-care" },
-      { property: "og:description", content: "Manage your prepaid mobile plan, top ups and add-ons." },
+      { property: "og:title", content: "whitelabel — Prepaid mobile self-care" },
+      {
+        property: "og:description",
+        content: "Manage your prepaid mobile plan, top ups and add-ons.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -97,7 +100,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+      },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
@@ -109,7 +116,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    // data-brand selects the active white-label theme (drei host | dreigo MVNO).
+    // lang matches the i18n default (en-US); i18next updates <html lang> at runtime.
+    <html lang="en" data-brand="drei">
       <head>
         <HeadContent />
       </head>

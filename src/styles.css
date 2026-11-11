@@ -4,39 +4,55 @@
  *   npm package before @importing its CSS. Never @import a remote URL (web fonts, CDN CSS): the
  *   build resolves @import from the filesystem. Load those with a <link> in the head() of
  *   src/routes/__root.tsx and name the family in a --font-* token in @theme inline below.
+ *
+ * Design system: whitelabel MVNO self-care, adapted from the fuon selfcare design system.
+ * The raw colour values live ONLY in ./styles/tokens.css. This file maps those tokens to
+ * Tailwind utilities (@theme inline) and the shadcn role variables the components read.
+ * The active brand is a theme set with <html data-brand="drei|dreigo">.
+ *
+ * Rule: a component NEVER hardcodes a colour. accent = the brand; primary buttons = ink.
+ * There is no box-shadow anywhere — depth is hairline + surface, never a drop shadow.
  */
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
+@import "./styles/tokens.css";
 
 /*
- * Design system definition.
- *
- * The design lives in this file: oklch color tokens on the shadcn variables
- * (--background, --foreground, --primary, --secondary, --muted, --accent, ...) plus
- * new tokens as needed, font tokens, and custom styles and animations.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * No `dark:` variant is defined — dark mode is out of scope for this design system
+ * (see the note above @layer base). Add the variant together with its token layer if/when
+ * dark mode is specced, so a `dark:` utility never compiles against a theme that isn't built.
  */
 
+/*
+ * @theme inline — maps the Fuon tokens to Tailwind utilities.
+ * - Colour roles bind to the shadcn variables defined in :root below, so existing
+ *   shadcn/ui components keep working while rendering the Fuon palette.
+ * - --font-whitelabel drives font-display and font-sans (both Inter — one family).
+ * - --radius-* come straight from the Fuon scale in tokens.css.
+ */
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  /* fonts — one family (Inter) for the whole app */
+  --font-display: var(--font-whitelabel);
+  --font-sans: var(--font-whitelabel);
+
+  /* radii — Fuon scale (tokens.css). rounded-tile / rounded-control / rounded-card /
+     rounded-sheet / rounded-pill / rounded-check utilities. */
+  --radius-tile: 8px;
+  --radius-control: 12px;
+  --radius-card: 12px;
+  --radius-sheet: 20px;
+  --radius-pill: 999px;
+  --radius-check: 6px;
+  /* shadcn radius aliases — only the radii the system actually has (tile 8, control/card 12,
+     sheet 20). xl/2xl/3xl are intentionally NOT aliased: a stray rounded-3xl should fail
+     loudly in Phase 2 rather than resolve to a plausible-but-wrong radius. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+
+  /* colour roles — shadcn variable names bound to Fuon roles (values in :root) */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -49,7 +65,11 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
+  /* NOTE: shadcn's `bg-accent` is a quiet hover/selected WASH, not the brand colour — so
+     --color-accent binds to the brand TINT (correct for shadcn semantics). The saturated
+     brand colour is exposed separately as --color-accent-brand below; use `bg-accent-brand`
+     / `text-accent-ink` for the brand, never bare `bg-accent`. */
+  --color-accent: var(--accent-role);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -57,65 +77,130 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --font-display: "Outfit", sans-serif;
-  --font-sans: "Figtree", sans-serif;
-  --shadow-soft: var(--shadow-soft);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Fuon roles exposed directly as utilities (bg-accent-tint, text-accent-ink, …) */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-sand: var(--surface-sand);
+  --color-hairline: var(--hairline);
+  --color-ink: var(--ink);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-inverse: var(--text-inverse);
+  --color-accent-brand: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-tint: var(--accent-tint);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-focus: var(--focus);
 }
 
+/*
+ * shadcn role variables mapped to Fuon tokens.
+ * This is the single bridge between the design system (tokens.css) and the
+ * shadcn/ui components. Change a brand -> tokens.css; never touch component colours.
+ */
 :root {
-  --radius: 1rem;
-  --background: oklch(0.975 0.008 180);
-  --foreground: oklch(0.2 0.03 220);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.03 220);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.03 220);
-  --primary: oklch(0.5 0.12 190);
-  --primary-foreground: oklch(0.99 0.005 180);
-  --secondary: oklch(0.9 0.17 125);
-  --secondary-foreground: oklch(0.25 0.05 140);
-  --muted: oklch(0.94 0.012 190);
-  --muted-foreground: oklch(0.5 0.03 210);
-  --accent: oklch(0.92 0.05 185);
-  --accent-foreground: oklch(0.3 0.08 195);
-  --destructive: oklch(0.6 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.9 0.015 195);
-  --input: oklch(0.9 0.015 195);
-  --ring: oklch(0.5 0.12 190);
-  --chart-1: oklch(0.5 0.12 190);
-  --chart-2: oklch(0.85 0.17 125);
-  --chart-3: oklch(0.65 0.15 230);
-  --chart-4: oklch(0.75 0.15 70);
-  --chart-5: oklch(0.6 0.2 25);
-  --gradient-hero: linear-gradient(120deg, oklch(0.35 0.08 215), oklch(0.5 0.12 190));
-  --shadow-soft: 0 12px 30px -16px color-mix(in oklab, var(--primary) 35%, transparent);
+  /* keep a --radius for any shadcn calc() that still reads it */
+  --radius: var(--radius-card);
+
+  /* surfaces */
+  --background: var(--canvas);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-primary);
+
+  /* primary = ink (buttons are ink, not the brand) */
+  --primary: var(--ink);
+  --primary-foreground: var(--text-inverse);
+
+  /* secondary = quiet surface for secondary buttons / chips */
+  --secondary: var(--surface-tint);
+  --secondary-foreground: var(--text-primary);
+
+  /* muted = page-quiet text + subtle fills */
+  --muted: var(--surface-tint);
+  --muted-foreground: var(--text-secondary);
+
+  /* accent ROLE (shadcn bg-accent / hover wash) = the brand tint;
+     its foreground is accent-ink so text/icons on the tint stay >=4.5:1 */
+  --accent-role: var(--accent-tint);
+  --accent-foreground: var(--accent-ink);
+
+  /* status */
+  --destructive: var(--danger);
+  --destructive-foreground: var(--text-inverse);
+
+  /* controls */
+  --border: var(--hairline);
+  --input: var(--border-input);
+  --ring: var(--focus);
 }
+
+/*
+ * Dark theme is intentionally NOT defined here. It is not in design/DESIGN.md (not a token,
+ * not a brand, not an open item) and would need its own neutral set, re-tinted brand accents
+ * and a passing contrast table per brand before it could ship. When it becomes a real spec
+ * item, add it as its own token layer — never by inverting neutrals and keeping light accents.
+ */
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
 
+  html {
+    font-family: var(--font-whitelabel);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 }
 
+/*
+ * Typography utilities — the Fuon type styles, verbatim from the design/DESIGN.md front
+ * matter (typography: — 11 styles). Inter everywhere. Role-named (type-<role>) so a scale
+ * change never renames a call site. These are the ONLY type stacks a screen may use — no
+ * ad-hoc text-*. DESIGN.md is the source of truth; keep this block and the front matter in
+ * lockstep. No uppercase style exists — "No uppercase eyebrow labels" (DESIGN.md).
+ */
+@utility type-display-number { font-size: 40px; line-height: 44px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+@utility type-title { font-size: 24px; line-height: 30px; font-weight: 600; letter-spacing: -0.01em; }
+@utility type-heading { font-size: 18px; line-height: 24px; font-weight: 600; }
+@utility type-body { font-size: 16px; line-height: 24px; font-weight: 400; }
+@utility type-body-strong { font-size: 16px; line-height: 24px; font-weight: 600; }
+@utility type-body-sm { font-size: 14px; line-height: 20px; font-weight: 400; }
+@utility type-body-sm-strong { font-size: 14px; line-height: 20px; font-weight: 600; }
+@utility type-caption { font-size: 12px; line-height: 16px; font-weight: 500; }
+@utility type-control { font-size: 16px; line-height: 20px; font-weight: 600; }
+@utility type-tab-label { font-size: 11px; line-height: 14px; font-weight: 500; }
+@utility type-tab-label-strong { font-size: 11px; line-height: 14px; font-weight: 600; }
+
+/* tabular figures for money / data / time columns (DESIGN.md: numbers that mean money,
+   data or time use font-variant-numeric: tabular-nums). display-number already includes it. */
+@utility tabular-figures { font-variant-numeric: tabular-nums; }
+
+/*
+ * bg-hero — bridge surface for the inherited app-header only. DESIGN.md forbids gradients,
+ * so this is a FLAT fill (not the old accent->accent-hover gradient). It uses `ink`, not the
+ * brand accent, because the header still renders a white TEXT wordmark + tagline: white on
+ * ink is ~13:1 (Drei) / ~17:1 (DreiGo), whereas white on the Drei cyan accent is ~2.9:1 and
+ * fails 4.5:1. Phase 2 replaces this header with the real brand-tile (flat accent + wordmark
+ * IMAGE, no body text), at which point this utility is removed.
+ */
 @utility bg-hero {
-  background-image: var(--gradient-hero);
+  background-color: var(--ink);
 }

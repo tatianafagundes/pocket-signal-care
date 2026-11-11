@@ -2,13 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Home, Smartphone, Wallet, PackagePlus, User, LifeBuoy } from "lucide-react";
 
+// Fallbacks match the en-US default locale and the fixed DESIGN.md tab set.
+// "Top up" is the one prepaid term — never "Recharge".
 const TABS = [
-  { to: "/", key: "nav.home", fallback: "Início", icon: Home },
-  { to: "/my-plan", key: "nav.myPlan", fallback: "Meu plano", icon: Smartphone },
-  { to: "/top-up", key: "nav.topUp", fallback: "Recarga", icon: Wallet },
-  { to: "/add-ons", key: "nav.addOns", fallback: "Pacotes", icon: PackagePlus },
-  { to: "/account", key: "nav.account", fallback: "Conta", icon: User },
-  { to: "/support", key: "nav.support", fallback: "Ajuda", icon: LifeBuoy },
+  { to: "/", key: "nav.home", fallback: "Home", icon: Home },
+  { to: "/my-plan", key: "nav.myPlan", fallback: "My plan", icon: Smartphone },
+  { to: "/top-up", key: "nav.topUp", fallback: "Top up", icon: Wallet },
+  { to: "/add-ons", key: "nav.addOns", fallback: "Add-ons", icon: PackagePlus },
+  { to: "/account", key: "nav.account", fallback: "Account", icon: User },
+  { to: "/support", key: "nav.support", fallback: "Support", icon: LifeBuoy },
 ] as const;
 
 export function BottomTabBar() {

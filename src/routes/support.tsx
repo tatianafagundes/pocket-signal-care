@@ -8,7 +8,10 @@ export const Route = createFileRoute("/support")({
       { title: "Support — whitelabel" },
       { name: "description", content: "Support in your whitelabel prepaid mobile self-care app." },
       { property: "og:title", content: "Support — whitelabel" },
-      { property: "og:description", content: "Support in your whitelabel prepaid mobile self-care app." },
+      {
+        property: "og:description",
+        content: "Support in your whitelabel prepaid mobile self-care app.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -18,5 +21,10 @@ export const Route = createFileRoute("/support")({
 
 function Page() {
   const { t } = useTranslation();
-  return <PageShell title={t("pages.support.title", "Ajuda")} subtitle={t("pages.support.subtitle", "Estamos aqui para você. A central de ajuda chega em breve.")} />;
+  return (
+    <PageShell
+      title={t("pages.support.title", "Support")}
+      subtitle={t("pages.support.subtitle", "We're here for you. The help center is coming soon.")}
+    />
+  );
 }

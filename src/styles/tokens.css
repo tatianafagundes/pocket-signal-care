@@ -1,0 +1,114 @@
+/*
+ * Design tokens — whitelabel MVNO self-care (adapted from the fuon selfcare design system).
+ *
+ * The ONLY place raw colour values live. Components read these via the Tailwind
+ * utilities mapped in src/styles.css — never a hardcoded colour in a component.
+ *
+ * The brand is a theme: the active brand is set with <html data-brand="drei|dreigo">.
+ * A brand may change: accent (+accent-ink, accent-tint, accent-hover), surfaces/canvas,
+ * ink (buttons), text colours, font family, wordmark. A brand MUST NOT change the system
+ * tokens: status (success/warning/danger + tints), focus, border-input, disabled,
+ * text-tertiary, text-inverse, spacing, radii.
+ *
+ * "The accent is the brand, and the brand is one token. Buttons are ink, not the brand."
+ * When a brand accent is too light to be text (<4.5:1 on surface), links/rings use accent-ink.
+ *
+ * Base values below = fuon. The default brand is Drei (see [data-brand="drei"]); with no
+ * data-brand the fuon base renders as a fallback, not a shipping state.
+ */
+
+:root {
+  /* --- surfaces (system; a brand may re-tint) --- */
+  --canvas: #f5f6f8;
+  --surface: #ffffff;
+  --surface-tint: #eef6f5;
+  --surface-sand: #fbf4e8;
+  --hairline: #e4e7eb;
+
+  /* --- text (system defaults; brand may override primary/secondary) --- */
+  --ink: #16181d;
+  --text-primary: #16181d;
+  --text-secondary: #5f6670;
+  --text-tertiary: #8a919b; /* system — chevrons/dividers only, never a string */
+  --text-inverse: #ffffff;  /* system */
+
+  /* --- controls (system) --- */
+  --border-input: #858c96;  /* system — 3.4:1 on white (WCAG 1.4.11) */
+  --focus: #7c5cd6;         /* system — focus ring, distinct from every brand accent */
+  --disabled: #c9ced6;      /* system */
+  --disabled-text: #8a919b; /* system */
+
+  /* --- accent (brand) --- base = fuon teal --- */
+  --accent: #0e7c7b;        /* brand tile, active tab, data-ring, icon glyphs (graphic >=3:1) */
+  --accent-ink: #0e7c7b;    /* links + selection ring/dot (text >=4.5:1); = accent when accent passes */
+  --accent-hover: #0b6665;
+  --accent-tint: #d9efee;   /* selected-row wash, icon tiles, avatar */
+  --button-primary-hover: #2a2d34;
+
+  /* --- status (system — never changed by a brand; always colour + word) --- */
+  --success: #15703a;
+  --success-tint: #e3f4ea;
+  --warning: #9a4607;
+  --warning-tint: #fbeedd;
+  --danger: #c2281f;
+  --danger-tint: #fbe5e3;
+
+  /* --- radii (system) --- */
+  --radius-none: 0px;
+  --radius-tile: 8px;
+  --radius-control: 12px;
+  --radius-card: 12px;
+  --radius-sheet: 20px;
+  --radius-pill: 999px;
+  --radius-check: 6px;
+
+  /* --- spacing (system) --- */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-s: 8px;
+  --spacing-m: 12px;
+  --spacing-l: 16px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 24px;
+  --spacing-section: 32px;
+  --spacing-gutter: 20px;
+  --spacing-icon-s: 16px;
+  --spacing-icon-m: 20px;
+  --spacing-icon-l: 24px;
+  --spacing-tap: 44px;
+  --spacing-phone-width: 390px;
+
+  /* --- typography (system) — Inter --- */
+  --font-whitelabel: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Drei — base/default brand (host operator / MVNE).
+ * Identity white/black/blue, extracted from drei.at official CSS.
+ * accent cyan #00a0d2 is ~2.9:1 on white -> graphic only; links/rings use accent-ink #006a8e.
+ * Buttons stay ink (navy #0f273b). Cyan avoids collision with the red system danger.
+ */
+:root[data-brand="drei"] {
+  --accent: #00a0d2;
+  --accent-ink: #006a8e;
+  --accent-hover: #0081aa;
+  --accent-tint: #e0f3fa;
+  --ink: #0f273b;
+  --text-primary: #0f273b;
+  --button-primary-hover: #1a3850;
+}
+
+/*
+ * DreiGo — second brand (fictitious data-only MVNO on Drei), proves the white-label.
+ * Purple #820ad1 (Nubank) is ~5.6:1 on white -> serves as link directly (accent-ink = accent).
+ * Lime, if used, is decorative only — never a link, ring, or the only signal of a state.
+ */
+:root[data-brand="dreigo"] {
+  --accent: #820ad1;
+  --accent-ink: #820ad1;
+  --accent-hover: #6a08ab;
+  --accent-tint: #f0e5fb;
+  --ink: #16181d;
+  --text-primary: #16181d;
+  --button-primary-hover: #2a2d34;
+}
