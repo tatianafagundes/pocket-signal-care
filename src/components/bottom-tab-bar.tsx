@@ -29,8 +29,11 @@ export function BottomTabBar() {
           <li key={to}>
             <Link
               to={to}
-              activeOptions={{ exact: to === "/" }}
-              className="group flex min-h-[56px] flex-col items-center justify-center gap-1 px-1 py-2 type-tab-label text-text-secondary transition-colors hover:text-text-primary data-[status=active]:text-accent-ink"
+              // exact on "/" so Home doesn't match every route; includeSearch:false so a
+              // ?tenant= query doesn't deactivate a tab (the Links carry no search of their own).
+              activeOptions={{ exact: to === "/", includeSearch: false }}
+              activeProps={{ "aria-current": "page" }}
+              className="group flex min-h-[56px] flex-col items-center justify-center gap-1 px-1 py-2 type-tab-label text-text-secondary transition-colors hover:text-text-primary focus-ring data-[status=active]:text-accent-ink"
             >
               <span className="flex h-7 w-12 items-center justify-center rounded-pill transition-colors group-data-[status=active]:bg-accent-tint">
                 <Icon className="size-5" aria-hidden="true" />

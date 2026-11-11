@@ -266,9 +266,12 @@ for the primary button and hero only, never for a selected state (selection is t
 ## Internationalisation
 
 en-US (default) + de-AT (second locale, draft — to be validated by Drei before a real
-customer sees it). Every UI string is a key; zero hardcoded strings. Locale default per
-brand (Drei → de-AT, DreiGo → en-US), user can switch. Sentence case in en-US; German
-orthography (nouns capitalised) in de-AT. Dates and money format by the active locale.
+customer sees it). Every UI string is a key; zero hardcoded strings. **Both tenants default to
+en-US**; de-AT is opt-in via the language selector until Drei validates the copy. (When it is
+validated, Drei's default can flip to de-AT — but then the SSR `<html lang>` must be resolved
+server-side to match, so the first paint doesn't flash from en to de-AT.) Sentence case in
+en-US; German orthography (nouns capitalised) in de-AT. Dates and money format by the active
+locale.
 
 ## Do's and Don'ts
 
@@ -307,7 +310,8 @@ Host operator (MVNE). Palette from drei.at official CSS: `accent` cyan `#0096c5`
 `#0073a0` (link/ring, ~4.6:1), `button-primary` cyan `#0096c5` + white label (A1 exception,
 ~3.3:1), text `#1f1f1f` (strong) / `#5c5c5c` (body), `accent-tint` `#e0f3fa`. Campaign colours
 purple `#71439d` + lime `#DDEE3D`; hero gradient `#0096c5 → #71439d`. No navy. Default locale
-de-AT. Wordmark placeholder until the official asset is supplied.
+en-US (de-AT opt-in until Drei validates the copy). Wordmark placeholder until the official
+asset is supplied.
 
 ### DreiGo (second brand, the white-label proof)
 Fictitious data-only MVNO on Drei. `accent` purple `#820ad1` (Nubank; ~5.6:1 on white, so

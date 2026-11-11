@@ -29,7 +29,7 @@ export function TenantNotFoundBanner() {
 
   return (
     <div
-      role="status"
+      role="alert"
       className="mx-auto flex w-full max-w-[390px] items-start gap-3 rounded-control bg-warning-tint px-4 py-3"
     >
       <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
@@ -39,7 +39,7 @@ export function TenantNotFoundBanner() {
         </p>
         <a
           href={goToDreiHref}
-          className="type-body-sm-strong mt-1 inline-block text-accent-ink underline underline-offset-2"
+          className="focus-ring type-body-sm-strong mt-1 inline-block rounded-pill text-accent-ink underline underline-offset-2"
         >
           {t("tenant.goToDrei")}
         </a>

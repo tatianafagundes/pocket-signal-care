@@ -38,7 +38,7 @@ export function LanguageSelector() {
             aria-pressed={active}
             aria-label={label}
             className={
-              "min-h-8 rounded-pill px-3 type-caption transition-colors " +
+              "focus-ring inline-flex min-h-11 min-w-11 items-center justify-center rounded-pill px-3 type-caption transition-colors " +
               (active
                 ? "bg-accent-tint text-accent-ink"
                 : "text-text-secondary hover:text-text-primary")

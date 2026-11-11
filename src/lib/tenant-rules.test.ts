@@ -24,8 +24,8 @@ describe("tenant-rules", () => {
   });
 
   describe("per-tenant defaults", () => {
-    it("Drei defaults to de-AT, DreiGo to en", () => {
-      expect(localeForTenant("drei")).toBe("de-AT");
+    it("both tenants default to en (de-AT is opt-in until Drei validates the copy)", () => {
+      expect(localeForTenant("drei")).toBe("en");
       expect(localeForTenant("dreigo")).toBe("en");
     });
     it("exposes display names", () => {
@@ -56,12 +56,12 @@ describe("tenant-rules", () => {
       expect(r.source).toBe("query");
     });
 
-    it("defaults to Drei with no signal", () => {
+    it("defaults to Drei with no signal, locale en", () => {
       const r = resolveTenant("app.example.com", "");
       expect(r.tenant).toBe(DEFAULT_TENANT);
       expect(r.tenant).toBe("drei");
       expect(r.source).toBe("default");
-      expect(r.locale).toBe("de-AT");
+      expect(r.locale).toBe("en");
       expect(r.requestedUnknown).toBeNull();
     });
 

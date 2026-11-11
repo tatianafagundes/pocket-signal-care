@@ -195,6 +195,19 @@
 @utility tabular-figures { font-variant-numeric: tabular-nums; }
 
 /*
+ * focus-ring — the Fuon 2px focus indicator (DESIGN.md: "Focus is a 2px `focus` violet ring",
+ * a system token distinct from every brand accent). Apply to every keyboard-focusable control
+ * (buttons, links, pills, tabs). Uses :focus-visible so it shows for keyboard/AT, not mouse.
+ * The 2px offset lifts the ring off the control so it reads on any surface. WCAG 2.4.7.
+ */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+/*
  * bg-hero — the brand hero band, for a future campaign/hero surface (Fase 5+). The real Drei
  * (and Nubank-style DreiGo) hero IS a blue->purple / purple gradient, carried by
  * --gradient-hero (base falls back to a flat accent). Not used by the Fase 2 shell — the

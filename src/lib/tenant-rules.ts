@@ -24,9 +24,15 @@ export const DEFAULT_TENANT: TenantId = "drei";
 /** The two supported locales (see src/i18n.ts). */
 export type Locale = "en" | "de-AT";
 
-/** Per-tenant default locale (DESIGN.md: Drei -> de-AT, DreiGo -> en-US). User can switch. */
+/*
+ * Per-tenant default locale. en-US is the product default for BOTH tenants: de-AT is a draft
+ * (DESIGN.md: "to be validated by Drei before a real customer sees it"), so we do not ship a
+ * first paint in German. A user opts into de-AT via the language selector; once Drei validates
+ * the de-AT copy, drei's default can flip to "de-AT" here (and the SSR <html lang> must then be
+ * resolved server-side to match — see tenant-provider SSR note).
+ */
 const TENANT_DEFAULT_LOCALE: Record<TenantId, Locale> = {
-  drei: "de-AT",
+  drei: "en",
   dreigo: "en",
 };
 
