@@ -1,7 +1,7 @@
-import { useTranslation } from "react-i18next";
+import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { AlertTriangle } from "lucide-react";
 
-import { useTenant } from "@/components/tenant-provider";
+import { useTenant } from "@/hooks/use-tenant";
 
 /*
  * Tenant-not-found recovery. (Spec Fase 2.2 — "tela de tenant inexistente com 'ir para Drei'")
@@ -12,7 +12,7 @@ import { useTenant } from "@/components/tenant-provider";
  * colour + word + icon (never colour alone), one action. Renders nothing when all is well.
  */
 export function TenantNotFoundBanner() {
-  const { t } = useTranslation();
+  const { t } = useLocalizedTranslation();
   const { requestedUnknown } = useTenant();
 
   if (!requestedUnknown) return null;

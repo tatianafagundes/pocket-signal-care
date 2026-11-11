@@ -1,4 +1,4 @@
-import { useTenant } from "@/components/tenant-provider";
+import { useTenant } from "@/hooks/use-tenant";
 import { LanguageSelector } from "@/components/language-selector";
 
 /*
@@ -13,7 +13,7 @@ import { LanguageSelector } from "@/components/language-selector";
  * the Drei cyan (#0096c5) is ~3.3:1 and the A1 exception is scoped to the primary button + hero
  * only — it does not cover the tile. Ink on cyan is ~5.9:1 (passes). When the official wordmark
  * IMAGE lands it can be white-on-accent (a graphic, ≥3:1); until then, ink text keeps the
- * placeholder accessible. The tile's text already IS the accessible name, so no aria-label.
+ * placeholder accessible. The tile's text already IS the accessible name, so no t()/aria-label.
  */
 export function AppHeader() {
   const { tenantName } = useTenant();

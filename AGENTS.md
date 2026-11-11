@@ -59,6 +59,13 @@ backend; every other system is mocked behind a seam). The design system is
   and flipped by env. Keep the canonical contracts and `SeamResult` discipline; never call
   a backend directly from a component.
 
+### Tenant context
+- Keep tenant context in a component-free shared module, the consumer hook in its own
+  module, and the provider above the app shell; this preserves context identity during
+  hot updates. Use the localized translation hook throughout the tenant shell and pages
+  to keep each deferred boundary in the server language until its hydration finishes;
+  automatic tenant and language updates also run in React transitions.
+
 ### Build / verify
 - `export PATH="$HOME/.bun/bin:$PATH"` first (bun is not on the default PATH), then
   `bun run build` and `bun test` before pushing. Keep the connected branch in a working

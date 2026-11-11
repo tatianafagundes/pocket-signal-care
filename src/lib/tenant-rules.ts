@@ -64,7 +64,7 @@ export function tenantName(tenant: TenantId): string {
 function tenantFromHostname(hostname: string | null | undefined): TenantId | null {
   if (!hostname) return null;
   const host = hostname.split(":")[0]; // strip any :port
-  const firstLabel = host.split(".")[0]?.toLowerCase();
+  const firstLabel = host?.split(".")[0]?.toLowerCase();
   if (!firstLabel || firstLabel === "www" || firstLabel === "localhost") return null;
   return isTenantId(firstLabel) ? firstLabel : null;
 }

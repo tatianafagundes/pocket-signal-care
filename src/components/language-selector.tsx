@@ -1,6 +1,6 @@
-import { useTranslation } from "react-i18next";
+import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 
-import { useTenant } from "@/components/tenant-provider";
+import { useTenant } from "@/hooks/use-tenant";
 import type { Locale } from "@/lib/tenant-rules";
 
 /*
@@ -19,7 +19,7 @@ const LOCALES: { value: Locale; short: string; label: string }[] = [
 ];
 
 export function LanguageSelector() {
-  const { t } = useTranslation();
+  const { t } = useLocalizedTranslation();
   const { locale, setLocale } = useTenant();
 
   return (
