@@ -1,0 +1,73 @@
+import type { TenantId } from "@/lib/tenant-rules";
+
+/*
+ * Canonical domain model. (Spec Fase 3.1 / contracts/model)
+ *
+ * These are the shapes the screens consume — never raw TMF. The CPR http client maps
+ * TMF632/629 to/from these; the mock driver builds them directly. Keeping one canonical
+ * model means a screen is identical whether CPR is real or mocked.
+ *
+ * Money is minor units (euro cents) + currency, formatted by the active locale in the UI —
+ * so there is never a float-rounding bug in balances or prices.
+ */
+
+/** A legal/individual party (TMF632 Party). */
+export interface Party {
+  partyId: string;
+  tenantId: TenantId;
+  givenName: string;
+  familyName: string;
+  email: string;
+  /** E.164 where known; a prepaid party may not have an MSISDN until activation. */
+  msisdn?: string;
+}
+
+export type CustomerStatus = "active" | "pending" | "suspended";
+
+/** A customer (TMF629) — a party in a commercial relationship with the operator. */
+export interface Customer {
+  customerId: string;
+  tenantId: TenantId;
+  partyId: string;
+  status: CustomerStatus;
+  /** ISO date the customer was created. */
+  createdAt: string;
+}
+
+/** A provisioned product on the customer's installed base (TMF637). */
+export interface Product {
+  productId: string;
+  offerId: string;
+  name: string;
+  /** "plan" = the primary bought offer; "add-on" = an offer on top; "sim" = the SIM/MSISDN. */
+  kind: "plan" | "add-on" | "sim";
+  status: "active" | "pending";
+}
+
+/** Prepaid balance (TMF654). Minor units to avoid float errors. */
+export interface Balance {
+  /** Balance in minor units (euro cents). */
+  amountMinor: number;
+  currency: "EUR";
+  /** ISO date the balance/plan validity expires, when applicable. */
+  validUntil?: string;
+}
+
+/**
+ * Customer360 — the composed view the Home/Account screens render. Assembled by the pure
+ * `customer360-rules.compose(...)` from CPR (party/customer) + order (installed base) +
+ * charging (balance). Composition is NOT done inside a connector.
+ */
+export interface Customer360 {
+  customer: Customer;
+  party: Party;
+  installedBase: Product[];
+  balance: Balance | null;
+}
+
+/** Result of resolving a tenant against CPR (Fase 2 TODO wired to this in Fase 3.4). */
+export interface TenantResolution {
+  exists: boolean;
+  id: TenantId;
+  name: string;
+}

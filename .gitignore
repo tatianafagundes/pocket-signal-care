@@ -16,6 +16,11 @@ dist-ssr
 .nitro
 *.local
 
+# Env — never commit real driver URLs/tokens. .env.example is tracked as the template.
+.env
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

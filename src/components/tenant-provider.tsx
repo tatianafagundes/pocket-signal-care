@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { TenantContext, type TenantContextValue } from "@/lib/tenant-context";
 import { resolveTenant, tenantName, type Locale, type TenantResolution } from "@/lib/tenant-rules";
+import { api, SeamFailure } from "@/services/api";
 
 /*
  * TenantProvider — the white-label runtime. (Spec Fase 2.2)
@@ -19,8 +20,10 @@ import { resolveTenant, tenantName, type Locale, type TenantResolution } from "@
  * client. __root.tsx hardcodes data-brand="drei" (the default) for first paint; this provider
  * takes over and updates it.
  *
- * Fase 3 TODO: once api.resolveTenant exists (CPR seam), confirm the resolved tenant actually
- * exists server-side and drive `status` from that call instead of the local known-list check.
+ * Tenant existence is confirmed against CPR via api.resolveTenant after the local resolve
+ * (Fase 3.4). With the mock driver this always confirms; when VITE_CPR_DRIVER=http it hits the
+ * real CPR. The confirmation only drives the not-found recovery banner — theming/locale apply
+ * instantly from the local resolve so first paint is never blocked on the network.
  */
 
 export function TenantProvider({ children }: { children: ReactNode }) {
@@ -40,6 +43,31 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     startTransition(() => {
       setResolution(r);
     });
+
+    // Confirm the resolved tenant actually exists in CPR (Fase 3.4 — resolves the Fase 2 TODO).
+    // Theming already applied from the local resolve above; this only surfaces the recovery
+    // banner if the backend says the tenant is unknown. Never throws into render.
+    let cancelled = false;
+    void api
+      .resolveTenant(r.tenant)
+      .then((res) => {
+        if (!cancelled && !res.exists) {
+          setResolution((prev) => ({ ...prev, requestedUnknown: prev.tenant }));
+        }
+      })
+      .catch((e: unknown) => {
+        // A SeamFailure here means CPR is unreachable, not that the tenant is invalid — don't
+        // punish the user with the not-found banner for a backend blip. Log and keep the brand.
+        if (import.meta.env.DEV) {
+          console.debug(
+            "[tenant] resolveTenant confirm failed:",
+            e instanceof SeamFailure ? e.code : e,
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const locale = localeOverride ?? resolution.locale;

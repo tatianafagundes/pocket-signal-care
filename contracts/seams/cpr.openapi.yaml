@@ -1,0 +1,170 @@
+openapi: 3.1.0
+info:
+  title: CPR seam — Customer/Party Repository (canonical)
+  version: 0.1.0
+  description: >
+    Canonical contract for the CPR seam of the whitelabel MVNO self-care app. This describes
+    the CANONICAL shapes the app consumes — not TMF. The http driver maps TMF632 (Party) and
+    TMF629 (Customer) to/from these; the mock driver builds them directly. CPR is the only
+    system intended to go real (driver flip via VITE_CPR_DRIVER); ECM/EOC/ECEV/DSIMA stay mock.
+    This file is documentation of the seam surface; runtime validation lives in
+    src/schemas/cpr.ts (Zod). Operations never throw — they return a SeamResult.
+
+tags:
+  - name: cpr
+    description: Party + Customer repository, and the composed Customer360 read.
+
+paths:
+  /cpr/tenants/{tenantId}/resolve:
+    get:
+      tags: [cpr]
+      operationId: resolveTenant
+      summary: Confirm a tenant exists and return its id + display name.
+      parameters:
+        - in: path
+          name: tenantId
+          required: true
+          schema: { type: string, enum: [drei, dreigo] }
+      responses:
+        "200":
+          description: Resolution (exists may be false for an unknown tenant).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantResolution" }
+
+  /cpr/parties:
+    post:
+      tags: [cpr]
+      operationId: createParty
+      summary: Create a party (TMF632 on the http driver).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartyInput" }
+      responses:
+        "201":
+          description: The created party id.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [partyId]
+                properties: { partyId: { type: string } }
+
+  /cpr/customers:
+    post:
+      tags: [cpr]
+      operationId: createCustomer
+      summary: Create a customer for a party (TMF629). Prepaid — no Billing Account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerInput" }
+      responses:
+        "201":
+          description: The created customer id.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [customerId]
+                properties: { customerId: { type: string } }
+
+  /cpr/customers/{customerId}/360:
+    get:
+      tags: [cpr]
+      operationId: getCustomer360
+      summary: >
+        The composed Customer360 (party/customer from CPR + installed base from order +
+        balance from charging). Composition is a pure rule, not done in the connector.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Composed customer view.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Customer360" }
+        "404":
+          description: Unknown customer (returned as a SeamError notFound, not an HTTP throw).
+
+components:
+  schemas:
+    TenantResolution:
+      type: object
+      required: [exists, id, name]
+      properties:
+        exists: { type: boolean }
+        id: { type: string, enum: [drei, dreigo] }
+        name: { type: string }
+
+    PartyInput:
+      type: object
+      required: [tenantId, givenName, familyName, email]
+      properties:
+        tenantId: { type: string, enum: [drei, dreigo] }
+        givenName: { type: string }
+        familyName: { type: string }
+        email: { type: string, format: email }
+        msisdn: { type: string, description: "E.164; optional until activation." }
+
+    Party:
+      allOf:
+        - $ref: "#/components/schemas/PartyInput"
+        - type: object
+          required: [partyId]
+          properties: { partyId: { type: string } }
+
+    CustomerInput:
+      type: object
+      required: [tenantId, partyId]
+      properties:
+        tenantId: { type: string, enum: [drei, dreigo] }
+        partyId: { type: string }
+
+    Customer:
+      type: object
+      required: [customerId, tenantId, partyId, status, createdAt]
+      properties:
+        customerId: { type: string }
+        tenantId: { type: string, enum: [drei, dreigo] }
+        partyId: { type: string }
+        status: { type: string, enum: [active, pending, suspended] }
+        createdAt: { type: string, format: date-time }
+
+    Product:
+      type: object
+      required: [productId, offerId, name, kind, status]
+      properties:
+        productId: { type: string }
+        offerId: { type: string }
+        name: { type: string }
+        kind: { type: string, enum: [plan, add-on, sim] }
+        status: { type: string, enum: [active, pending] }
+
+    Balance:
+      type: object
+      required: [amountMinor, currency]
+      properties:
+        amountMinor: { type: integer, description: "Euro cents." }
+        currency: { type: string, enum: [EUR] }
+        validUntil: { type: string, format: date-time }
+
+    Customer360:
+      type: object
+      required: [customer, party, installedBase, balance]
+      properties:
+        customer: { $ref: "#/components/schemas/Customer" }
+        party: { $ref: "#/components/schemas/Party" }
+        installedBase:
+          type: array
+          items: { $ref: "#/components/schemas/Product" }
+        balance:
+          oneOf:
+            - $ref: "#/components/schemas/Balance"
+            - type: "null"
