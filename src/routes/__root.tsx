@@ -86,9 +86,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "whitelabel — Prepaid mobile self-care" },
+      // Brand-neutral default title (the tenant isn't resolved server-side yet — Phase 3).
+      // TenantProvider rewrites document.title to "<Brand> — …" on the client after resolve.
+      { title: "Prepaid mobile self-care" },
       { name: "description", content: "Manage your prepaid mobile plan, top ups and add-ons." },
-      { property: "og:title", content: "whitelabel — Prepaid mobile self-care" },
+      { property: "og:title", content: "Prepaid mobile self-care" },
       {
         property: "og:description",
         content: "Manage your prepaid mobile plan, top ups and add-ons.",

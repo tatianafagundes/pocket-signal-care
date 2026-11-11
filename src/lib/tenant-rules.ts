@@ -42,6 +42,22 @@ const TENANT_NAME: Record<TenantId, string> = {
   dreigo: "DreiGo",
 };
 
+/*
+ * Brand wordmark/logo asset, served from /public/brands. The app-bar renders this as the brand
+ * logo (the one place the logo appears). Drei = the official "3" mark (white-background JPEG,
+ * sits on the white app-bar); DreiGo = a placeholder SVG for the fictitious MVNO. Replace with
+ * official transparent assets when available (DESIGN.md open item).
+ */
+const TENANT_LOGO: Record<TenantId, string> = {
+  drei: "/brands/drei.jpeg",
+  dreigo: "/brands/dreigo.svg",
+};
+
+/** Path (under /public) to the brand's logo/wordmark. */
+export function tenantLogo(tenant: TenantId): string {
+  return TENANT_LOGO[tenant];
+}
+
 /** True when `value` is one of the known tenant ids. Narrows the type. */
 export function isTenantId(value: string | null | undefined): value is TenantId {
   return value != null && (TENANT_IDS as readonly string[]).includes(value.toLowerCase());

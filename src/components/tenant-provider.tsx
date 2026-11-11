@@ -44,11 +44,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   const locale = localeOverride ?? resolution.locale;
 
-  // Apply the brand theme to <html> and keep i18n in sync with the active locale.
+  // Apply the brand theme to <html>, keep i18n in sync, and set the tab title to the brand.
+  // (The SSR title is brand-neutral since the tenant isn't resolved server-side yet — Phase 3.)
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.setAttribute("data-brand", resolution.tenant);
       document.documentElement.setAttribute("lang", locale);
+      document.title = `${tenantName(resolution.tenant)} — Prepaid mobile self-care`;
     }
   }, [resolution.tenant, locale]);
 
