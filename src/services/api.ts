@@ -1,5 +1,9 @@
 import type { SeamError, SeamResult } from "@/services/seam-result";
 import * as cpr from "@/services/cpr.functions";
+import * as catalog from "@/services/catalog.functions";
+import * as order from "@/services/order.functions";
+import * as charging from "@/services/charging.functions";
+import * as resource from "@/services/resource.functions";
 
 /*
  * api — the single port the UI uses. (Spec Fase 0.3 / 3.4)
@@ -38,9 +42,29 @@ async function unwrap<T>(r: Promise<SeamResult<T>>): Promise<T> {
 }
 
 export const api = {
-  // CPR seam
+  // CPR seam (real-able)
   resolveTenant: (tenantId: string) => unwrap(cpr.resolveTenant(tenantId)),
   createParty: (input: unknown) => unwrap(cpr.createParty(input)),
   createCustomer: (input: unknown) => unwrap(cpr.createCustomer(input)),
   getCustomer360: (customerId: string) => unwrap(cpr.getCustomer360(customerId)),
+
+  // Catalog seam (ECM, mock)
+  listOffers: (tenantId: string) => unwrap(catalog.listOffers(tenantId)),
+  qualifyOffer: (offerId: string, ctx: unknown) => unwrap(catalog.qualifyOffer(offerId, ctx)),
+
+  // Order seam (EOC, mock)
+  createCart: (customerId: string) => unwrap(order.createCart(customerId)),
+  addItem: (input: unknown) => unwrap(order.addItem(input)),
+  submitOrder: (cartId: string) => unwrap(order.submitOrder(cartId)),
+  getInstalledBase: (customerId: string) => unwrap(order.getInstalledBase(customerId)),
+
+  // Charging seam (ECEV, mock)
+  getBalance: (customerId: string) => unwrap(charging.getBalance(customerId)),
+  topUp: (input: unknown) => unwrap(charging.topUp(input)),
+  rateAndDeduct: (input: unknown) => unwrap(charging.rateAndDeduct(input)),
+
+  // Resource seam (DSIMA, mock) — SIM/MSISDN
+  listAvailableMsisdn: (tenantId: string) => unwrap(resource.listAvailableMsisdn(tenantId)),
+  reserveMsisdn: (input: unknown) => unwrap(resource.reserveMsisdn(input)),
+  validateSim: (iccid: string) => unwrap(resource.validateSim(iccid)),
 };

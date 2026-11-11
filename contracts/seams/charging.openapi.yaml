@@ -1,0 +1,92 @@
+openapi: 3.1.0
+info:
+  title: Charging seam — ECEV (canonical)
+  version: 0.1.0
+  description: >
+    Canonical contract for the charging (ECEV) seam — prepaid balance. Mock for the demo; the
+    http driver would map TMF654 (prepaid balance management). Amounts are minor units (euro
+    cents). Operations never throw — they return a SeamResult. Runtime validation:
+    src/schemas/charging.ts. rateAndDeduct refuses to go negative (insufficient balance is a
+    rejected domain error, not a crash).
+tags:
+  - name: charging
+paths:
+  /charging/customers/{customerId}/balance:
+    get:
+      tags: [charging]
+      operationId: getBalance
+      summary: The customer's prepaid balance (null if none yet).
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Balance or null.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/Balance"
+                  - type: "null"
+  /charging/customers/{customerId}/top-up:
+    post:
+      tags: [charging]
+      operationId: topUp
+      summary: Add credit to the balance.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amountMinor]
+              properties: { amountMinor: { type: integer, description: "Euro cents, positive." } }
+      responses:
+        "200":
+          description: The new balance.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Balance" }
+  /charging/customers/{customerId}/deduct:
+    post:
+      tags: [charging]
+      operationId: rateAndDeduct
+      summary: Deduct a charge; refuses to go negative.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amountMinor]
+              properties: { amountMinor: { type: integer } }
+      responses:
+        "200":
+          description: Confirmation.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties: { ok: { type: boolean, enum: [true] } }
+components:
+  schemas:
+    Balance:
+      type: object
+      required: [amountMinor, currency]
+      properties:
+        amountMinor: { type: integer, description: "Euro cents." }
+        currency: { type: string, enum: [EUR] }
+        validUntil: { type: string, format: date-time }

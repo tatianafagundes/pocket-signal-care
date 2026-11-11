@@ -71,3 +71,42 @@ export interface TenantResolution {
   id: TenantId;
   name: string;
 }
+
+/*
+ * Catalog (ECM / TMF620). An Offer is a catalogue item. Prepaid offers are modelled as
+ * activation bundles (plan + recharge + SIM PO + MSISDN PO) per the DMP Value Accelerator —
+ * the bundle detail lives in the catalog mock; the Offer here is the customer-facing summary.
+ */
+export interface Offer {
+  offerId: string;
+  tenantId: TenantId;
+  name: string;
+  /** Data allowance label, e.g. "10 GB" or "Unlimited". */
+  dataAmount: string;
+  /** Price in minor units (euro cents). */
+  priceMinor: number;
+  currency: "EUR";
+  /** Validity in days (prepaid cycle). */
+  validityDays: number;
+  /** The one recommended offer per tenant is highlighted in the grid. */
+  recommended: boolean;
+}
+
+/*
+ * Resource (DSIMA). A selectable/reservable mobile number and SIM validation result —
+ * the first step of prepaid onboarding.
+ */
+export interface Msisdn {
+  /** The number in E.164. */
+  msisdn: string;
+  tenantId: TenantId;
+  /** Available until reserved; reserve removes it from the pool (concurrency). */
+  status: "available" | "reserved";
+}
+
+export interface SimValidation {
+  iccid: string;
+  valid: boolean;
+  /** SIM form when valid. */
+  simType?: "physical" | "esim";
+}

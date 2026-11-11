@@ -1,0 +1,45 @@
+import { afterEach, describe, expect, it } from "vitest";
+
+import { listOffers, qualifyOffer } from "@/services/catalog.functions";
+import { clearForcedError, forceError } from "@/services/mock-support";
+
+afterEach(() => clearForcedError());
+
+describe("catalog seam (mock)", () => {
+  it("lists tenant-specific offers with one recommended", async () => {
+    const drei = await listOffers("drei");
+    expect(drei.ok).toBe(true);
+    if (drei.ok) {
+      expect(drei.data.length).toBeGreaterThan(0);
+      expect(drei.data.every((o) => o.tenantId === "drei")).toBe(true);
+      expect(drei.data.filter((o) => o.recommended)).toHaveLength(1);
+    }
+    const dreigo = await listOffers("dreigo");
+    if (dreigo.ok) expect(dreigo.data.every((o) => o.tenantId === "dreigo")).toBe(true);
+  });
+
+  it("rejects an invalid tenant (validation, never throws)", async () => {
+    const r = await listOffers("acme");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("validation");
+  });
+
+  it("qualifies an offer as eligible during onboarding (no customer)", async () => {
+    const r = await qualifyOffer("drei-plan-10gb", { tenantId: "drei" });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.eligible).toBe(true);
+  });
+
+  it("fails qualify for an unknown offer", async () => {
+    const r = await qualifyOffer("nope", { tenantId: "drei" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe("catalog.offer.notFound");
+  });
+
+  it("honours a forced error (Req 9.3)", async () => {
+    forceError("catalog.listOffers");
+    const r = await listOffers("drei");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("unavailable");
+  });
+});

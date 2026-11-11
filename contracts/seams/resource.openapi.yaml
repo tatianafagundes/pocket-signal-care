@@ -1,0 +1,93 @@
+openapi: 3.1.0
+info:
+  title: Resource seam — DSIMA (canonical)
+  version: 0.1.0
+  description: >
+    Canonical contract for the resource (DSIMA) seam — SIM/MSISDN selection and reservation,
+    the first step of prepaid onboarding. Mock for the demo; the http driver would map DSIMA /
+    Resource Management. Operations never throw — they return a SeamResult. Runtime validation:
+    src/schemas/resource.ts. reserveMsisdn removes the number from the available pool so two
+    users cannot take the same one (conflict if already reserved). The tenant enum is
+    hand-maintained; source of truth is TENANT_IDS in src/lib/tenant-rules.ts.
+tags:
+  - name: resource
+paths:
+  /resource/{tenantId}/msisdn/available:
+    get:
+      tags: [resource]
+      operationId: listAvailableMsisdn
+      summary: List available numbers for the tenant.
+      parameters:
+        - in: path
+          name: tenantId
+          required: true
+          schema: { type: string, enum: [drei, dreigo] }
+      responses:
+        "200":
+          description: Available MSISDNs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Msisdn" }
+  /resource/msisdn/reserve:
+    post:
+      tags: [resource]
+      operationId: reserveMsisdn
+      summary: Reserve a number (removes it from the pool).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenantId, msisdn]
+              properties:
+                tenantId: { type: string, enum: [drei, dreigo] }
+                msisdn: { type: string }
+      responses:
+        "200":
+          description: Reservation id.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reservationId]
+                properties: { reservationId: { type: string } }
+        "409":
+          description: Number already reserved (returned as a SeamError conflict, not a throw).
+  /resource/sim/validate:
+    post:
+      tags: [resource]
+      operationId: validateSim
+      summary: Validate a SIM by ICCID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [iccid]
+              properties: { iccid: { type: string } }
+      responses:
+        "200":
+          description: Validation result.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimValidation" }
+components:
+  schemas:
+    Msisdn:
+      type: object
+      required: [msisdn, tenantId, status]
+      properties:
+        msisdn: { type: string }
+        tenantId: { type: string, enum: [drei, dreigo] }
+        status: { type: string, enum: [available, reserved] }
+    SimValidation:
+      type: object
+      required: [iccid, valid]
+      properties:
+        iccid: { type: string }
+        valid: { type: boolean }
+        simType: { type: string, enum: [physical, esim] }

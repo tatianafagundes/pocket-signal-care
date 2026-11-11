@@ -12,6 +12,8 @@ import {
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 import { createCprMock } from "@/services/cpr/cpr-mock";
 import { createCprHttp } from "@/services/cpr/cpr-http";
+import { getInstalledBase } from "@/services/order.functions";
+import { getBalance } from "@/services/charging.functions";
 
 /*
  * CPR seam. (Spec Fase 3.2)
@@ -72,11 +74,29 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
     });
   }
   const customerId = parsed.data;
-  // tenantId for logging is taken from the composed customer once fetched; use a placeholder
-  // until then (the 360 read is tenant-scoped by the customer record itself).
+  // The 360 fan-out lives HERE (not in a driver): CPR owns party+customer; the installed base
+  // comes from the order (EOC) seam and the balance from the charging (ECEV) seam. Compose the
+  // three with the pure rule. If CPR fails, fail; if order/charging fail, degrade gracefully
+  // (empty base / null balance) so the 360 still renders the customer rather than erroring out.
   return runRead({ tenantId: "cpr" }, "cpr.getCustomer360", async () => {
-    const parts = await driver.getCustomer360Parts(customerId);
-    if (!parts.ok) return parts;
-    return { ok: true, data: composeCustomer360(parts.data) };
+    const cpr = await driver.getCustomerAndParty(customerId);
+    if (!cpr.ok) return cpr;
+
+    const [baseRes, balanceRes] = await Promise.all([
+      getInstalledBase(customerId),
+      getBalance(customerId),
+    ]);
+    const installedBase = baseRes.ok ? baseRes.data : [];
+    const balance = balanceRes.ok ? balanceRes.data : null;
+
+    return {
+      ok: true,
+      data: composeCustomer360({
+        customer: cpr.data.customer,
+        party: cpr.data.party,
+        installedBase,
+        balance,
+      }),
+    };
   });
 }

@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: Order seam — EOC (canonical)
+  version: 0.1.0
+  description: >
+    Canonical contract for the order (EOC) seam. Mock for the demo; the http driver would map
+    TMF663 (shopping cart) / TMF622 (product order) / TMF637 (installed base / product
+    inventory). Operations never throw — they return a SeamResult. Runtime validation:
+    src/schemas/order.ts. Submitting an order provisions each cart item as a product on the
+    customer's installed base, which the Customer360 reads.
+tags:
+  - name: order
+paths:
+  /order/carts:
+    post:
+      tags: [order]
+      operationId: createCart
+      summary: Open a cart for a customer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerId]
+              properties: { customerId: { type: string } }
+      responses:
+        "201":
+          description: The created cart id.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cartId]
+                properties: { cartId: { type: string } }
+  /order/carts/{cartId}/items:
+    post:
+      tags: [order]
+      operationId: addItem
+      summary: Add an offer to the cart.
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [offerId]
+              properties: { offerId: { type: string } }
+      responses:
+        "200":
+          description: The updated cart id.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cartId]
+                properties: { cartId: { type: string } }
+  /order/carts/{cartId}/submit:
+    post:
+      tags: [order]
+      operationId: submitOrder
+      summary: Submit the cart as an order; provisions products.
+      parameters:
+        - in: path
+          name: cartId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The order id + status.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [orderId, status]
+                properties:
+                  orderId: { type: string }
+                  status: { type: string, enum: [completed, pending] }
+  /order/customers/{customerId}/installed-base:
+    get:
+      tags: [order]
+      operationId: getInstalledBase
+      summary: The customer's provisioned products.
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Installed base.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Product" }
+components:
+  schemas:
+    Product:
+      type: object
+      required: [productId, offerId, name, kind, status]
+      properties:
+        productId: { type: string }
+        offerId: { type: string }
+        name: { type: string }
+        kind: { type: string, enum: [plan, add-on, sim] }
+        status: { type: string, enum: [active, pending] }

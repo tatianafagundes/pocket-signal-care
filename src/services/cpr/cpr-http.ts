@@ -1,5 +1,5 @@
 import { ok, err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Customer360Parts } from "@/services/customer360-rules";
+import type { Customer, Party } from "@/services/model";
 import type { PartyInput, CustomerInput } from "@/schemas/cpr";
 import type { TenantId } from "@/lib/tenant-rules";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
@@ -110,10 +110,11 @@ export function createCprHttp(): CprDriver {
         (json) => fromTmfCustomerCreate(json),
       );
     },
-    async getCustomer360Parts(_customerId: string): Promise<SeamResult<Customer360Parts>> {
-      // The 360 fan-out (customer + installed base + balance) is assembled server-side in Fase 8;
-      // the seam still composes the canonical shape with the pure rule. Stubbed until wired.
-      return notConfigured<Customer360Parts>();
+    async getCustomerAndParty(
+      _customerId: string,
+    ): Promise<SeamResult<{ customer: Customer; party: Party }>> {
+      // Real CPR GET customer + its engaged party (TMF629/632). Stubbed until Fase 8 wires it.
+      return notConfigured<{ customer: Customer; party: Party }>();
     },
   };
 }

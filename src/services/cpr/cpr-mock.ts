@@ -1,40 +1,28 @@
 import { ok, err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Balance, Customer, Party, Product } from "@/services/model";
-import type { Customer360Parts } from "@/services/customer360-rules";
+import type { Customer, Party } from "@/services/model";
 import type { PartyInput, CustomerInput } from "@/schemas/cpr";
 import { tenantName, type TenantId } from "@/lib/tenant-rules";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
+import { withMock } from "@/services/mock-support";
 
 /*
- * CPR mock driver — in-memory store + per-tenant demo seed. (Spec Fase 3.3)
+ * CPR mock driver — in-memory party + customer store, per-tenant demo seed. (Spec Fase 3.3)
  *
- * The store is module-level so it survives across calls within a session (what the demo
- * needs: onboard a customer, then see them in the 360). It is NOT the database — the real CPR
- * (http driver) replaces this when VITE_CPR_DRIVER=http. Latency is simulated so loading states
- * are exercised; a per-op forced-error hook lands in Fase 4.5.
- *
- * Note: in the full architecture the installed base comes from the EOC mock and the balance
- * from the ECEV mock (Fase 4). Until those exist, the CPR mock seeds a minimal plan+SIM and a
- * starting balance on the demo customer so getCustomer360 returns a complete view end-to-end.
- * When Fase 4 lands, the seam will source installedBase/balance from those seams instead.
+ * CPR owns ONLY party + customer. The demo customer's installed base lives in the order (EOC)
+ * mock and its balance in the charging (ECEV) mock — the seam's getCustomer360 fans out to
+ * those. The store is module-level so it survives the session (onboard a customer, then see it
+ * in the 360). It is NOT the database — the http driver replaces it when VITE_CPR_DRIVER=http.
+ * Latency + forced-error come from withMock.
  */
 
 interface MockRecord {
   party: Party;
   customer: Customer;
-  installedBase: Product[];
-  balance: Balance | null;
 }
 
 // customerId -> record. Module-level = survives across calls in the session.
 const store = new Map<string, MockRecord>();
 let seeded = false;
-
-function simulateLatency(): Promise<void> {
-  // 300–900ms, so skeleton/loading states are real in the demo.
-  const ms = 300 + Math.floor(Math.random() * 600);
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /** Seed one demo customer per tenant, once. Ids are stable so the demo can deep-link. */
 function seed(): void {
@@ -59,88 +47,67 @@ function seed(): void {
       status: "active",
       createdAt: "2026-01-15T10:00:00Z",
     };
-    const installedBase: Product[] = [
-      {
-        productId: `${customerId}-plan`,
-        offerId: `${tenantId}-plan-10gb`,
-        name: "Prepaid 10 GB",
-        kind: "plan",
-        status: "active",
-      },
-      {
-        productId: `${customerId}-sim`,
-        offerId: `${tenantId}-sim`,
-        name: "SIM",
-        kind: "sim",
-        status: "active",
-      },
-    ];
-    const balance: Balance = {
-      amountMinor: 1500,
-      currency: "EUR",
-      validUntil: "2026-12-31T23:59:59Z",
-    };
-    store.set(customerId, { party, customer, installedBase, balance });
+    store.set(customerId, { party, customer });
   }
 }
 
 export function createCprMock(): CprDriver {
   seed();
   return {
-    async resolveTenant(tenantId) {
-      await simulateLatency();
+    resolveTenant(tenantId) {
       // The known-tenant check is the local rule here; the real CPR confirms server-side (Fase 8).
-      return ok({ exists: true, id: tenantId, name: tenantName(tenantId) });
+      return withMock("cpr.resolveTenant", () =>
+        ok({ exists: true, id: tenantId, name: tenantName(tenantId) }),
+      );
     },
 
-    async createParty(input: PartyInput): Promise<SeamResult<{ partyId: string }>> {
-      await simulateLatency();
-      const partyId = `party-${cryptoId()}`;
-      // Hold the party on a provisional record keyed by partyId until a customer is created.
-      pendingParties.set(partyId, {
-        partyId,
-        tenantId: input.tenantId,
-        givenName: input.givenName,
-        familyName: input.familyName,
-        email: input.email,
-        ...(input.msisdn ? { msisdn: input.msisdn } : {}),
+    createParty(input: PartyInput): Promise<SeamResult<{ partyId: string }>> {
+      return withMock("cpr.createParty", () => {
+        const partyId = `party-${cryptoId()}`;
+        // Hold the party on a provisional record keyed by partyId until a customer is created.
+        pendingParties.set(partyId, {
+          partyId,
+          tenantId: input.tenantId,
+          givenName: input.givenName,
+          familyName: input.familyName,
+          email: input.email,
+          ...(input.msisdn ? { msisdn: input.msisdn } : {}),
+        });
+        return ok({ partyId });
       });
-      return ok({ partyId });
     },
 
-    async createCustomer(input: CustomerInput): Promise<SeamResult<{ customerId: string }>> {
-      await simulateLatency();
-      const party = pendingParties.get(input.partyId);
-      if (!party) {
-        return err(
-          seamError("cpr.party.notFound", "notFound", "fixInput", "Create the party first."),
-        );
-      }
-      const customerId = `cust-${cryptoId()}`;
-      const customer: Customer = {
-        customerId,
-        tenantId: input.tenantId,
-        partyId: input.partyId,
-        status: "active",
-        createdAt: new Date().toISOString(),
-      };
-      // New prepaid customer: empty installed base + no balance yet (provisioned later).
-      store.set(customerId, { party, customer, installedBase: [], balance: null });
-      pendingParties.delete(input.partyId);
-      return ok({ customerId });
+    createCustomer(input: CustomerInput): Promise<SeamResult<{ customerId: string }>> {
+      return withMock("cpr.createCustomer", () => {
+        const party = pendingParties.get(input.partyId);
+        if (!party) {
+          return err(
+            seamError("cpr.party.notFound", "notFound", "fixInput", "Create the party first."),
+          );
+        }
+        const customerId = `cust-${cryptoId()}`;
+        const customer: Customer = {
+          customerId,
+          tenantId: input.tenantId,
+          partyId: input.partyId,
+          status: "active",
+          createdAt: new Date().toISOString(),
+        };
+        store.set(customerId, { party, customer });
+        pendingParties.delete(input.partyId);
+        return ok({ customerId });
+      });
     },
 
-    async getCustomer360Parts(customerId: string): Promise<SeamResult<Customer360Parts>> {
-      await simulateLatency();
-      const rec = store.get(customerId);
-      if (!rec) {
-        return err(seamError("cpr.customer.notFound", "notFound", "contactSupport"));
-      }
-      return ok({
-        customer: rec.customer,
-        party: rec.party,
-        installedBase: rec.installedBase,
-        balance: rec.balance,
+    getCustomerAndParty(
+      customerId: string,
+    ): Promise<SeamResult<{ customer: Customer; party: Party }>> {
+      return withMock("cpr.getCustomerAndParty", () => {
+        const rec = store.get(customerId);
+        if (!rec) {
+          return err(seamError("cpr.customer.notFound", "notFound", "contactSupport"));
+        }
+        return ok({ customer: rec.customer, party: rec.party });
       });
     },
   };

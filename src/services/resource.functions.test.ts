@@ -1,0 +1,61 @@
+import { describe, expect, it } from "vitest";
+
+import { listAvailableMsisdn, reserveMsisdn, validateSim } from "@/services/resource.functions";
+
+describe("resource seam (DSIMA mock)", () => {
+  it("lists available numbers for a tenant", async () => {
+    const r = await listAvailableMsisdn("drei");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.length).toBeGreaterThan(0);
+      expect(r.data.every((m) => m.status === "available" && m.tenantId === "drei")).toBe(true);
+    }
+  });
+
+  it("reserves a number and removes it from the available pool (concurrency)", async () => {
+    const list = await listAvailableMsisdn("dreigo");
+    if (!list.ok || list.data.length === 0) throw new Error("no numbers to reserve");
+    const target = list.data[0].msisdn;
+
+    const first = await reserveMsisdn({ tenantId: "dreigo", msisdn: target });
+    expect(first.ok).toBe(true);
+    if (first.ok) expect(first.data.reservationId).toMatch(/^resv-/);
+
+    // Gone from the available pool now.
+    const after = await listAvailableMsisdn("dreigo");
+    if (after.ok) expect(after.data.some((m) => m.msisdn === target)).toBe(false);
+
+    // A second reserve of the same number conflicts (someone already took it).
+    const second = await reserveMsisdn({ tenantId: "dreigo", msisdn: target });
+    expect(second.ok).toBe(false);
+    if (!second.ok) {
+      expect(second.error.code).toBe("resource.msisdn.taken");
+      expect(second.error.category).toBe("conflict");
+    }
+  });
+
+  it("fails to reserve an unknown number", async () => {
+    const r = await reserveMsisdn({ tenantId: "drei", msisdn: "+4300000000000" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe("resource.msisdn.notFound");
+  });
+
+  it("validates a SIM, rejecting the known-bad 0000 ICCID", async () => {
+    const good = await validateSim("8943010000000001234");
+    expect(good.ok).toBe(true);
+    if (good.ok) {
+      expect(good.data.valid).toBe(true);
+      expect(good.data.simType).toBe("physical");
+    }
+
+    const bad = await validateSim("8943010000000000000");
+    expect(bad.ok).toBe(true);
+    if (bad.ok) expect(bad.data.valid).toBe(false);
+  });
+
+  it("rejects a malformed ICCID (validation)", async () => {
+    const r = await validateSim("not-an-iccid");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("validation");
+  });
+});

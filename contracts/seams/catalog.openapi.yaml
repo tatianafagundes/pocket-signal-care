@@ -1,0 +1,77 @@
+openapi: 3.1.0
+info:
+  title: Catalog seam — ECM (canonical)
+  version: 0.1.0
+  description: >
+    Canonical contract for the catalog (ECM) seam. Mock for the demo (only CPR goes real);
+    the http driver would map TMF620 (catalog) / TMF679 (qualification). Operations never
+    throw — they return a SeamResult. Runtime validation: src/schemas/catalog.ts. The tenant
+    enum is hand-maintained here; the source of truth is TENANT_IDS in src/lib/tenant-rules.ts.
+tags:
+  - name: catalog
+paths:
+  /catalog/{tenantId}/offers:
+    get:
+      tags: [catalog]
+      operationId: listOffers
+      summary: List the tenant's prepaid offers (activation bundles).
+      parameters:
+        - in: path
+          name: tenantId
+          required: true
+          schema: { type: string, enum: [drei, dreigo] }
+      responses:
+        "200":
+          description: Offers for the tenant.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Offer" }
+  /catalog/offers/{offerId}/qualify:
+    post:
+      tags: [catalog]
+      operationId: qualifyOffer
+      summary: Qualify an offer for a context (onboarding or an existing customer).
+      parameters:
+        - in: path
+          name: offerId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QualifyContext" }
+      responses:
+        "200":
+          description: Eligibility result (with an i18n reason key when not eligible).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QualifyResult" }
+components:
+  schemas:
+    Offer:
+      type: object
+      required: [offerId, tenantId, name, dataAmount, priceMinor, currency, validityDays, recommended]
+      properties:
+        offerId: { type: string }
+        tenantId: { type: string, enum: [drei, dreigo] }
+        name: { type: string }
+        dataAmount: { type: string }
+        priceMinor: { type: integer, description: "Euro cents." }
+        currency: { type: string, enum: [EUR] }
+        validityDays: { type: integer }
+        recommended: { type: boolean }
+    QualifyContext:
+      type: object
+      required: [tenantId]
+      properties:
+        tenantId: { type: string, enum: [drei, dreigo] }
+        customerId: { type: string }
+    QualifyResult:
+      type: object
+      required: [eligible]
+      properties:
+        eligible: { type: boolean }
+        reasonKey: { type: string }
