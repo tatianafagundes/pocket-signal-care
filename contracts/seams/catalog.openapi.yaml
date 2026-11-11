@@ -7,6 +7,14 @@ info:
     the http driver would map TMF620 (catalog) / TMF679 (qualification). Operations never
     throw — they return a SeamResult. Runtime validation: src/schemas/catalog.ts. The tenant
     enum is hand-maintained here; the source of truth is TENANT_IDS in src/lib/tenant-rules.ts.
+
+    FASE 5 DEBT — ACTIVATION BUNDLE (deferred, decided): the spec (Req 2.8) models a prepaid
+    offer as an activation bundle (tariff plan + recharge offer + SIM PO + MSISDN PO), with the
+    onboarding initial balance DERIVED from the recharge offer. This Offer is a flat summary
+    (name/price/data) — enough for the offers grid (Req 3), not the bundle. DXP docs confirm ECM
+    has no fixed "bundle" object either (it's a composition of offering + specs + prices). The
+    bundle is modelled in Fase 5 (onboarding), where it's actually provisioned; until then the
+    demo customer's initial balance is a charging-mock seed, not recharge-derived.
 tags:
   - name: catalog
 paths:

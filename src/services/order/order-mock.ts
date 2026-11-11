@@ -24,23 +24,34 @@ const carts = new Map<string, Cart>();
 const installedBase = new Map<string, Product[]>();
 let seeded = false;
 
+// The demo customer's seeded plan must reference an offerId that EXISTS in the catalog mock
+// (catalog/catalog-mock.ts), so a "your plan" screen can link the installed-base product back
+// to its catalogue offer. These must stay in sync with the catalog seed per tenant.
+const DEMO_PLAN_OFFER: Record<TenantId, { offerId: string; name: string }> = {
+  drei: { offerId: "drei-plan-10gb", name: "Prepaid 10 GB" },
+  dreigo: { offerId: "dreigo-data-8gb", name: "Go 8 GB" },
+};
+
 function seed(): void {
   if (seeded) return;
   seeded = true;
   const tenants: TenantId[] = ["drei", "dreigo"];
   for (const tenantId of tenants) {
     const customerId = `demo-${tenantId}`;
+    const plan = DEMO_PLAN_OFFER[tenantId];
     installedBase.set(customerId, [
       {
         productId: `${customerId}-plan`,
-        offerId: `${tenantId}-plan-10gb`,
-        name: "Prepaid 10 GB",
+        offerId: plan.offerId,
+        name: plan.name,
         kind: "plan",
         status: "active",
       },
       {
+        // The SIM is a provisioning artifact (a SIM product order), NOT a catalogue offer — it
+        // has no entry in the catalog. Its offerId marks it as a PO ("-sim-po"), not a catalog id.
         productId: `${customerId}-sim`,
-        offerId: `${tenantId}-sim`,
+        offerId: `${tenantId}-sim-po`,
         name: "SIM",
         kind: "sim",
         status: "active",
@@ -53,8 +64,9 @@ function cryptoId(): string {
   return crypto.randomUUID().slice(0, 8);
 }
 
-/** Classify an offer id into a product kind (add-on offers contain "addon"/"roam"). */
+/** Classify an offer id into a product kind from its name. */
 function kindForOffer(offerId: string): Product["kind"] {
+  if (/\bsim\b|esim|iccid/i.test(offerId)) return "sim";
   if (/add-?on|roam|boost/i.test(offerId)) return "add-on";
   return "plan";
 }

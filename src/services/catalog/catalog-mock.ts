@@ -78,15 +78,19 @@ export function createCatalogMock(): CatalogDriver {
       return withMock("catalog.listOffers", () => ok(OFFERS[tenantId].map((o) => ({ ...o }))));
     },
 
-    qualifyOffer(offerId, ctx) {
+    qualifyOffer(offerId, ctx, balanceMinor) {
       return withMock("catalog.qualifyOffer", () => {
         const offer = OFFERS[ctx.tenantId].find((o) => o.offerId === offerId);
         if (!offer) {
           return err(seamError("catalog.offer.notFound", "notFound", "fixInput"));
         }
-        // Onboarding has no customer; add-on purchases do. Balance is supplied by the caller
-        // (the seam), not fetched here — this driver owns the catalogue, not the wallet.
-        const result = qualifyRule({ offer, hasCustomer: ctx.customerId != null });
+        // Onboarding has no customer; add-on purchases do. Balance is supplied by the seam
+        // (fetched from charging), not here — this driver owns the catalogue, not the wallet.
+        const result = qualifyRule({
+          offer,
+          hasCustomer: ctx.customerId != null,
+          ...(balanceMinor != null ? { balanceMinor } : {}),
+        });
         return ok(result);
       });
     },

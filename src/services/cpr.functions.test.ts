@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   resolveTenant,
@@ -6,6 +6,9 @@ import {
   createCustomer,
   getCustomer360,
 } from "@/services/cpr.functions";
+import { clearForcedError, forceError } from "@/services/mock-support";
+
+afterEach(() => clearForcedError());
 
 /*
  * CPR seam through the mock driver (default VITE_CPR_DRIVER=mock).
@@ -45,6 +48,20 @@ describe("cpr seam (mock driver)", () => {
         // seed has a plan + sim, sorted plan first
         expect(r.data.installedBase.map((p) => p.kind)).toEqual(["plan", "sim"]);
         expect(r.data.balance?.amountMinor).toBe(1500);
+      }
+    });
+
+    it("degrades gracefully when order/charging fail but CPR is ok", async () => {
+      // Arm both sub-seams to fail; the 360 must still return the customer, with an empty
+      // installed base and null balance — not error out.
+      forceError("order.getInstalledBase");
+      forceError("charging.getBalance");
+      const r = await getCustomer360("demo-drei");
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.data.customer.customerId).toBe("demo-drei");
+        expect(r.data.installedBase).toEqual([]);
+        expect(r.data.balance).toBeNull();
       }
     });
 

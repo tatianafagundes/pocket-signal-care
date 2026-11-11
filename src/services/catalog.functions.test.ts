@@ -36,6 +36,19 @@ describe("catalog seam (mock)", () => {
     if (!r.ok) expect(r.error.code).toBe("catalog.offer.notFound");
   });
 
+  it("marks an offer ineligible when an existing customer's balance is below the price", async () => {
+    // demo-dreigo is seeded with €15.00 (1500c); the 20 GB offer costs €19.99 (1999c) > balance.
+    const r = await qualifyOffer("dreigo-data-20gb", {
+      tenantId: "dreigo",
+      customerId: "demo-dreigo",
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.eligible).toBe(false);
+      expect(r.data.reasonKey).toBe("offer.ineligible.insufficientBalance");
+    }
+  });
+
   it("honours a forced error (Req 9.3)", async () => {
     forceError("catalog.listOffers");
     const r = await listOffers("drei");

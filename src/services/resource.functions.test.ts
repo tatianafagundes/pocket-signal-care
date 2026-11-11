@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { listAvailableMsisdn, reserveMsisdn, validateSim } from "@/services/resource.functions";
+import { clearForcedError } from "@/services/mock-support";
+
+afterEach(() => clearForcedError());
 
 describe("resource seam (DSIMA mock)", () => {
   it("lists available numbers for a tenant", async () => {

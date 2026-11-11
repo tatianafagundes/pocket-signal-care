@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { getBalance, topUp, rateAndDeduct } from "@/services/charging.functions";
+import { clearForcedError } from "@/services/mock-support";
+
+afterEach(() => clearForcedError());
 
 describe("charging seam (mock)", () => {
   it("reads the seeded demo balance", async () => {

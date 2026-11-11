@@ -52,5 +52,11 @@ export async function withMock<T>(
   if (isForced(op)) {
     return err(seamError(`${op}.forced`, "unavailable", "retry", "Forced mock failure (demo)."));
   }
-  return fn();
+  try {
+    return await fn();
+  } catch {
+    // Never-throw is self-contained here, not only via runRead: a bug in a mock op becomes a
+    // retryable SeamError instead of a rejected promise escaping the seam.
+    return err(seamError(`${op}.threw`, "unavailable", "retry", "Mock threw unexpectedly."));
+  }
 }

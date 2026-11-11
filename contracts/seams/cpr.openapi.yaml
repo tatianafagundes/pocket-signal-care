@@ -13,6 +13,14 @@ info:
     of truth is TENANT_IDS in src/lib/tenant-rules.ts (Zod derives from it); if a third tenant
     is added there, update this enum too — it will not sync automatically.
 
+    FASE 8 MAPPING (confirmed via DXP docs, DMP Evolved):
+    - CPR exposes TMF632 Party + TMF629 Customer AND TMF669 Party Role Management. If the app
+      ever needs roles beyond "customer", add a TMF669 mapping — not just 632/629.
+    - Tenant is passed by BOTH a Keycloak bearer token (carries tenant authorization) AND the
+      `X-Tenant-ID` header (selects the tenant when the token has more than one; may be omitted
+      when the user has a single tenant role). The http client currently sets X-Tenant-ID only —
+      Fase 8 must also send the Keycloak token.
+
 tags:
   - name: cpr
     description: Party + Customer repository, and the composed Customer360 read.

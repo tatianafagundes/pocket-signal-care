@@ -4,11 +4,18 @@ info:
   version: 0.1.0
   description: >
     Canonical contract for the resource (DSIMA) seam — SIM/MSISDN selection and reservation,
-    the first step of prepaid onboarding. Mock for the demo; the http driver would map DSIMA /
-    Resource Management. Operations never throw — they return a SeamResult. Runtime validation:
-    src/schemas/resource.ts. reserveMsisdn removes the number from the available pool so two
-    users cannot take the same one (conflict if already reserved). The tenant enum is
-    hand-maintained; source of truth is TENANT_IDS in src/lib/tenant-rules.ts.
+    the first step of prepaid onboarding. Mock for the demo. Operations never throw — they
+    return a SeamResult. Runtime validation: src/schemas/resource.ts. reserveMsisdn removes the
+    number from the available pool so two users cannot take the same one (conflict if already
+    reserved). The tenant enum is hand-maintained; source of truth is TENANT_IDS.
+
+    FASE 8 MAPPING (confirmed via DXP docs): DSIMA is reached through the Ericsson-specific
+    Resource Management API — NOT a TMF Resource API. Real endpoints:
+      - GET  /logicalResource/{id}        (look up an MSISDN)
+      - POST /logicalResource/search      (our listAvailableMsisdn -> filtered search)
+      - GET  /physicalResource/{iccid}    (our validateSim -> SIM by serial)
+      - POST /reservation                 (our reserveMsisdn)
+    (A TMF685 Resource Pool wrapper is a proposed/future layer, not the current contract.)
 tags:
   - name: resource
 paths:

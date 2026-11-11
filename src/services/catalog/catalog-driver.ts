@@ -10,5 +10,14 @@ import type { QualifyContext } from "@/schemas/catalog";
  */
 export interface CatalogDriver {
   listOffers(tenantId: TenantId): Promise<SeamResult<Offer[]>>;
-  qualifyOffer(offerId: string, ctx: QualifyContext): Promise<SeamResult<QualifyResult>>;
+  /**
+   * Qualify an offer. `balanceMinor` is the customer's current balance (when one exists), which
+   * the SEAM fetches from charging and passes in — the catalog driver owns the catalogue, not
+   * the wallet, so it doesn't fetch balance itself. The pure rule uses it for eligibility.
+   */
+  qualifyOffer(
+    offerId: string,
+    ctx: QualifyContext,
+    balanceMinor?: number,
+  ): Promise<SeamResult<QualifyResult>>;
 }

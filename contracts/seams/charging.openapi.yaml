@@ -3,11 +3,19 @@ info:
   title: Charging seam — ECEV (canonical)
   version: 0.1.0
   description: >
-    Canonical contract for the charging (ECEV) seam — prepaid balance. Mock for the demo; the
-    http driver would map TMF654 (prepaid balance management). Amounts are minor units (euro
-    cents). Operations never throw — they return a SeamResult. Runtime validation:
-    src/schemas/charging.ts. rateAndDeduct refuses to go negative (insufficient balance is a
-    rejected domain error, not a crash).
+    Canonical contract for the charging (ECEV/CBEV) seam — prepaid balance. Mock for the demo.
+    Amounts are minor units (euro cents). Operations never throw — they return a SeamResult.
+    Runtime validation: src/schemas/charging.ts. rateAndDeduct refuses to go negative.
+
+    FASE 8 MAPPING (confirmed via DXP docs, DMP Evolved):
+    - getBalance/topUp map to TMF654 Prepay Balance Management (balance enquiry + adjustment +
+      voucher/voucherless recharge). BUT the real balance is NOT a single scalar: CBEV returns
+      an account-level `monetaryBalance {amount, units}` PLUS product/allowance buckets (e.g.
+      "Data 15GB" with a remaining amount). When wiring the http driver, model those as distinct
+      balances, not one number. Our canonical Balance is the monetary balance only (demo scope).
+    - rateAndDeduct is NOT TMF654 — in DMP Evolved it is the CBEV Payment Connector (deduct +
+      refund on order failure, calling CHA rating). Keep it in this seam canonically, but the
+      http mapping targets the Payment Connector, not TMF654.
 tags:
   - name: charging
 paths:

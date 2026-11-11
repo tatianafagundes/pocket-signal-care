@@ -8,6 +8,7 @@ import { offerIdSchema, qualifyContextSchema } from "@/schemas/catalog";
 import type { CatalogDriver } from "@/services/catalog/catalog-driver";
 import { createCatalogMock } from "@/services/catalog/catalog-mock";
 import { createCatalogHttp } from "@/services/catalog/catalog-http";
+import { getBalance } from "@/services/charging.functions";
 
 /*
  * Catalog (ECM) seam. (Spec Fase 4.2) listOffers + qualifyOffer. Mock by default (ECM stays
@@ -42,7 +43,14 @@ export function qualifyOffer(
       error: seamError("catalog.qualify.invalid", "validation", "fixInput"),
     });
   }
-  return runRead({ tenantId: ctx.data.tenantId }, "catalog.qualifyOffer", () =>
-    driver.qualifyOffer(offer.data, ctx.data),
-  );
+  return runRead({ tenantId: ctx.data.tenantId }, "catalog.qualifyOffer", async () => {
+    // For an existing customer, fetch the balance so the rule can flag "top up first" when an
+    // offer costs more than the balance (Req 3.4). Onboarding (no customer) skips this.
+    let balanceMinor: number | undefined;
+    if (ctx.data.customerId) {
+      const bal = await getBalance(ctx.data.customerId);
+      if (bal.ok && bal.data) balanceMinor = bal.data.amountMinor;
+    }
+    return driver.qualifyOffer(offer.data, ctx.data, balanceMinor);
+  });
 }

@@ -1,6 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { createCart, addItem, submitOrder, getInstalledBase } from "@/services/order.functions";
+import { clearForcedError } from "@/services/mock-support";
+
+afterEach(() => clearForcedError());
 
 describe("order seam (mock)", () => {
   it("seeds the demo customer's installed base (plan + sim)", async () => {

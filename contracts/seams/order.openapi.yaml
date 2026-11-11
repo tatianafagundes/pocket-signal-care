@@ -4,10 +4,15 @@ info:
   version: 0.1.0
   description: >
     Canonical contract for the order (EOC) seam. Mock for the demo; the http driver would map
-    TMF663 (shopping cart) / TMF622 (product order) / TMF637 (installed base / product
-    inventory). Operations never throw — they return a SeamResult. Runtime validation:
-    src/schemas/order.ts. Submitting an order provisions each cart item as a product on the
-    customer's installed base, which the Customer360 reads.
+    TMF663 (shopping cart, v1) / TMF622 (product order, v4/v5) / TMF637 (product inventory, v4).
+    Operations never throw — they return a SeamResult. Runtime validation: src/schemas/order.ts.
+    Submitting an order provisions each cart item as a product on the customer's installed base,
+    which the Customer360 reads.
+
+    FASE 8 MAPPING NOTE (confirmed via DXP docs): TMF637 Product Inventory is READ-ONLY in EOC
+    (Service Registry). Our mock writes to the installed base on submitOrder for demo
+    convenience, but in the real system installed-base changes come from the ORDER (TMF622)
+    completing — NOT from writing TMF637 directly. The http driver must not try to POST TMF637.
 tags:
   - name: order
 paths:
