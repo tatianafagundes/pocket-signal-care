@@ -87,8 +87,14 @@
   --spacing-tap: 44px;
   --spacing-phone-width: 390px;
 
-  /* --- typography (system) — Inter --- */
-  --font-whitelabel: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* --- typography (brand) ---
+   * Drei's brand font is Helvetica Neue (confirmed in drei.at CSS: Helvetica-Neue-Bold /
+   * Helvetica Neue LT Pro / Helvetica-Neue-Light stacks), matching the parent "3"/Three
+   * brand (Helvetica). We use the system Helvetica stack — no webfont, no network dependency,
+   * present on macOS/Windows. A brand may override --font-whitelabel.
+   * NOTE: Drei also ships a proprietary display/script face ("drei", by Typejockeys) used only
+   * for campaign flourishes; it is not licensable here, so it is omitted (see DESIGN.md open items). */
+  --font-whitelabel: "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* --- hero band (brand) --- base = flat accent; a brand may set a gradient (Drei does) --- */
   --gradient-hero: var(--accent);

@@ -30,17 +30,17 @@ colors:
   disabled-text: "#8a919b"
   button-primary-hover: "#2a2d34"
 typography:
-  display-number: { fontFamily: Inter, fontSize: 40px, lineHeight: 44px, fontWeight: 700, letterSpacing: -0.02em }
-  title:          { fontFamily: Inter, fontSize: 24px, lineHeight: 30px, fontWeight: 600, letterSpacing: -0.01em }
-  heading:        { fontFamily: Inter, fontSize: 18px, lineHeight: 24px, fontWeight: 600 }
-  body:           { fontFamily: Inter, fontSize: 16px, lineHeight: 24px, fontWeight: 400 }
-  body-strong:    { fontFamily: Inter, fontSize: 16px, lineHeight: 24px, fontWeight: 600 }
-  body-sm:        { fontFamily: Inter, fontSize: 14px, lineHeight: 20px, fontWeight: 400 }
-  body-sm-strong: { fontFamily: Inter, fontSize: 14px, lineHeight: 20px, fontWeight: 600 }
-  caption:        { fontFamily: Inter, fontSize: 12px, lineHeight: 16px, fontWeight: 500 }
-  control:        { fontFamily: Inter, fontSize: 16px, lineHeight: 20px, fontWeight: 600 }
-  tab-label:      { fontFamily: Inter, fontSize: 11px, lineHeight: 14px, fontWeight: 500 }
-  tab-label-strong:{ fontFamily: Inter, fontSize: 11px, lineHeight: 14px, fontWeight: 600 }
+  display-number: { fontFamily: Helvetica Neue, fontSize: 40px, lineHeight: 44px, fontWeight: 700, letterSpacing: -0.02em }
+  title:          { fontFamily: Helvetica Neue, fontSize: 24px, lineHeight: 30px, fontWeight: 600, letterSpacing: -0.01em }
+  heading:        { fontFamily: Helvetica Neue, fontSize: 18px, lineHeight: 24px, fontWeight: 600 }
+  body:           { fontFamily: Helvetica Neue, fontSize: 16px, lineHeight: 24px, fontWeight: 400 }
+  body-strong:    { fontFamily: Helvetica Neue, fontSize: 16px, lineHeight: 24px, fontWeight: 600 }
+  body-sm:        { fontFamily: Helvetica Neue, fontSize: 14px, lineHeight: 20px, fontWeight: 400 }
+  body-sm-strong: { fontFamily: Helvetica Neue, fontSize: 14px, lineHeight: 20px, fontWeight: 600 }
+  caption:        { fontFamily: Helvetica Neue, fontSize: 12px, lineHeight: 16px, fontWeight: 500 }
+  control:        { fontFamily: Helvetica Neue, fontSize: 16px, lineHeight: 20px, fontWeight: 600 }
+  tab-label:      { fontFamily: Helvetica Neue, fontSize: 11px, lineHeight: 14px, fontWeight: 500 }
+  tab-label-strong:{ fontFamily: Helvetica Neue, fontSize: 11px, lineHeight: 14px, fontWeight: 600 }
 rounded:
   none: 0px
   tile: 8px
@@ -68,8 +68,8 @@ brandName: Drei
 brands:
   drei:
     name: Drei
-    note: Base/default brand. Palette from drei.at official CSS — cyan #0096C5 (most-used blue) is the brand action colour; primary button = cyan filled, white label, pill (like "Mein Drei"). Text is grey #5c5c5c (body, 70× in the CSS) / #1f1f1f (strong/title) — not black, not the dropped navy #0f273b. Purple #71439d and lime #DDEE3D are CAMPAIGN colours (hero gradient, offer cards, badges) — never a link, button or body colour. Hero band is a blue->purple gradient #0096C5 -> #71439d. KNOWN EXCEPTION (decision A1) — white on cyan #0096C5 is ~3.3:1, below 4.5:1; shipped on the primary button + hero only to match the brand (the site has the same shortfall). Links/rings use accent-ink #0073a0 (>=4.5:1); body text #5c5c5c/#1f1f1f is accessible. The red #DA1B1B in the CSS stays a detail/alert colour, never the accent.
-    fontFamily: Inter
+    note: Base/default brand. Palette from drei.at official CSS — cyan #0096C5 (most-used blue) is the brand action colour; primary button = cyan filled, white label, pill (like "Mein Drei"). Text is grey #5c5c5c (body, 70× in the CSS) / #1f1f1f (strong/title) — not black, not the dropped navy #0f273b. Purple #71439d and lime #DDEE3D are CAMPAIGN colours (hero gradient, offer cards, badges) — never a link, button or body colour. Hero band is a blue->purple gradient #0096C5 -> #71439d. Font is Helvetica Neue (the brand font in drei.at CSS, matching the "3" brand); a proprietary "drei" script face (Typejockeys) is used for campaign flourishes and is not bundled. KNOWN EXCEPTION (decision A1) — white on cyan #0096C5 is ~3.3:1, below 4.5:1; shipped on the primary button + hero only to match the brand (the site has the same shortfall). Links/rings use accent-ink #0073a0 (>=4.5:1); body text #5c5c5c/#1f1f1f is accessible. The red #DA1B1B in the CSS stays a detail/alert colour, never the accent.
+    fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
     wordmark: assets/drei-wordmark.png
     colors:
       accent: "#0096c5"
@@ -87,8 +87,8 @@ brands:
       gradient-hero: "linear-gradient(120deg, #0096c5, #71439d)"
   dreigo:
     name: DreiGo
-    note: Fictitious data-only MVNO on Drei, to prove the white-label. Purple from the Nubank design system (#820AD1); ~5.6:1 on white so it serves as link directly AND as the filled primary button (white label, accessible) — Nubank style. Lime is decorative highlight only — never a link, ring, or the only signal of a state.
-    fontFamily: Inter
+    note: Fictitious data-only MVNO on Drei, to prove the white-label. Purple from the Nubank design system (#820AD1); ~5.6:1 on white so it serves as link directly AND as the filled primary button (white label, accessible) — Nubank style. Lime is decorative highlight only — never a link, ring, or the only signal of a state. Font inherits the base Helvetica Neue stack (a brand may override).
+    fontFamily: "Helvetica Neue, Helvetica, Arial, sans-serif"
     wordmark: assets/dreigo-wordmark.png
     colors:
       accent: "#820ad1"
@@ -201,8 +201,8 @@ Inherited from fuon, unchanged except via the brand block:
 
 ## Typography
 
-Inter everywhere, 13 styles (listed in front matter). Numbers that mean money, data or time
-use `font-variant-numeric: tabular-nums`. The only big thing on a screen is the number that
+Helvetica Neue everywhere (the Drei brand font; system stack, no webfont), 11 styles (listed
+in front matter). Numbers that mean money, data or time use `font-variant-numeric: tabular-nums`. The only big thing on a screen is the number that
 matters (`display-number`). Links and section labels are `body-sm-strong` sentence case.
 **No uppercase eyebrow labels.** Money is written one way: EUR formatted by the active
 locale (de-AT `1.234,56 €`, en-US `€1,234.56`); whole euros in offers/rows, two decimals in
@@ -323,4 +323,8 @@ Wordmark placeholder.
 - The A1 primary-button/hero contrast exception (~3.3:1) — confirm Drei accepts it, or get an
   on-cyan label treatment that passes 4.5:1.
 - Official Drei and DreiGo wordmark assets.
+- Drei's proprietary display/script face ("drei", by Typejockeys) is used on drei.at for
+  campaign flourishes. It is not licensable/bundleable here, so the app uses the Helvetica
+  Neue stack only. If Drei supplies the licensed webfont, add it as a `--font-brand-display`
+  for hero/campaign headings; until then those render in Helvetica Neue.
 - de-AT copy validation by Drei.

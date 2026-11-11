@@ -28,11 +28,11 @@
  * @theme inline — maps the Fuon tokens to Tailwind utilities.
  * - Colour roles bind to the shadcn variables defined in :root below, so existing
  *   shadcn/ui components keep working while rendering the Fuon palette.
- * - --font-whitelabel drives font-display and font-sans (both Inter — one family).
+ * - --font-whitelabel drives font-display and font-sans (both the Helvetica Neue stack — one family).
  * - --radius-* come straight from the Fuon scale in tokens.css.
  */
 @theme inline {
-  /* fonts — one family (Inter) for the whole app */
+  /* fonts — one family (Helvetica Neue stack, the Drei brand font) for the whole app */
   --font-display: var(--font-whitelabel);
   --font-sans: var(--font-whitelabel);
 
@@ -173,7 +173,7 @@
 
 /*
  * Typography utilities — the Fuon type styles, verbatim from the design/DESIGN.md front
- * matter (typography: — 11 styles). Inter everywhere. Role-named (type-<role>) so a scale
+ * matter (typography: — 11 styles). Helvetica Neue everywhere. Role-named (type-<role>) so a scale
  * change never renames a call site. These are the ONLY type stacks a screen may use — no
  * ad-hoc text-*. DESIGN.md is the source of truth; keep this block and the front matter in
  * lockstep. No uppercase style exists — "No uppercase eyebrow labels" (DESIGN.md).

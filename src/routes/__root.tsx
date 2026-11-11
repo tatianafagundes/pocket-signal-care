@@ -99,12 +99,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
-      },
+      // No web font link: the brand font is the system Helvetica stack (--font-whitelabel),
+      // matching Drei / the "3" brand. No Google Fonts dependency.
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
