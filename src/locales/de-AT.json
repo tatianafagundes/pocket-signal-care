@@ -1,5 +1,10 @@
 {
   "app": { "name": "whitelabel", "tagline": "Dein Prepaid-Handy, ganz nach dir" },
+  "tenant": {
+    "notFound": "„{{requested}}“ konnten wir nicht finden. Wir zeigen stattdessen Drei.",
+    "goToDrei": "Zu Drei wechseln",
+    "language": "Sprache"
+  },
   "nav": {
     "home": "Start",
     "myPlan": "Mein Tarif",

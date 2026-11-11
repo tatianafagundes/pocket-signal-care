@@ -195,12 +195,12 @@
 @utility tabular-figures { font-variant-numeric: tabular-nums; }
 
 /*
- * bg-hero — the brand hero band. The real Drei (and Nubank-style DreiGo) hero IS a
- * blue->purple / purple gradient, so --gradient-hero carries it (base falls back to a flat
- * accent). The header renders white text on it — on the Drei gradient that is the same
- * brand-fidelity tradeoff accepted for the cyan button (A1); it is a banner, not body text.
- * background-image wins over any background-color; set both so the flat-accent base fallback
- * still paints when a brand defines no gradient.
+ * bg-hero — the brand hero band, for a future campaign/hero surface (Fase 5+). The real Drei
+ * (and Nubank-style DreiGo) hero IS a blue->purple / purple gradient, carried by
+ * --gradient-hero (base falls back to a flat accent). Not used by the Fase 2 shell — the
+ * app-bar uses a flat brand-tile — but kept because a campaign banner will want it, and the
+ * hero gradient is the one allowed gradient (a brand surface, not decoration). background-image
+ * wins over background-color; both are set so the flat-accent base still paints without a gradient.
  */
 @utility bg-hero {
   background-color: var(--accent);

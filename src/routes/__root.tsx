@@ -15,6 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import "@/i18n";
 import { AppHeader } from "@/components/app-header";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
+import { TenantProvider } from "@/components/tenant-provider";
+import { TenantNotFoundBanner } from "@/components/tenant-not-found-banner";
 
 function NotFoundComponent() {
   return (
@@ -131,12 +133,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <div className="min-h-screen bg-background">
-        <AppHeader />
-        <Outlet />
-        <BottomTabBar />
-      </div>
+      {/* TenantProvider resolves the brand from the URL, sets <html data-brand>, syncs locale. */}
+      <TenantProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <div className="min-h-screen bg-background">
+          <AppHeader />
+          <TenantNotFoundBanner />
+          <Outlet />
+          <BottomTabBar />
+        </div>
+      </TenantProvider>
     </QueryClientProvider>
   );
 }

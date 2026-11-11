@@ -1,16 +1,32 @@
 import { useTranslation } from "react-i18next";
 
+import { useTenant } from "@/components/tenant-provider";
+import { LanguageSelector } from "@/components/language-selector";
+
+/*
+ * App bar (Fuon). (Spec Fase 2.3)
+ *
+ * A white app-bar with a 1px hairline under it — no coloured band, no gradient (that was the
+ * old bg-hero bridge). The brand surface is the Fuon brand-tile: a flat `accent` rectangle
+ * holding the wordmark, the ONLY place the logo renders. Until the official Drei/DreiGo
+ * wordmark assets arrive, the tile shows the brand name as a placeholder wordmark (white on
+ * the flat accent). Right side: the language selector. Everything sits in the 390px phone column.
+ */
 export function AppHeader() {
   const { t } = useTranslation();
+  const { tenantName } = useTenant();
+
   return (
-    <header className="bg-hero text-primary-foreground">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
-        <span className="font-display text-xl font-bold tracking-tight">
-          {t("app.name", "whitelabel")}
+    <header className="sticky top-0 z-40 border-b border-hairline bg-surface">
+      <div className="mx-auto flex h-14 w-full max-w-[390px] items-center justify-between px-5">
+        {/* brand-tile — flat accent, wordmark placeholder (white). No gradient. */}
+        <span
+          className="inline-flex h-8 items-center rounded-tile bg-accent-brand px-3 type-body-strong text-text-inverse"
+          aria-label={t("app.name", tenantName)}
+        >
+          {tenantName}
         </span>
-        <span className="hidden text-sm opacity-80 sm:inline">
-          {t("app.tagline", "Your prepaid mobile, your way")}
-        </span>
+        <LanguageSelector />
       </div>
     </header>
   );

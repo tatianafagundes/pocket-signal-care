@@ -1,5 +1,10 @@
 {
   "app": { "name": "whitelabel", "tagline": "Your prepaid mobile, your way" },
+  "tenant": {
+    "notFound": "We couldn't find \"{{requested}}\". Showing Drei instead.",
+    "goToDrei": "Go to Drei",
+    "language": "Language"
+  },
   "nav": {
     "home": "Home",
     "myPlan": "My plan",
