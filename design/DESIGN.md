@@ -68,30 +68,38 @@ brandName: Drei
 brands:
   drei:
     name: Drei
-    note: Base/default brand. Colours extracted from drei.at official CSS (identity is white/black/blue; the cyan is the action colour, confirmed on the willkommen page). The red #DA1B1B present in drei.at CSS stays a detail/alert colour, never the accent.
+    note: Base/default brand. Palette from drei.at official CSS — cyan #0096C5 (most-used blue) is the brand action colour; primary button = cyan filled, white label, pill (like "Mein Drei"). Text is grey #5c5c5c (body, 70× in the CSS) / #1f1f1f (strong/title) — not black, not the dropped navy #0f273b. Purple #71439d and lime #DDEE3D are CAMPAIGN colours (hero gradient, offer cards, badges) — never a link, button or body colour. Hero band is a blue->purple gradient #0096C5 -> #71439d. KNOWN EXCEPTION (decision A1) — white on cyan #0096C5 is ~3.3:1, below 4.5:1; shipped on the primary button + hero only to match the brand (the site has the same shortfall). Links/rings use accent-ink #0073a0 (>=4.5:1); body text #5c5c5c/#1f1f1f is accessible. The red #DA1B1B in the CSS stays a detail/alert colour, never the accent.
     fontFamily: Inter
-    wordmark: assets/drei-wordmark-white.png
+    wordmark: assets/drei-wordmark.png
     colors:
-      accent: "#00a0d2"
-      accent-ink: "#006a8e"
-      accent-hover: "#0081aa"
+      accent: "#0096c5"
+      accent-ink: "#0073a0"
+      accent-hover: "#007aa6"
       accent-tint: "#e0f3fa"
-      ink: "#0f273b"
-      text-primary: "#0f273b"
-      button-primary-hover: "#1a3850"
+      button-primary: "#0096c5"
+      button-primary-text: "#ffffff"
+      button-primary-hover: "#007aa6"
+      ink: "#1f1f1f"
+      text-primary: "#1f1f1f"
+      text-secondary: "#5c5c5c"
+      campaign-purple: "#71439d"
+      campaign-lime: "#ddee3d"
+      gradient-hero: "linear-gradient(120deg, #0096c5, #71439d)"
   dreigo:
     name: DreiGo
-    note: Fictitious data-only MVNO on Drei, to prove the white-label. Purple from the Nubank design system (#820AD1); passes 4.5:1 on white so it serves as link directly. Lime is decorative highlight only — never a link, ring, or the only signal of a state.
+    note: Fictitious data-only MVNO on Drei, to prove the white-label. Purple from the Nubank design system (#820AD1); ~5.6:1 on white so it serves as link directly AND as the filled primary button (white label, accessible) — Nubank style. Lime is decorative highlight only — never a link, ring, or the only signal of a state.
     fontFamily: Inter
-    wordmark: assets/dreigo-wordmark-white.png
+    wordmark: assets/dreigo-wordmark.png
     colors:
       accent: "#820ad1"
       accent-ink: "#820ad1"
       accent-hover: "#6a08ab"
       accent-tint: "#f0e5fb"
+      button-primary: "#820ad1"
+      button-primary-text: "#ffffff"
+      button-primary-hover: "#6a08ab"
       ink: "#16181d"
       text-primary: "#16181d"
-      button-primary-hover: "#2a2d34"
 ---
 
 # whitelabel mvno selfcare — design system
@@ -111,16 +119,21 @@ Two rules make the brand swappable (inherited from fuon):
    brand tile behind the wordmark, the active tab, links, selected rows and input focus —
    and nowhere else. Change it (and `accent-ink`, `accent-tint`, the wordmark) and the app
    rebrands.
-2. **Buttons are ink, not brand.** Primary actions are `colors.ink` on white. A new brand
-   never has to re-prove that its colour works as a button.
+2. **The primary button is the brand's filled button.** Primary actions use
+   `colors.button-primary` (the brand accent, filled, white label, pill) — Drei cyan, DreiGo
+   purple — matching each operator's real site. A new brand sets `button-primary` +
+   `button-primary-text` + `button-primary-hover`. (This replaces the fuon "buttons are ink"
+   rule: both shipping brands fill the button with their accent, so ink is reserved for text
+   and the secondary-button outline.)
 
 ### How tokens become code (this repo)
 
 The values in this front matter live as CSS custom properties in **`src/styles/tokens.css`**
 — the one file with raw colours. `src/styles.css` binds those tokens to Tailwind v4
 utilities and to the shadcn role variables the components read. A component never hardcodes a
-colour; it uses a utility (`bg-accent-tint`, `text-accent-ink`, `bg-primary` = ink, …). The
-active brand is set once with `<html data-brand="drei|dreigo">` in `src/routes/__root.tsx`.
+colour; it uses a utility (`bg-accent-tint`, `text-accent-ink`, `bg-primary` = the brand's
+filled primary button, …). The active brand is set once with `<html data-brand="drei|dreigo">`
+in `src/routes/__root.tsx`.
 
 ### What is NOT the fuon base
 
@@ -147,21 +160,29 @@ ships. A brand only "exists" when its table passes.
 
 | Pair | Drei | DreiGo | Min | Note |
 |---|---|---|---|---|
-| `accent` on surface #fff | ~2.9:1 | ~5.6:1 | 4.5 (text) / 3 (graphic) | Drei cyan is graphic-only; **not** a link |
-| `accent-ink` on surface #fff | ~5.4:1 (#006a8e) | ~5.6:1 (=accent) | 4.5 | the link/ring colour |
-| `text-inverse` on `ink` | ~13:1 (#0f273b) | ~17.8:1 (#16181d) | 4.5 | primary button label |
+| `button-primary-text` on `button-primary` | **~3.3:1 ✗** (#fff on #0096c5) | ~5.6:1 (#fff on #820ad1) | 4.5 | **Drei: KNOWN EXCEPTION (A1)** — shipped to match the brand; scoped to primary button + hero only. DreiGo passes. |
+| `accent` on surface #fff | ~3.3:1 | ~5.6:1 | 4.5 (text) / 3 (graphic) | Drei cyan #0096c5 is graphic-only; **not** a link |
+| `accent-ink` on surface #fff | ~4.6:1 (#0073a0) | ~5.6:1 (=accent) | 4.5 | the link/ring colour — accessible both brands |
+| `text-primary` on surface #fff | ~14:1 (#1f1f1f) | ~16.4:1 (#16181d) | 4.5 | strong/title text |
+| `text-secondary` on surface #fff | ~7:1 (#5c5c5c) | ~8.6:1 (#5f6670) | 4.5 | body text — accessible both brands |
 | `text-primary` on `accent-tint` | reconfirm (#e0f3fa) | reconfirm (#f0e5fb) | 4.5 | selected-row / avatar text |
 | `accent` on canvas #f5f6f8 | reconfirm | reconfirm | 3 | data-ring, unread dot |
 
-**Drei note:** because `accent` cyan is ~2.9:1 on white — below even the 3:1 non-text floor —
-the **selection ring, link and icon glyphs use `accent-ink` (#006a8e)**, not the cyan. The
-cyan is reserved for larger brand surfaces (brand tile, data-ring fill) where it reads as a
-graphic against a larger area. Reconfirm each at Phase 1.4.
+**Drei note:** `accent` cyan `#0096c5` is ~3.3:1 on white — fine as a graphic (≥3:1), below
+4.5:1 for text — so the **link and selection ring use `accent-ink` `#0073a0`** (a darkened
+cyan, ~4.6:1), not the bright cyan. The bright cyan is the primary-button fill and the hero
+(the A1 brand exception) and larger brand graphics. `text-secondary` `#5c5c5c` is the body
+colour (the site's dominant grey). Reconfirm each at Phase 1.4.
 
-**Why Drei is blue, not red:** drei.at's own CSS and the willkommen page are white/black/blue.
-The cyan accent also avoids a collision the spec review flagged (B4): fuon's `danger` is red
-and is a system token a brand cannot change; a red Drei accent would make links and errors the
-same hue. Cyan vs red are opposite hues — action and error never blur.
+**Drei's campaign colours (purple + lime).** drei.at uses purple `#71439d` and lime `#DDEE3D`
+on campaign surfaces — the hero gradient, offer cards and badges (e.g. the "6 Monate" badge,
+the lime price card). They are brand tokens (`campaign-purple`, `campaign-lime`) reserved for
+banners/offers only. **Never a link, a button, body text, or the only signal of a state** —
+status still owns success/warning/danger, and links still use `accent-ink`.
+
+**Why cyan is the accent, not red:** fuon's `danger` is red and is a system token a brand
+cannot change; a red Drei accent would make links and errors the same hue. Drei's own action
+colour is cyan `#0096c5` — opposite hue to red, so action and error never blur.
 
 ## Colors
 
@@ -198,27 +219,29 @@ no tab bar — though this demo does not authenticate, so sign-in is out of scop
 
 ## Elevation & Depth
 
-None. No shadow, no gradient, no photography, no uppercase. Hierarchy comes from
-canvas/surface contrast, hairlines and type. Bottom sheets sit on a 40 % ink scrim — the one
-place depth is implied. **shadcn ships shadows and its own radii by default; the adaptation
-must null them** and bind radii to the tokens above.
+No shadow, no photography, no uppercase. The one gradient is the brand **hero band**
+(`gradient-hero`, blue→purple for Drei) — a brand surface, not decoration; everywhere else is
+flat. Hierarchy comes from canvas/surface contrast, hairlines and type. Bottom sheets sit on a
+40 % ink scrim — the one place depth is implied. **shadcn ships shadows and its own radii by
+default; the adaptation must null the shadows** and bind radii to the tokens above.
 
 ## Shapes
 
-12 px on cards, buttons, inputs and content tiles; 8 px on small glyph tiles; 6 px on the
-checkbox; 20 px on bottom sheets; pill (999) on chips, badges and circular controls. Nothing
-else.
+12 px on cards, inputs and content tiles; 8 px on small glyph tiles; 6 px on the checkbox;
+20 px on bottom sheets; **pill (999) on buttons** (primary + secondary — both Drei and DreiGo
+ship pill buttons), chips, badges and circular controls. Nothing else.
 
 ## Components
 
 Inherited from fuon as tokens (full list in the spec design.md). Highlights and the rules
 that travel with them:
 
-- **button-primary** — `ink` fill, 52 px, radius control. One per screen, full width, bottom
-  of content or sticky above the tab bar. **Never the brand colour.**
-- **button-secondary** — white with `border-input`. **button-danger** — restricted: only in a
-  confirmation sheet, or as a secondary button with `danger` text on a screen. Never a loose
-  red button.
+- **button-primary** — `button-primary` fill (the brand accent: Drei cyan / DreiGo purple),
+  white label, 52 px, **pill radius** (both brands use pill buttons on their sites). One per
+  screen, full width, bottom of content or sticky above the tab bar.
+- **button-secondary** — white with `border-input`, pill. **button-danger** — restricted:
+  only in a confirmation sheet, or as a secondary button with `danger` text on a screen.
+  Never a loose red button.
 - **link** — `accent-ink`, `body-sm-strong`. On a status tint the link takes the status
   colour, not the accent.
 - **card** (no shadow), **card-tint**, **row** / **row-compact**, **option-row** (radio +
@@ -237,8 +260,8 @@ that travel with them:
 **Selected means accent, everywhere** (inherited). Selected card = 2 px `accent-ink` border;
 selected option-row = `accent-ink` ring + dot + `accent-tint` wash; selected chip =
 `accent-tint` fill + 2 px `accent-ink` ring; active tab = `accent-ink` (Drei) / `accent`
-(DreiGo). Text on `accent-tint` is `text-primary`, never `accent`. Ink fill is for primary
-buttons only, never for a selected state.
+(DreiGo). Text on `accent-tint` is `text-primary`, never `accent`. The filled brand accent is
+for the primary button and hero only, never for a selected state (selection is tint + ring).
 
 ## Internationalisation
 
@@ -254,12 +277,17 @@ orthography (nouns capitalised) in de-AT. Dates and money format by the active l
   tab, title and button; `offer` = catalogue item, `plan` = the primary offer bought,
   `add-on` = an offer on an existing contract.
 - Do write status as a sentence with colour + word; dates/money per locale.
-- Don't use the accent as a surface, a header, a button fill, or a card title; links are the
-  only accent text (and they use `accent-ink`), except on a status tint where the link takes
-  the status colour.
+- Do fill the primary button and the hero with the brand accent (Drei cyan / DreiGo purple) —
+  that is the brand signature. Everywhere else the accent is a graphic or a link (`accent-ink`).
+- Don't use the accent as a card surface, a card title, or body text; links are the only
+  accent text (and they use `accent-ink`), except on a status tint where the link takes the
+  status colour.
+- Don't use the campaign colours (purple, lime) as a link, button, body text, or the only
+  signal of a state — they are for banners/offers/badges only.
 - Don't use green, amber or red for anything that is not a state — and a brand accent is
   never red (it would collide with `danger`).
-- Don't add shadows, gradients, photography or uppercase labels.
+- Don't add shadows, photography or uppercase labels. (The hero gradient is the one allowed
+  gradient — a brand surface, not decoration.)
 - Don't let a brand change a system token: status + tints, `focus`, `border-input`,
   `disabled`, `text-tertiary`, `text-inverse`, spacing, radii.
 
@@ -267,29 +295,32 @@ orthography (nouns capitalised) in de-AT. Dates and money format by the active l
 
 A brand is a **mode**, not a copy (inherited from fuon). `brands:` lists each operator with
 its name, font, wordmark and the colours it overrides; a colour it does not list keeps the
-base value. A brand may change: `accent` (+`accent-ink`, `accent-tint`, `accent-hover`),
-surfaces/canvas, `ink` (buttons), text colours, font family, wordmark, and the copy name.
-The system keeps: status colours + tints, `focus`, `border-input`, `disabled`,
-`text-tertiary`, `text-inverse`, spacing, radii. `<html data-brand="drei|dreigo">` is the
-whole swap; no second file. Adding a third operator = one new `brands:` entry whose contrast
-table passes — no screen changes.
+base value. A brand may change: `accent` (+`accent-ink`, `accent-tint`, `accent-hover`), `button-primary`
+(+text, hover), `gradient-hero`, campaign colours, surfaces/canvas, `ink`, text colours, font
+family, wordmark, and the copy name. The system keeps: status colours + tints, `focus`,
+`border-input`, `disabled`, `text-tertiary`, `text-inverse`, spacing, radii.
+`<html data-brand="drei|dreigo">` is the whole swap; no second file. Adding a third operator =
+one new `brands:` entry whose contrast table passes — no screen changes.
 
 ### Drei (base / default)
-Host operator (MVNE). Identity white/black/blue, from drei.at. `accent` cyan `#00a0d2`
-(graphic), `accent-ink` `#006a8e` (link/ring, ~5.4:1), `ink` navy `#0f273b` (buttons,
-~13:1), `accent-tint` `#e0f3fa`. Default locale de-AT. Wordmark to be supplied; placeholder
-until the official asset is available.
+Host operator (MVNE). Palette from drei.at official CSS: `accent` cyan `#0096c5`, `accent-ink`
+`#0073a0` (link/ring, ~4.6:1), `button-primary` cyan `#0096c5` + white label (A1 exception,
+~3.3:1), text `#1f1f1f` (strong) / `#5c5c5c` (body), `accent-tint` `#e0f3fa`. Campaign colours
+purple `#71439d` + lime `#DDEE3D`; hero gradient `#0096c5 → #71439d`. No navy. Default locale
+de-AT. Wordmark placeholder until the official asset is supplied.
 
 ### DreiGo (second brand, the white-label proof)
 Fictitious data-only MVNO on Drei. `accent` purple `#820ad1` (Nubank; ~5.6:1 on white, so
-`accent-ink` = `accent`), `accent-tint` `#f0e5fb`, `ink` `#16181d`. Lime, if used, is a
-decorative highlight only — never a link, a ring, or the only signal of a state. Default
-locale en-US. Wordmark placeholder.
+`accent-ink` = `accent` and the button passes), `accent-tint` `#f0e5fb`, `ink` `#16181d`,
+hero gradient purple. Lime, if used, is a decorative highlight only. Default locale en-US.
+Wordmark placeholder.
 
 ## Open items (reconfirm before shipping a brand)
 - Run `tools/contrast.py` per brand and publish the full table (Phase 1.4). Hand-computed
   ratios here are order-of-magnitude, not the measured record.
-- Drei official hex set is from drei.at CSS (accent `#00a0d2`, ink `#0f273b`); confirm with
-  Drei brand guidelines if/when available, and confirm `accent-tint`/`text-primary` pairs.
+- Drei hex set is from drei.at official CSS (accent `#0096c5`, text `#5c5c5c`/`#1f1f1f`,
+  campaign `#71439d`/`#DDEE3D`); confirm against Drei brand guidelines if/when available.
+- The A1 primary-button/hero contrast exception (~3.3:1) — confirm Drei accepts it, or get an
+  on-cyan label treatment that passes 4.5:1.
 - Official Drei and DreiGo wordmark assets.
 - de-AT copy validation by Drei.

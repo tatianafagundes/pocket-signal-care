@@ -26,7 +26,6 @@
   --hairline: #e4e7eb;
 
   /* --- text (system defaults; brand may override primary/secondary) --- */
-  --ink: #16181d;
   --text-primary: #16181d;
   --text-secondary: #5f6670;
   --text-tertiary: #8a919b; /* system — chevrons/dividers only, never a string */
@@ -43,7 +42,17 @@
   --accent-ink: #0e7c7b;    /* links + selection ring/dot (text >=4.5:1); = accent when accent passes */
   --accent-hover: #0b6665;
   --accent-tint: #d9efee;   /* selected-row wash, icon tiles, avatar */
-  --button-primary-hover: #2a2d34;
+
+  /* --- primary button (brand) ---
+   * Both shipping brands fill the primary button with their accent (Drei cyan, DreiGo
+   * Nubank-purple), white label — not the Fuon "ink" button. A brand sets these three.
+   * Base = fuon teal (which passes 4.5:1 on white; Drei's cyan does not — see Drei block). */
+  --button-primary: #0e7c7b;        /* fill */
+  --button-primary-text: #ffffff;   /* label */
+  --button-primary-hover: #0b6665;
+
+  /* --- ink --- neutral dark for text/secondary-button outline (not the primary button) --- */
+  --ink: #16181d;
 
   /* --- status (system — never changed by a brand; always colour + word) --- */
   --success: #15703a;
@@ -80,22 +89,45 @@
 
   /* --- typography (system) — Inter --- */
   --font-whitelabel: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* --- hero band (brand) --- base = flat accent; a brand may set a gradient (Drei does) --- */
+  --gradient-hero: var(--accent);
 }
 
 /*
  * Drei — base/default brand (host operator / MVNE).
- * Identity white/black/blue, extracted from drei.at official CSS.
- * accent cyan #00a0d2 is ~2.9:1 on white -> graphic only; links/rings use accent-ink #006a8e.
- * Buttons stay ink (navy #0f273b). Cyan avoids collision with the red system danger.
+ * Palette taken from drei.at official CSS (hex counts from the live stylesheet):
+ *   #0096C5 cyan (most-used blue), #00A0D2 light cyan, #71439d purple, #DDEE3D lime,
+ *   #5c5c5c body grey (70×, the dominant text colour), #1F1F1F strong/title text.
+ * The hero band is a blue->purple gradient (#0096C5 -> #71439d), confirmed on the Business page.
+ *
+ *   - accent cyan #0096C5 — the brand colour (links/highlights like "Vorteilen", "Mein Drei").
+ *   - primary button = cyan #0096C5 FILLED, white label, pill — like the site's "Mein Drei".
+ *   - text is grey #5c5c5c (body) / #1f1f1f (strong); NOT black, NOT the old navy #0f273b.
+ *   - purple #71439d and lime #DDEE3D are CAMPAIGN colours (badges, offer cards, hero), not
+ *     body/button colours — kept as brand tokens so banners can use them, never as a link.
+ *
+ * KNOWN BRAND EXCEPTION (decided A1: fidelity to Drei over the 4.5:1 text rule):
+ *   white on cyan #0096C5 is ~3.3:1 — below WCAG 1.4.3 (4.5:1). The drei.at site has the
+ *   same shortfall on "Mein Drei". Shipped to match the brand, scoped to the PRIMARY BUTTON
+ *   only. Links/rings use accent-ink #0073a0 (>=4.5:1) and body text is #5c5c5c/#1f1f1f —
+ *   those remain accessible. Revisit if Drei supplies an on-cyan label treatment that passes.
  */
 :root[data-brand="drei"] {
-  --accent: #00a0d2;
-  --accent-ink: #006a8e;
-  --accent-hover: #0081aa;
+  --accent: #0096c5;              /* official Drei cyan (most-used) */
+  --accent-ink: #0073a0;          /* links / selection ring — darkened cyan, >=4.5:1, accessible */
+  --accent-hover: #007aa6;
   --accent-tint: #e0f3fa;
-  --ink: #0f273b;
-  --text-primary: #0f273b;
-  --button-primary-hover: #1a3850;
+  --button-primary: #0096c5;      /* cyan fill — the Drei signature (known ~3.3:1 exception, A1) */
+  --button-primary-text: #ffffff;
+  --button-primary-hover: #007aa6;
+  --ink: #1f1f1f;                 /* strong text / secondary-button outline / icons */
+  --text-primary: #1f1f1f;        /* titles / strong text */
+  --text-secondary: #5c5c5c;      /* body text — the dominant Drei grey (70× in CSS) */
+  /* campaign colours — banners / offer cards / badges only; never a link, button or body */
+  --campaign-purple: #71439d;
+  --campaign-lime: #ddee3d;
+  --gradient-hero: linear-gradient(120deg, #0096c5, #71439d);
 }
 
 /*
@@ -105,10 +137,13 @@
  */
 :root[data-brand="dreigo"] {
   --accent: #820ad1;
-  --accent-ink: #820ad1;
+  --accent-ink: #820ad1;          /* purple ~5.6:1 on white — serves as link directly */
   --accent-hover: #6a08ab;
   --accent-tint: #f0e5fb;
+  --button-primary: #820ad1;      /* purple fill, white label — Nubank style; ~5.6:1, ACCESSIBLE */
+  --button-primary-text: #ffffff;
+  --button-primary-hover: #6a08ab;
   --ink: #16181d;
   --text-primary: #16181d;
-  --button-primary-hover: #2a2d34;
+  --gradient-hero: linear-gradient(120deg, #820ad1, #6a08ab);
 }

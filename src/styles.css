@@ -119,9 +119,10 @@
   --popover: var(--surface);
   --popover-foreground: var(--text-primary);
 
-  /* primary = ink (buttons are ink, not the brand) */
-  --primary: var(--ink);
-  --primary-foreground: var(--text-inverse);
+  /* primary button = the brand's filled button (Drei cyan / DreiGo purple), white label.
+     Both shipping brands fill the primary action with their accent, matching their real sites. */
+  --primary: var(--button-primary);
+  --primary-foreground: var(--button-primary-text);
 
   /* secondary = quiet surface for secondary buttons / chips */
   --secondary: var(--surface-tint);
@@ -194,13 +195,14 @@
 @utility tabular-figures { font-variant-numeric: tabular-nums; }
 
 /*
- * bg-hero — bridge surface for the inherited app-header only. DESIGN.md forbids gradients,
- * so this is a FLAT fill (not the old accent->accent-hover gradient). It uses `ink`, not the
- * brand accent, because the header still renders a white TEXT wordmark + tagline: white on
- * ink is ~13:1 (Drei) / ~17:1 (DreiGo), whereas white on the Drei cyan accent is ~2.9:1 and
- * fails 4.5:1. Phase 2 replaces this header with the real brand-tile (flat accent + wordmark
- * IMAGE, no body text), at which point this utility is removed.
+ * bg-hero — the brand hero band. The real Drei (and Nubank-style DreiGo) hero IS a
+ * blue->purple / purple gradient, so --gradient-hero carries it (base falls back to a flat
+ * accent). The header renders white text on it — on the Drei gradient that is the same
+ * brand-fidelity tradeoff accepted for the cyan button (A1); it is a banner, not body text.
+ * background-image wins over any background-color; set both so the flat-accent base fallback
+ * still paints when a brand defines no gradient.
  */
 @utility bg-hero {
-  background-color: var(--ink);
+  background-color: var(--accent);
+  background-image: var(--gradient-hero);
 }
