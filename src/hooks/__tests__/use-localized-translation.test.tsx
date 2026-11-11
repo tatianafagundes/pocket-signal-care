@@ -8,7 +8,6 @@ import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 const hydration = vi.hoisted(() => ({ ready: false }));
 
 vi.mock("@tanstack/react-router", () => ({ useHydrated: () => hydration.ready }));
-vi.mock("@/hooks/use-tenant", () => ({ useTenant: () => ({ locale: "de-AT" }) }));
 
 afterEach(async () => {
   cleanup();
@@ -19,15 +18,27 @@ afterEach(async () => {
 });
 
 describe("useLocalizedTranslation", () => {
-  it("should pin the server locale until hydration completes even when the shared locale changes", async () => {
-    await i18n.changeLanguage("de-AT");
-    const { result, rerender } = renderHook(() => useLocalizedTranslation());
+  it("pins to the server language (en) before hydration, even when i18n is de-AT", async () => {
+    await act(async () => {
+      await i18n.changeLanguage("de-AT");
+    });
+    hydration.ready = false;
 
-    expect(result.current.t).toHaveProperty("lng", "en");
+    const { result } = renderHook(() => useLocalizedTranslation());
 
+    // Pre-hydration t is a fixed-T on "en" so the first client paint matches SSR.
+    expect(result.current.t("pages.home.title")).toBe("Hi there, great to see you");
+  });
+
+  it("follows the active language after hydration (so switching to DE translates)", async () => {
     hydration.ready = true;
-    rerender();
+    await act(async () => {
+      await i18n.changeLanguage("de-AT");
+    });
 
-    expect(result.current.t).toHaveProperty("lng", "de-AT");
+    const { result } = renderHook(() => useLocalizedTranslation());
+
+    // Post-hydration t tracks the live language → German.
+    expect(result.current.t("pages.home.title")).toBe("Schön, dich zu sehen");
   });
 });
