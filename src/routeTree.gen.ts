@@ -10,33 +10,90 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AddOnsRouteImport } from './routes/add-ons'
+import { Route as MyPlanRouteImport } from './routes/my-plan'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as TopUpRouteImport } from './routes/top-up'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AddOnsRoute = AddOnsRouteImport.update({
+  id: '/add-ons',
+  path: '/add-ons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPlanRoute = MyPlanRouteImport.update({
+  id: '/my-plan',
+  path: '/my-plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TopUpRoute = TopUpRouteImport.update({
+  id: '/top-up',
+  path: '/top-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/add-ons': typeof AddOnsRoute
+  '/my-plan': typeof MyPlanRoute
+  '/support': typeof SupportRoute
+  '/top-up': typeof TopUpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/add-ons': typeof AddOnsRoute
+  '/my-plan': typeof MyPlanRoute
+  '/support': typeof SupportRoute
+  '/top-up': typeof TopUpRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/add-ons': typeof AddOnsRoute
+  '/my-plan': typeof MyPlanRoute
+  '/support': typeof SupportRoute
+  '/top-up': typeof TopUpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/account' | '/add-ons' | '/my-plan' | '/support' | '/top-up'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/account' | '/add-ons' | '/my-plan' | '/support' | '/top-up'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/add-ons'
+    | '/my-plan'
+    | '/support'
+    | '/top-up'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  AddOnsRoute: typeof AddOnsRoute
+  MyPlanRoute: typeof MyPlanRoute
+  SupportRoute: typeof SupportRoute
+  TopUpRoute: typeof TopUpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +105,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/add-ons': {
+      id: '/add-ons'
+      path: '/add-ons'
+      fullPath: '/add-ons'
+      preLoaderRoute: typeof AddOnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-plan': {
+      id: '/my-plan'
+      path: '/my-plan'
+      fullPath: '/my-plan'
+      preLoaderRoute: typeof MyPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/top-up': {
+      id: '/top-up'
+      path: '/top-up'
+      fullPath: '/top-up'
+      preLoaderRoute: typeof TopUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  AddOnsRoute: AddOnsRoute,
+  MyPlanRoute: MyPlanRoute,
+  SupportRoute: SupportRoute,
+  TopUpRoute: TopUpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
