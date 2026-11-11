@@ -70,3 +70,17 @@ backend; every other system is mocked behind a seam). The design system is
 - `export PATH="$HOME/.bun/bin:$PATH"` first (bun is not on the default PATH), then
   `bun run build` and `bun test` before pushing. Keep the connected branch in a working
   state (it syncs back to Lovable).
+### Seam layer conventions (Fase 0+3)
+
+- **Tests are colocated** as `*.test.ts` next to the source (e.g. `cpr.functions.test.ts`),
+  not under a `__tests__/` folder. This is a deliberate deviation from the spec's
+  `src/services/__tests__/` wording — colocation is the common Vitest convention and keeps a
+  seam + its test together. (vitest.config includes `src/**/*.{test,spec}.{ts,tsx}`.)
+- **Canonical domain types live in `src/services/model.ts`**, not `contracts/model/`. The
+  OpenAPI files under `contracts/seams/` document the seam surface; there is no codegen, so a
+  separate `contracts/model/` would just duplicate the TS types. (The reference repo does the
+  same — canonical types in the service layer.)
+- **Never-throw**: a seam returns `SeamResult`, never throws. `api.ts` is the only place a
+  `{ok:false}` becomes a thrown `SeamFailure`. The UI imports only `{ api, SeamFailure }`.
+- **Driver flip by env** is confined to `driver-config.ts` (`VITE_<SEAM>_DRIVER`, default mock).
+  TMF mapping lives ONLY in a seam's `*-http.ts` client — never in the seam, a rule, or the UI.

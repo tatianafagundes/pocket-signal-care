@@ -9,6 +9,9 @@ info:
     system intended to go real (driver flip via VITE_CPR_DRIVER); ECM/EOC/ECEV/DSIMA stay mock.
     This file is documentation of the seam surface; runtime validation lives in
     src/schemas/cpr.ts (Zod). Operations never throw — they return a SeamResult.
+    NOTE: the `tenant` enum ([drei, dreigo]) below is hand-maintained here. The runtime source
+    of truth is TENANT_IDS in src/lib/tenant-rules.ts (Zod derives from it); if a third tenant
+    is added there, update this enum too — it will not sync automatically.
 
 tags:
   - name: cpr

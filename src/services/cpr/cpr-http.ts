@@ -68,7 +68,14 @@ export function createCprHttp(): CprDriver {
         const category = res.status === 404 ? "notFound" : "unavailable";
         return err(seamError(`cpr.http.${res.status}`, category, "retry"));
       }
-      return ok(mapResponse(await res.json()));
+      const json: unknown = await res.json();
+      try {
+        return ok(mapResponse(json));
+      } catch {
+        // The response arrived but didn't match the expected TMF shape (e.g. missing id).
+        // That's a contract problem, not a network blip — surface it distinctly, not retryable.
+        return err(seamError("cpr.http.badResponse", "unknown", "contactSupport"));
+      }
     } catch {
       // Abort (timeout) or network error → retryable unavailable, never a thrown crash.
       return err(seamError("cpr.http.unavailable", "unavailable", "retry"));
@@ -141,11 +148,15 @@ function fromTmfTenant(
 }
 
 function fromTmfPartyCreate(json: unknown): { partyId: string } {
-  const id = (json as { id?: string } | null)?.id ?? "";
+  const id = (json as { id?: string } | null)?.id;
+  // Never accept an empty id silently — a blank partyId would flow on as if valid. Throwing
+  // here is caught by `request`'s try/catch and surfaces as a retryable seam.unavailable.
+  if (!id) throw new Error("CPR party create: missing id in TMF632 response");
   return { partyId: id };
 }
 
 function fromTmfCustomerCreate(json: unknown): { customerId: string } {
-  const id = (json as { id?: string } | null)?.id ?? "";
+  const id = (json as { id?: string } | null)?.id;
+  if (!id) throw new Error("CPR customer create: missing id in TMF629 response");
   return { customerId: id };
 }
