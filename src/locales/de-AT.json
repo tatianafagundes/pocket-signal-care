@@ -123,27 +123,59 @@
       }
     },
     "seamError": {
-      "auth": { "register": { "emailInUse": "Für diese E-Mail gibt es schon ein Konto. Versuch dich stattdessen anzumelden." } }
+      "auth": { "register": { "emailInUse": "Für diese E-Mail gibt es schon ein Konto. Versuch dich stattdessen anzumelden." } },
+      "resource": { "msisdn": { "taken": "Diese Nummer wurde gerade vergeben. Wähl eine andere." } }
     },
     "details": {
       "title": "Deine Daten",
       "subtitle": "Nur dein Name — damit richten wir dein Profil ein.",
-      "placeholder": "Das Daten-Formular erscheint hier."
+      "placeholder": "Das Daten-Formular erscheint hier.",
+      "givenName": "Vorname",
+      "familyName": "Nachname",
+      "givenNameRequired": "Gib deinen Vornamen ein.",
+      "familyNameRequired": "Gib deinen Nachnamen ein."
     },
     "number": {
       "title": "Nummer wählen",
       "subtitle": "Wähl eine neue Handynummer, wir halten sie für dich.",
-      "placeholder": "Die Nummernauswahl erscheint hier."
+      "placeholder": "Die Nummernauswahl erscheint hier.",
+      "loadError": "Wir konnten keine verfügbaren Nummern laden.",
+      "empty": "Zurzeit sind keine Nummern verfügbar.",
+      "reserved": "Für dich reserviert: {{msisdn}}",
+      "reserve": "Diese Nummer reservieren",
+      "listLabel": "Verfügbare Nummern",
+      "retry": "Erneut versuchen"
     },
     "review": {
       "title": "Prüfen und aktivieren",
       "subtitle": "Prüf alles, bevor du bestätigst — du kannst noch zurück und ändern.",
-      "placeholder": "Deine Bestellübersicht erscheint hier."
+      "placeholder": "Deine Bestellübersicht erscheint hier.",
+      "plan": "Tarif",
+      "number": "Nummer",
+      "account": "Konto",
+      "name": "Name",
+      "change": "Ändern",
+      "confirm": "Bestätigen und aktivieren",
+      "incomplete": "Es fehlen noch Schritte. Geh zurück und schließ sie zuerst ab.",
+      "balanceNote": "Du startest ohne Guthaben — lad jederzeit auf, um deinen Tarif zu nutzen.",
+      "progress": {
+        "createParty": "Dein Profil wird erstellt…",
+        "createCustomer": "Dein Konto wird eingerichtet…",
+        "createCart": "Deine Bestellung wird vorbereitet…",
+        "addPlan": "Dein Tarif wird hinzugefügt…",
+        "addSim": "Deine SIM wird hinzugefügt…",
+        "submitOrder": "Wird aktiviert…",
+        "finalizing": "Wird abgeschlossen…"
+      },
+      "terminalError": "Wir konnten deinen Tarif nicht fertig aktivieren. Dein Konto ist gespeichert — du kannst es erneut versuchen."
     },
     "success": {
-      "title": "Alles erledigt",
-      "subtitle": "Dein Tarif ist aktiv. Lad dein Guthaben auf, wann du möchtest.",
-      "placeholder": "Ein Link zu deinem Tarif erscheint hier."
+      "title": "Alles erledigt, {{name}}",
+      "titleNoName": "Alles erledigt",
+      "subtitle": "Dein Tarif ist aktiv.",
+      "placeholder": "Ein Link zu deinem Tarif erscheint hier.",
+      "balanceEmpty": "Du hast noch kein Guthaben — lad zum ersten Mal auf, um deinen Tarif zu nutzen.",
+      "goToPlan": "Zu meinem Tarif"
     }
   }
 }

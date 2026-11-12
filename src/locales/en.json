@@ -123,27 +123,59 @@
       }
     },
     "seamError": {
-      "auth": { "register": { "emailInUse": "That email already has an account. Try signing in instead." } }
+      "auth": { "register": { "emailInUse": "That email already has an account. Try signing in instead." } },
+      "resource": { "msisdn": { "taken": "That number was just taken. Pick another." } }
     },
     "details": {
       "title": "Your details",
       "subtitle": "Just your name — we'll use it to set up your profile.",
-      "placeholder": "The details form will appear here."
+      "placeholder": "The details form will appear here.",
+      "givenName": "First name",
+      "familyName": "Last name",
+      "givenNameRequired": "Enter your first name.",
+      "familyNameRequired": "Enter your last name."
     },
     "number": {
       "title": "Pick your number",
       "subtitle": "Choose a new mobile number and we'll hold it for you.",
-      "placeholder": "The number picker will appear here."
+      "placeholder": "The number picker will appear here.",
+      "loadError": "We couldn't load available numbers.",
+      "empty": "No numbers are available right now.",
+      "reserved": "Reserved for you: {{msisdn}}",
+      "reserve": "Reserve this number",
+      "listLabel": "Available numbers",
+      "retry": "Try again"
     },
     "review": {
       "title": "Review and activate",
       "subtitle": "Check everything before you confirm — you can still go back and change it.",
-      "placeholder": "Your order summary will appear here."
+      "placeholder": "Your order summary will appear here.",
+      "plan": "Plan",
+      "number": "Number",
+      "account": "Account",
+      "name": "Name",
+      "change": "Change",
+      "confirm": "Confirm and activate",
+      "incomplete": "Some steps are missing. Go back and complete them first.",
+      "balanceNote": "You start with no balance — top up any time to use your plan.",
+      "progress": {
+        "createParty": "Creating your profile…",
+        "createCustomer": "Setting up your account…",
+        "createCart": "Preparing your order…",
+        "addPlan": "Adding your plan…",
+        "addSim": "Adding your SIM…",
+        "submitOrder": "Activating…",
+        "finalizing": "Finishing up…"
+      },
+      "terminalError": "We couldn't finish activating your plan. Your account is saved — you can try again."
     },
     "success": {
-      "title": "You're all set",
-      "subtitle": "Your plan is active. Make your first top up when you're ready.",
-      "placeholder": "A link to your plan will appear here."
+      "title": "You're all set, {{name}}",
+      "titleNoName": "You're all set",
+      "subtitle": "Your plan is active.",
+      "placeholder": "A link to your plan will appear here.",
+      "balanceEmpty": "You have no balance yet — make your first top up to start using your plan.",
+      "goToPlan": "Go to my plan"
     }
   }
 }
