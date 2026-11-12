@@ -35,7 +35,7 @@ export function formatPrice(amountMinor: number, currency: string, locale: Local
  * ARGS (the formatted price + validity) so the component renders it through `t()` in the active
  * locale — the pure decision of which phrasing applies lives here and is testable.
  *
- *  - recurring (autoRenew + validityDays): "€14.90 every 30 days · auto-renews"
+ *  - recurring (autoRenew + validityDays): "€14.90 every 30 days · renews, cancel anytime"
  *  - fixed cycle (validityDays, no autoRenew): "€14.90 every 30 days"
  *  - no validity (e.g. an add-on): just the price
  */

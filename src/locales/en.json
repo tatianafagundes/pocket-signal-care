@@ -134,7 +134,7 @@
       "subtitle": "Pick the plan that fits how you use your phone.",
       "empty": "No plans are available right now.",
       "recommended": "Recommended",
-      "priceRecurring": "{{price}} every {{days}} days · auto-renews",
+      "priceRecurring": "{{price}} every {{days}} days · renews, cancel anytime",
       "priceOnce": "{{price}} every {{days}} days",
       "priceNoValidity": "{{price}}",
       "assist": {
@@ -269,7 +269,8 @@
       "physical": {
         "title": "Physical SIM",
         "description": "We mail you a SIM card. Best if your phone doesn't support eSIM."
-      }
+      },
+      "esimHelp": "Not sure your phone supports eSIM? Most phones from 2019 onwards do — look for “eSIM” or “Add mobile plan” in your phone’s settings."
     },
     "delivery": {
       "title": "Where should we ship your SIM?",

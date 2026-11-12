@@ -134,7 +134,7 @@
       "subtitle": "Wähl den Tarif, der zu deiner Handynutzung passt.",
       "empty": "Zurzeit sind keine Tarife verfügbar.",
       "recommended": "Empfohlen",
-      "priceRecurring": "{{price}} alle {{days}} Tage · verlängert sich automatisch",
+      "priceRecurring": "{{price}} alle {{days}} Tage · verlängert sich, jederzeit kündbar",
       "priceOnce": "{{price}} alle {{days}} Tage",
       "priceNoValidity": "{{price}}",
       "assist": {
@@ -269,7 +269,8 @@
       "physical": {
         "title": "Physische SIM",
         "description": "Wir schicken dir eine SIM-Karte. Am besten, wenn dein Handy keine eSIM unterstützt."
-      }
+      },
+      "esimHelp": "Unsicher, ob dein Handy eSIM kann? Die meisten Handys ab 2019 können es – suche in den Einstellungen nach „eSIM“ oder „Mobilfunktarif hinzufügen“."
     },
     "delivery": {
       "title": "Wohin sollen wir deine SIM schicken?",

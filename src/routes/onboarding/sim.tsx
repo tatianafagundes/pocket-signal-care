@@ -149,6 +149,13 @@ function SimPage() {
             })}
           </RadioGroup>
 
+          <p className="mt-3 type-caption text-text-secondary">
+            {t(
+              "onboarding.sim.esimHelp",
+              "Not sure your phone supports eSIM? Most phones from 2019 onwards do — look for “eSIM” or “Add mobile plan” in your phone’s settings.",
+            )}
+          </p>
+
           <WizardNav
             onBack={() => navigate({ to: "/onboarding/plan" })}
             onContinue={onContinue}
