@@ -72,6 +72,27 @@ describe("onboarding-persistence", () => {
     expect(loadOnboardingState("drei").step).toBe("plan");
   });
 
+  it("still resumes at exactly the TTL boundary (60 min is not yet expired)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+    saveOnboardingState({ ...initialOnboardingState("drei"), step: "plan" });
+
+    // Exactly 60 minutes: `now - savedAt > TTL` is false, so it still resumes.
+    vi.setSystemTime(new Date("2026-01-01T01:00:00Z"));
+    expect(loadOnboardingState("drei").step).toBe("plan");
+  });
+
+  it("does not let an unknown stored key leak into the revived state", () => {
+    const env = {
+      savedAt: Date.now(),
+      state: { ...initialOnboardingState("drei"), step: "plan", injected: "evil" },
+    };
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(env));
+    const loaded = loadOnboardingState("drei") as Record<string, unknown>;
+    expect(loaded.injected).toBeUndefined();
+    expect(Object.keys(loaded).sort()).toEqual(Object.keys(initialOnboardingState("drei")).sort());
+  });
+
   it("starts clean on malformed JSON", () => {
     window.sessionStorage.setItem(STORAGE_KEY, "{ not json");
     expect(loadOnboardingState("drei")).toEqual(initialOnboardingState("drei"));

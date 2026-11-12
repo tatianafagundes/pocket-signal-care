@@ -30,8 +30,20 @@ export const ONBOARDING_STEPS = [
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
-/** Total number of steps — the "M" in "Step N of M". */
+/** Total number of steps, including the terminal success screen. */
 export const ONBOARDING_STEP_COUNT = ONBOARDING_STEPS.length;
+
+/**
+ * The steps the user actively works through, excluding the terminal "success" screen. This is the
+ * "M" in "Step N of M": success is an outcome, not a step to complete, so it is not counted — and
+ * the progress stepper shows exactly these. Keeping the count here means the announcement and the
+ * stepper can't drift apart.
+ */
+export const ONBOARDING_WORKING_STEPS = ONBOARDING_STEPS.filter(
+  (s) => s !== "success",
+) as readonly Exclude<OnboardingStep, "success">[];
+
+export const ONBOARDING_WORKING_STEP_COUNT = ONBOARDING_WORKING_STEPS.length;
 
 /**
  * The persisted, non-secret wizard state. Everything here is safe to write to sessionStorage:
