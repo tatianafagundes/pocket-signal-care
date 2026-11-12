@@ -30,13 +30,16 @@ function OnboardingLayout() {
 
 function StepGuard() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { state } = useOnboarding();
+  const { state, restored } = useOnboarding();
   const navigate = useNavigate();
 
   // Re-evaluate on both route AND state change, so a fast navigation never guards against a
   // previous render's state. Success is exempt explicitly: it resets the state after it mounts,
   // and the guard must never bounce the user away from the success screen.
   useEffect(() => {
+    // Wait for saved progress: guarding against the clean pre-restore state would bounce a
+    // reloading user back to the first step.
+    if (!restored) return;
     const segment = pathname.split("/")[2] ?? "";
     if (!(ONBOARDING_STEPS as readonly string[]).includes(segment)) return;
     const target = segment as OnboardingStep;
@@ -47,7 +50,7 @@ function StepGuard() {
     if (allowed !== target) {
       void navigate({ to: `/onboarding/${allowed}`, replace: true });
     }
-  }, [pathname, state, navigate]);
+  }, [pathname, state, navigate, restored]);
 
   return null;
 }

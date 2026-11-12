@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
   OnboardingContext,
@@ -24,10 +24,9 @@ import { useTenant } from "@/hooks/use-tenant";
  * changes mid-flow the wizard keeps the tenant it started with — a half-finished Drei flow does
  * not silently become a DreiGo flow. (Persistence also refuses to resume another tenant's state.)
  *
- * SSR-safe: the state is initialised lazily. On the server `loadOnboardingState` returns the
- * clean initial state (no window); on the client's first render it reads sessionStorage. Because
- * the tenant context is `drei` on both server and first client render (hydration-safe), the
- * initial state matches across hydration.
+ * Hydration-safe: the server and the first client render both start from the clean initial state,
+ * so the markup matches. Saved progress is read back in a layout effect (before paint, before any
+ * step's passive effects), and `restored` flips to true so redirect logic can wait for it.
  */
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const { tenant } = useTenant();
@@ -35,7 +34,15 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Pin the tenant for the life of this provider instance (the flow it started with).
   const tenantRef = useRef(tenant);
 
-  const [state, setState] = useState<OnboardingState>(() => loadOnboardingState(tenantRef.current));
+  const [state, setState] = useState<OnboardingState>(() =>
+    initialOnboardingState(tenantRef.current),
+  );
+  const [restored, setRestored] = useState(false);
+
+  useLayoutEffect(() => {
+    setState(loadOnboardingState(tenantRef.current));
+    setRestored(true);
+  }, []);
 
   const patch = useCallback((p: OnboardingPatch) => {
     setState((prev) => {
@@ -51,8 +58,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<OnboardingContextValue>(
-    () => ({ state, patch, reset }),
-    [state, patch, reset],
+    () => ({ state, patch, reset, restored }),
+    [state, patch, reset, restored],
   );
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;

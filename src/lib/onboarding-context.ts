@@ -143,6 +143,11 @@ export interface OnboardingContextValue {
   patch: (patch: OnboardingPatch) => void;
   /** Reset the wizard to its initial state for the current tenant (and clear persistence). */
   reset: () => void;
+  /**
+   * False on the server and the first client render (clean state, so hydration matches); true
+   * once saved progress has been read back. Redirect decisions must wait for it.
+   */
+  restored: boolean;
 }
 
 // Keep context identity outside refreshable components and hooks (Fast Refresh stability).
