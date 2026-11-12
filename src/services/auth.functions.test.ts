@@ -68,9 +68,28 @@ describe("auth seam (mock)", () => {
     if (!r.ok) expect(r.error.category).toBe("validation");
   });
 
+  it("returns tooLong (not generic invalid) for a 129-char password via the seam", async () => {
+    // 129 chars is the only length that passes the Zod cap (max 129) yet fires tooLong in
+    // auth-rules (> 128) — proving the per-criterion feedback path survives end to end.
+    const r = await registerAccount({
+      tenantId: "drei",
+      email: uniqueEmail(),
+      password: "A1a" + "x".repeat(126),
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe("auth.password.tooLong");
+  });
+
   it("honours a forced error on register (Req 9.3)", async () => {
     forceError("auth.register");
     const r = await registerAccount({ tenantId: "drei", email: uniqueEmail(), password: strong });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("unavailable");
+  });
+
+  it("honours a forced error on login (Req 9.3)", async () => {
+    forceError("auth.login");
+    const r = await loginAccount({ tenantId: "drei", email: uniqueEmail(), password: strong });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.category).toBe("unavailable");
   });

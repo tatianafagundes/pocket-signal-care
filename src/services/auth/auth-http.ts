@@ -5,7 +5,8 @@ import type { AuthDriver } from "@/services/auth/auth-driver";
 /*
  * Auth http driver — STUB (Keycloak OIDC). (Spec Fase 5 / Fase 8 integration point)
  *
- * Selected when VITE_AUTH_DRIVER=keycloak. Not implemented for the demo: it returns a clear
+ * Selected when VITE_AUTH_DRIVER=http (the only value driverFor accepts; anything else → mock).
+ * Not implemented for the demo: it returns a clear
  * "not implemented" SeamError. This file DOCUMENTS the real flow so Fase 8 has a map.
  *
  * Keycloak (OIDC) — the intended real flow:
