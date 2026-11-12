@@ -96,14 +96,26 @@ export interface PartyInteraction {
 }
 
 /**
+ * An installed-base Product joined to its catalogue Offer (ECM). `offer` is resolved by offerId
+ * at composition time: it is `null` for a provisioning item with no catalogue entry (the SIM PO
+ * `<tenant>-sim-po`), so screens read `offer?.name ?? name` and never show a raw offerId when a
+ * catalogue name exists. The join is read-only enrichment — the Product itself is unchanged.
+ */
+export interface EnrichedProduct extends Product {
+  offer: Offer | null;
+}
+
+/**
  * Customer360 — the composed view the Home/Account screens render. Assembled by the pure
  * `customer360-rules.compose(...)` from CPR (party/customer + interactions) + order (installed
- * base) + charging (balance). Composition is NOT done inside a connector.
+ * base) + charging (balance) + catalog (ECM, joined onto the installed base). Composition is NOT
+ * done inside a connector.
  */
 export interface Customer360 {
   customer: Customer;
   party: Party;
-  installedBase: Product[];
+  /** Installed base, each product joined to its catalogue Offer (null when not in the catalogue). */
+  installedBase: EnrichedProduct[];
   balance: Balance | null;
   /** Party interactions (TMF683), newest first — the activity timeline. Empty when none. */
   interactions: PartyInteraction[];

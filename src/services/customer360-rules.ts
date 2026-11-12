@@ -2,6 +2,8 @@ import type {
   Balance,
   Customer,
   Customer360,
+  EnrichedProduct,
+  Offer,
   Party,
   PartyInteraction,
   Product,
@@ -10,10 +12,11 @@ import type {
 /*
  * Customer360 composition — a PURE rule. (Spec Fase 3.2)
  *
- * The 360 view is assembled from three systems: party/customer (CPR), installed base (order/
- * EOC), and balance (charging/ECEV). Per the review + the DMP Value Accelerator HLD, this
- * composition lives here — NOT inside any connector — so it is unit-testable without a backend
- * and identical whether CPR is real or mocked. No I/O, no throw.
+ * The 360 view is assembled from several systems: party/customer + interactions (CPR), installed
+ * base (order/EOC), balance (charging/ECEV), and the catalogue (ECM, joined onto the installed
+ * base). Per the review + the DMP Value Accelerator HLD, this composition lives here — NOT inside
+ * any connector — so it is unit-testable without a backend and identical whether CPR is real or
+ * mocked. No I/O, no throw.
  */
 
 export interface Customer360Parts {
@@ -25,18 +28,28 @@ export interface Customer360Parts {
   balance: Balance | null;
   /** Party interactions (TMF683) from CPR; empty when none. */
   interactions?: PartyInteraction[];
+  /**
+   * Catalogue offers (ECM) used to enrich the installed base — the plans and add-ons for the
+   * tenant. Empty/absent when the catalogue is unavailable; each product's `offer` then resolves
+   * to null (the screen falls back to the product's own name).
+   */
+  offers?: Offer[];
 }
 
 /** Compose the canonical Customer360 from the sources. Deterministic. */
 export function composeCustomer360(parts: Customer360Parts): Customer360 {
+  // offerId -> Offer, so the installed-base join is O(1) per product. A product whose offerId has
+  // no catalogue entry (the SIM PO) resolves to null — never an error, never a raw id downstream.
+  const offerById = new Map<string, Offer>((parts.offers ?? []).map((o) => [o.offerId, o]));
+
   return {
     customer: parts.customer,
     party: parts.party,
-    // Stable order: plan first, then add-ons, then the SIM — so the Home/Account view reads
-    // the same way every time regardless of the order systems return products in.
-    installedBase: [...parts.installedBase].sort(
-      (a, b) => productKindRank(a.kind) - productKindRank(b.kind),
-    ),
+    // Stable order: plan first, then add-ons, then the SIM — so the Home/Account view reads the
+    // same way every time — then enrich each product with its catalogue offer (null when none).
+    installedBase: [...parts.installedBase]
+      .sort((a, b) => productKindRank(a.kind) - productKindRank(b.kind))
+      .map((p): EnrichedProduct => ({ ...p, offer: offerById.get(p.offerId) ?? null })),
     balance: parts.balance,
     // Newest first, so the activity timeline reads top-down regardless of source order.
     interactions: [...(parts.interactions ?? [])].sort((a, b) =>
@@ -61,7 +74,7 @@ export function hasBalance(c360: Customer360): boolean {
   return c360.balance != null && c360.balance.amountMinor > 0;
 }
 
-/** The customer's primary plan, if one is provisioned. */
-export function primaryPlan(c360: Customer360): Product | null {
+/** The customer's primary plan (catalogue-enriched), if one is provisioned. */
+export function primaryPlan(c360: Customer360): EnrichedProduct | null {
   return c360.installedBase.find((p) => p.kind === "plan") ?? null;
 }

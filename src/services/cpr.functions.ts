@@ -16,6 +16,7 @@ import { createCprMock } from "@/services/cpr/cpr-mock";
 import { createCprHttp } from "@/services/cpr/cpr-http";
 import { getInstalledBase } from "@/services/order.functions";
 import { getBalance } from "@/services/charging.functions";
+import { listOffers, listAddOns } from "@/services/catalog.functions";
 
 /*
  * CPR seam. (Spec Fase 3.2)
@@ -83,16 +84,26 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
   return runRead({ tenantId: "cpr" }, "cpr.getCustomer360", async () => {
     const cpr = await driver.getCustomerAndParty(customerId);
     if (!cpr.ok) return cpr;
+    // The customer's tenant drives the catalogue fetch — known only after the CPR read resolves.
+    const tenantId = cpr.data.customer.tenantId;
 
-    const [baseRes, balanceRes, interactionsRes] = await Promise.all([
+    const [baseRes, balanceRes, interactionsRes, offersRes, addOnsRes] = await Promise.all([
       getInstalledBase(customerId),
       getBalance(customerId),
       driver.listInteractions(customerId),
+      listOffers(tenantId),
+      listAddOns(tenantId),
     ]);
     const installedBase = baseRes.ok ? baseRes.data : [];
     const balance = balanceRes.ok ? balanceRes.data : null;
     // Interactions degrade gracefully like base/balance: a failed timeline must not blank the 360.
     const interactions = interactionsRes.ok ? interactionsRes.data : [];
+    // Catalogue enrichment also degrades: if ECM fails, offers is empty and each product's `offer`
+    // resolves to null (the screen falls back to the product's own name) — the 360 still renders.
+    const offers = [
+      ...(offersRes.ok ? offersRes.data : []),
+      ...(addOnsRes.ok ? addOnsRes.data : []),
+    ];
 
     return {
       ok: true,
@@ -102,6 +113,7 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
         installedBase,
         balance,
         interactions,
+        offers,
       }),
     };
   });

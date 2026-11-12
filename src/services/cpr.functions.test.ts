@@ -53,6 +53,24 @@ describe("cpr seam (mock driver)", () => {
         // The demo customer has a seeded onboarding interaction in the timeline.
         expect(r.data.interactions.length).toBeGreaterThanOrEqual(1);
         expect(r.data.interactions[0]!.type).toBe("onboarding");
+        // ECM join: the plan resolves to its catalogue offer; the SIM PO has no catalogue entry.
+        const plan = r.data.installedBase.find((p) => p.kind === "plan")!;
+        const simProduct = r.data.installedBase.find((p) => p.kind === "sim")!;
+        expect(plan.offer).not.toBeNull();
+        expect(plan.offer?.offerId).toBe(plan.offerId);
+        expect(simProduct.offer).toBeNull();
+      }
+    });
+
+    it("degrades gracefully when the catalogue (ECM) fails — products present, offer null", async () => {
+      forceError("catalog.listOffers");
+      forceError("catalog.listAddOns");
+      const r = await getCustomer360("demo-drei");
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        // The installed base is still there; it just isn't catalogue-enriched.
+        expect(r.data.installedBase.length).toBeGreaterThan(0);
+        expect(r.data.installedBase.every((p) => p.offer === null)).toBe(true);
       }
     });
 

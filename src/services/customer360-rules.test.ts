@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { composeCustomer360, hasBalance, primaryPlan } from "@/services/customer360-rules";
-import type { Balance, Customer, Party, Product } from "@/services/model";
+import type { Balance, Customer, Offer, Party, Product } from "@/services/model";
 
 const party: Party = {
   partyId: "p1",
@@ -39,6 +39,14 @@ const addon: Product = {
   status: "active",
 };
 const balance: Balance = { amountMinor: 1500, currency: "EUR" };
+const planOffer: Offer = {
+  offerId: "o-plan",
+  tenantId: "drei",
+  name: "Up 10",
+  dataAmount: "10 GB",
+  priceMinor: 990,
+  currency: "EUR",
+};
 
 describe("customer360-rules", () => {
   describe("composeCustomer360", () => {
@@ -69,6 +77,41 @@ describe("customer360-rules", () => {
     it("carries a null balance through (new customer)", () => {
       const c360 = composeCustomer360({ customer, party, installedBase: [], balance: null });
       expect(c360.balance).toBeNull();
+    });
+
+    it("enriches each product with its catalogue offer, null when not in the catalogue", () => {
+      const c360 = composeCustomer360({
+        customer,
+        party,
+        installedBase: [plan, sim],
+        balance: null,
+        offers: [planOffer],
+      });
+      const enrichedPlan = c360.installedBase.find((p) => p.kind === "plan")!;
+      const enrichedSim = c360.installedBase.find((p) => p.kind === "sim")!;
+      // The plan's offerId ("o-plan") resolves to the catalogue offer.
+      expect(enrichedPlan.offer).toEqual(planOffer);
+      expect(enrichedPlan.offer?.name).toBe("Up 10");
+      // The SIM ("o-sim") has no catalogue entry → null, never an error or a raw id.
+      expect(enrichedSim.offer).toBeNull();
+    });
+
+    it("resolves every offer to null when no catalogue is provided (ECM unavailable)", () => {
+      const c360 = composeCustomer360({ customer, party, installedBase: [plan], balance: null });
+      expect(c360.installedBase[0]!.offer).toBeNull();
+    });
+
+    it("does not mutate the input products when enriching", () => {
+      const input = [plan];
+      composeCustomer360({
+        customer,
+        party,
+        installedBase: input,
+        balance: null,
+        offers: [planOffer],
+      });
+      // The original product object gains no `offer` field.
+      expect("offer" in input[0]!).toBe(false);
     });
 
     it("defaults interactions to empty when none are provided", () => {
@@ -120,12 +163,13 @@ describe("customer360-rules", () => {
   });
 
   describe("primaryPlan", () => {
-    it("returns the plan product, or null when none", () => {
+    it("returns the plan product (enriched), or null when none", () => {
+      // primaryPlan now returns the ENRICHED product (a new object), so match by identity fields.
       expect(
         primaryPlan(
           composeCustomer360({ customer, party, installedBase: [sim, plan], balance: null }),
-        ),
-      ).toBe(plan);
+        )?.productId,
+      ).toBe(plan.productId);
       expect(
         primaryPlan(composeCustomer360({ customer, party, installedBase: [sim], balance: null })),
       ).toBeNull();

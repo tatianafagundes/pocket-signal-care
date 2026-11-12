@@ -98,7 +98,17 @@ function Page() {
                     className="flex items-center justify-between gap-2 rounded-card border border-hairline bg-surface p-3"
                   >
                     <span className="min-w-0">
-                      <span className="type-body text-text-primary">{product.name}</span>
+                      {/* Catalogue name (ECM join) when the product resolves to an offer; falls
+                          back to the product's own name for non-catalogue items (the SIM PO). */}
+                      <span className="type-body text-text-primary">
+                        {product.offer?.name ?? product.name}
+                      </span>
+                      {/* Price from the catalogue, when known — a plain fact, not a CTA. */}
+                      {product.offer ? (
+                        <span className="mt-0.5 block type-caption text-text-secondary">
+                          {formatPrice(product.offer.priceMinor, product.offer.currency, locale)}
+                        </span>
+                      ) : null}
                       {/* SIM form (Fase 7.5): the proof the /sim choice had an effect. */}
                       {product.kind === "sim" && product.simType ? (
                         <span className="mt-0.5 block type-caption text-text-secondary">
