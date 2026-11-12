@@ -119,11 +119,57 @@ announces its title only, not "Step 7 of 7"; dropped a redundant `aria-live`; co
 price doc example and added `format.test.ts` pinning the real ICU output; added an exact-TTL and
 an extra-key-leak persistence test.
 
+## Fase D — Screens wired to seams — shipped
+
+Commits `ea44dc1` (welcome + plan + shared nav/error) → `e62e15e` (assist + account) →
+`c4e3359` (details + number + review + success). 115 tests. This phase established the repo's
+first form (react-hook-form + zod via `components/ui/form`), data-fetching (react-query), and
+navigation (`useNavigate`) patterns.
+
+Shipped:
+- Shared: `WizardNav` (back/continue), `SeamErrorNotice` (maps a `SeamFailure` to localized copy
+  under the `onboarding.seamError.*` tree; retry only when retryable), `/onboarding` → welcome
+  redirect.
+- welcome: brand-aware title + "See plans" CTA. plan: `listOffers` via react-query with
+  skeleton/error-retry/empty states, `RadioGroup` option-rows, recommended badge, and the B4
+  price label. assist: optional disclosure — 3 behavioural questions → pure `recommend()` → a
+  labelled suggestion. account: RHF+zod form, `autocomplete` email/new-password, live password
+  checklist (announces criterion transitions, not keystrokes). details: name form. number:
+  `listAvailableMsisdn` + `reserveMsisdn` with the concurrency path. review: summary rebuilt at
+  render, confirm runs the submit orchestration with per-step announcements. success: result head
+  + link to my-plan.
+- `lib/format.ts` `offerPriceLabel` (pure B4 logic, tested). `lib/onboarding-submit.ts`
+  `runOnboardingSubmit` (the activation sequence, tested for idempotent retry).
+
+Locked decisions:
+- **B1 — the review summary is rebuilt from state at render**, looking the offer up fresh from
+  the grid, so changing the plan upstream can never leave a stale price/plan in the summary.
+- **B4 — a price states its nature**: `offerPriceLabel` yields "€14.90 every 30 days ·
+  auto-renews", never a bare amount that reads as one-off.
+- **The password never leaves the account form**: it's passed to `api.register` and only the
+  email is persisted to the wizard state (a context test already guards the stored shape).
+- **Idempotent retry**: party and customer (durable, orphan-prone) are reused on retry; the cart
+  is rebuilt fresh each attempt because the mock's `addItem` appends — reusing it would double the
+  line items.
+- **Qualify is not called on the onboarding plan step**: with no customer every offer is
+  qualified, so per-offer qualify calls would be speculative. `OfferOption` still supports a
+  `qualify` prop for the (later) add-ons route.
+
+Conscious debts (honest scope): "see all plans" expansion not built (the mock grid fits on
+screen); submit is synchronous in the mock (`status: "completed"`), so the real
+`acknowledged → partial/failed` async flow, the "partially provisioned" terminal state, and MSISDN
+reservation TTL/expiry are Fase 8 concerns — they can't be exercised against the mock today. A
+terminal submit error with retry IS implemented.
+
+Verification caveat: the pages are verified by build, typecheck, and unit tests — NOT yet by
+running the app in a browser (there's a pre-existing `vite preview` env issue). Runtime render,
+focus/announcement behaviour, and the state matrix across both brands belong to Fase E
+(`ui-capture`).
+
 ---
 
-## Next: Fase D — screens wired to seams
+## Next: Fase E — runtime state matrix + a11y sweep
 
-The step pages are placeholders. Fase D wires each to the api seam: plan grid + tri-state
-qualify, the recommendation assist, the account form (password never leaves the component), the
-number picker + reserve, and the review → submit orchestration. See the Kiro-workspace `tasks.md`
-Fase D for the full breakdown.
+Walk the state×screen matrix at runtime with forced errors, and run the accessibility + i18n
+sweep (focus on step change, "Step N of M", first-invalid-field focus, contrast exception A1,
+de-AT with no raw keys) via `ui-capture`. See the Kiro-workspace `tasks.md` Fase E.
