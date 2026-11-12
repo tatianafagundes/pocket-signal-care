@@ -129,19 +129,20 @@ function ReviewPage() {
       ) : (
         <>
           {terminalError ? (
+            // Terminal activation failure: the account is saved. The notice is the MESSAGE only —
+            // no retry button here, because the footer "Confirm and activate" is the single retry
+            // path (both would call the same confirm(); two triggers for one action is ambiguous
+            // in the most consequential state). `retryable: false` so SeamErrorNotice shows no
+            // button; the copy ("you can try again") points at the footer.
             <SeamErrorNotice
               error={
-                // A terminal activation failure: the account is saved; offer a retry. Force the
-                // category to "unavailable" so retryable:true stays consistent with the SeamError
-                // invariant (only "unavailable" is retryable).
                 new SeamFailure({
                   code: terminalError.code,
-                  category: "unavailable",
-                  retryable: true,
+                  category: "unknown",
+                  retryable: false,
                   customerFacing: { key: "onboarding.review.terminalError" },
                 })
               }
-              onRetry={() => void confirm()}
               className="mb-4"
             />
           ) : null}
@@ -238,7 +239,9 @@ function SummaryRow({ label, value, onChange, changeLabel, busy }: SummaryRowPro
         type="button"
         variant="link"
         size="sm"
-        className="min-h-11"
+        // accent-ink (#0073a0, >=4.5:1), not the shadcn link variant's text-primary (the bright
+        // cyan #0096c5 ~3.3:1, which fails 1.4.3 for text and is outside the A1 button exception).
+        className="min-h-11 text-accent-ink"
         onClick={onChange}
         disabled={busy}
       >

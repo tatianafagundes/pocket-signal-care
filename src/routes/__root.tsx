@@ -18,6 +18,7 @@ import { AppHeader } from "@/components/app-header";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { TenantProvider } from "@/components/tenant-provider";
 import { SessionProvider } from "@/components/session-provider";
+import { installDevMockControls } from "@/services/dev-mock-controls";
 import { TenantNotFoundBanner } from "@/components/tenant-not-found-banner";
 
 function NotFoundComponent() {
@@ -138,6 +139,11 @@ function RootComponent() {
   const inOnboarding = useRouterState({
     select: (s) => s.location.pathname.startsWith("/onboarding"),
   });
+
+  // DEV-only: expose the mock forced-error switch on window.__mock (no-op / tree-shaken in prod).
+  useEffect(() => {
+    installDevMockControls();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

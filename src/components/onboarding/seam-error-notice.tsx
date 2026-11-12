@@ -1,6 +1,7 @@
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { SeamFailure } from "@/services/api";
 
 /*
@@ -35,15 +36,24 @@ export function SeamErrorNotice({ error, onRetry, className }: SeamErrorNoticePr
   const message = mapped !== "" ? mapped : t(error.customerKey, generic);
 
   return (
-    <Alert variant="destructive" className={className}>
-      <AlertDescription className="flex flex-col gap-3">
+    // Fuon danger notice: danger-tint fill + full-opacity danger border (the shadcn destructive
+    // variant ships a white fill + 50% border, too weak a signal). role="alert" is on Alert.
+    <Alert
+      variant="destructive"
+      className={cn(
+        "rounded-card border-danger bg-danger-tint text-danger [&>svg]:text-danger",
+        className,
+      )}
+    >
+      <AlertDescription className="flex flex-col gap-3 text-danger">
         <span>{message}</span>
         {error.retryable && onRetry ? (
+          // Secondary pill, no shadow (Fuon): a surface pill on the tint, not the shadcn
+          // rounded-md/shadow-sm outline button.
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="min-h-11 self-start"
+            className="min-h-11 self-start rounded-pill border-danger bg-surface shadow-none text-danger hover:bg-surface"
             onClick={onRetry}
           >
             {t("onboarding.error.retry", "Try again")}

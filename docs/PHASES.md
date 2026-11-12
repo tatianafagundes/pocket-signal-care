@@ -219,3 +219,32 @@ loading, errors), focus-order mechanism, heading structure (one h1 per screen).
 Debt noted: states not in the capture set (terminal submit error, expired-MSISDN, "see all plans")
 weren't reviewed at runtime; the `head()` meta is hardcoded English + a "whitelabel" placeholder
 (not localized/tenant-branded) — a separate i18n workstream.
+
+### Fase E debt closed — error/edge states captured + reviewed
+
+Added a DEV-only forced-error hook (`src/services/dev-mock-controls.ts`): under
+`import.meta.env.DEV` only, it exposes `window.__mock.{forceError,clearForcedError,isForced}` so
+the running app (and the capture harness) can arm a seam failure without a real outage. Verified
+the production bundle does NOT contain it (tree-shaken by the DEV guard).
+
+Captured 5 error/edge states at phone viewport (390×844) and reviewed them: plan list error,
+add-ons list error, my-plan `getCustomer360` error, number-reserve error, and the review
+submit **terminal** error ("account saved, couldn't activate, try again"). All render their
+recovery path. The review found one real blocker and three should-fixes, all fixed:
+- The terminal submit error had TWO buttons calling the same `confirm()` (a "Try again" in the
+  notice and "Confirm and activate" in the footer) — ambiguous in the most consequential state.
+  The notice is now message-only; the footer is the single retry path.
+- The error notice now uses the Fuon danger treatment (danger-tint fill + full-opacity border)
+  and the retry is a pill with no shadow, matching DESIGN.md (was a weak white/50%-border Alert
+  with a rounded-md shadowed button).
+- The review "Change" links used the shadcn `link` variant (`text-primary` = the bright cyan
+  #0096c5, ~3.3:1) — now `text-accent-ink` (#0073a0, ≥4.5:1). This corrects an over-broad "false
+  alarm" call from the first Fase E pass: the "More info" links were fine (already accent-ink),
+  but the `Button variant="link"` "Change" links were genuinely below contrast.
+
+Honest limitations of the capture: `forceError` persists across SPA navigation but not a full
+reload (arm, then navigate by click); react-query's default 3 retries delay the error state ~5s;
+and the specific MSISDN `taken` concurrency copy can't be reproduced with the client-side mock
+(per-page module state) — the generic unavailable+retry path is captured, the specific copy stays
+unit-tested. The capture scripts are throwaway (not committed); the review docs are in
+`docs/design/`.
