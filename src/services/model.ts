@@ -106,6 +106,18 @@ export interface UsageBucket {
 }
 
 /**
+ * Derived display state of a usage bucket (computed by `customer360-rules.bucketState`, never
+ * stored). Drives the 360 usage panel's colour/affordance (C360_012 "below a configured % →
+ * warning"):
+ * - `ok`       healthy, or unlimited, or metered with enough remaining.
+ * - `low`      metered and at/under the low-remaining threshold (LOW_REMAINING_RATIO) — nudge.
+ * - `depleted` metered and nothing left — the user must top up / buy an add-on to use this service.
+ * - `expired`  validFor.end is in the past — the bucket lapsed regardless of remaining.
+ * - `pending`  validFor.start is in the future — a bought-but-not-yet-active bucket (future add-on).
+ */
+export type BucketState = "ok" | "low" | "depleted" | "expired" | "pending";
+
+/**
  * Party Interaction (TMF683). A record of a past interaction between the operator and the party,
  * kept so it can be reused later — the customer-facing activity timeline, and the CSR panel's
  * history. In the real DXP this is its own microservice (eric-dxp-party-interaction-management);

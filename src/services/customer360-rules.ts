@@ -1,5 +1,6 @@
 import type {
   Balance,
+  BucketState,
   Customer,
   Customer360,
   EnrichedProduct,
@@ -106,4 +107,59 @@ export function hasBalance(c360: Customer360): boolean {
 /** The customer's primary plan (catalogue-enriched), if one is provisioned. */
 export function primaryPlan(c360: Customer360): EnrichedProduct | null {
   return c360.installedBase.find((p) => p.kind === "plan") ?? null;
+}
+
+/**
+ * Fraction of the granted total at or below which a metered bucket is "low" — 0.2 means the warning
+ * fires once 80% is consumed (20% remaining). No GSMA/ITU normative threshold exists; 0.2 is the
+ * common default (Google Mobile Data Plan API's LOW_QUOTA, operator practice). A second, earlier
+ * notice tier (e.g. 50%) is deliberately deferred — one threshold until a product need appears.
+ */
+export const LOW_REMAINING_RATIO = 0.2;
+
+/**
+ * Derived display state of a usage bucket — a PURE rule, no I/O, no throw. (Spec Fase: usage buckets)
+ *
+ * Evaluated as a priority ladder, first match wins, so the states are mutually exclusive:
+ *   1. expired  — validFor.end in the past (a lapsed bucket is lapsed whatever is left in it).
+ *   2. pending  — validFor.start in the future (bought but not yet active; nothing to show as left).
+ *   3. unlimited ⇒ ok — once it is active (not expired/pending), an unlimited bucket has no number
+ *      to be low or depleted; it is always ok. (Default choice, not a research-backed rule.)
+ *   4. depleted — metered and nothing remaining.
+ *   5. low      — metered and remaining ≤ LOW_REMAINING_RATIO of total.
+ *   6. ok       — everything else.
+ *
+ * Validity is checked before quantity on purpose: an expired or not-yet-started bucket should read
+ * as such even if its numbers look healthy (future add-on) or empty (lapsed, consumed). `now` is
+ * injectable so tests are deterministic.
+ */
+export function bucketState(bucket: UsageBucket, now: Date = new Date()): BucketState {
+  const t = now.getTime();
+
+  const endMs = parseIso(bucket.validFor?.end);
+  if (endMs !== null && endMs < t) return "expired";
+
+  const startMs = parseIso(bucket.validFor?.start);
+  if (startMs !== null && startMs > t) return "pending";
+
+  if (bucket.unlimited) return "ok";
+
+  // Metered from here. A bucket with no readable remaining can't be judged — treat as ok rather
+  // than invent a warning.
+  const remaining = bucket.remaining?.value;
+  if (remaining === undefined) return "ok";
+  if (remaining <= 0) return "depleted";
+
+  // "low" needs a denominator; without a usable total we can't compute a ratio, so it stays ok.
+  const total = bucket.total?.value;
+  if (total !== undefined && total > 0 && remaining / total <= LOW_REMAINING_RATIO) return "low";
+
+  return "ok";
+}
+
+/** Parse an ISO date to epoch ms; null when absent or unparseable (so a bad date never throws). */
+function parseIso(iso: string | undefined): number | null {
+  if (iso === undefined) return null;
+  const ms = Date.parse(iso);
+  return Number.isNaN(ms) ? null : ms;
 }

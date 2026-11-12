@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { composeCustomer360, hasBalance, primaryPlan } from "@/services/customer360-rules";
-import type { Balance, Customer, Offer, Party, Product } from "@/services/model";
+import {
+  bucketState,
+  composeCustomer360,
+  hasBalance,
+  LOW_REMAINING_RATIO,
+  primaryPlan,
+} from "@/services/customer360-rules";
+import type { Balance, Customer, Offer, Party, Product, UsageBucket } from "@/services/model";
 
 const party: Party = {
   partyId: "p1",
@@ -173,6 +179,171 @@ describe("customer360-rules", () => {
       expect(
         primaryPlan(composeCustomer360({ customer, party, installedBase: [sim], balance: null })),
       ).toBeNull();
+    });
+  });
+
+  describe("usage composition", () => {
+    const mk = (over: Partial<UsageBucket>): UsageBucket => ({
+      bucketId: "b",
+      type: "data",
+      unlimited: false,
+      total: { value: 10, unit: "GB" },
+      remaining: { value: 5, unit: "GB" },
+      ...over,
+    });
+
+    it("defaults usage to empty when none is provided", () => {
+      const c360 = composeCustomer360({ customer, party, installedBase: [], balance: null });
+      expect(c360.usage).toEqual([]);
+    });
+
+    it("orders buckets data > voice > sms > roaming regardless of input order", () => {
+      const c360 = composeCustomer360({
+        customer,
+        party,
+        installedBase: [],
+        balance: null,
+        usage: [
+          mk({ bucketId: "r", type: "roaming" }),
+          mk({ bucketId: "s", type: "sms" }),
+          mk({ bucketId: "d", type: "data" }),
+          mk({ bucketId: "v", type: "voice" }),
+        ],
+      });
+      expect(c360.usage.map((b) => b.type)).toEqual(["data", "voice", "sms", "roaming"]);
+    });
+
+    it("does not mutate the input usage array", () => {
+      const input = [mk({ bucketId: "s", type: "sms" }), mk({ bucketId: "d", type: "data" })];
+      composeCustomer360({ customer, party, installedBase: [], balance: null, usage: input });
+      expect(input.map((b) => b.type)).toEqual(["sms", "data"]);
+    });
+  });
+
+  describe("bucketState", () => {
+    const now = new Date("2026-06-15T12:00:00Z");
+    const mk = (over: Partial<UsageBucket>): UsageBucket => ({
+      bucketId: "b",
+      type: "data",
+      unlimited: false,
+      total: { value: 10, unit: "GB" },
+      remaining: { value: 5, unit: "GB" },
+      ...over,
+    });
+
+    it("is ok for a healthy metered bucket (well above the threshold)", () => {
+      expect(bucketState(mk({ remaining: { value: 5, unit: "GB" } }), now)).toBe("ok");
+    });
+
+    it("is low once remaining is at or below LOW_REMAINING_RATIO of total", () => {
+      // 20% of 10 GB = 2 GB: exactly at the threshold counts as low (≤).
+      expect(bucketState(mk({ remaining: { value: 2, unit: "GB" } }), now)).toBe("low");
+      // Just above the threshold is still ok.
+      expect(bucketState(mk({ remaining: { value: 2.01, unit: "GB" } }), now)).toBe("ok");
+      // Just below is low.
+      expect(bucketState(mk({ remaining: { value: 1, unit: "GB" } }), now)).toBe("low");
+    });
+
+    it("uses LOW_REMAINING_RATIO as the boundary (sanity-checks the constant)", () => {
+      const total = 100;
+      const atThreshold = total * LOW_REMAINING_RATIO;
+      expect(
+        bucketState(
+          mk({
+            total: { value: total, unit: "min" },
+            remaining: { value: atThreshold, unit: "min" },
+          }),
+          now,
+        ),
+      ).toBe("low");
+    });
+
+    it("is depleted when a metered bucket has nothing left", () => {
+      expect(bucketState(mk({ remaining: { value: 0, unit: "GB" } }), now)).toBe("depleted");
+    });
+
+    it("treats negative remaining as depleted", () => {
+      expect(bucketState(mk({ remaining: { value: -1, unit: "GB" } }), now)).toBe("depleted");
+    });
+
+    it("is expired when validFor.end is in the past, even if remaining looks healthy", () => {
+      expect(
+        bucketState(
+          mk({ remaining: { value: 9, unit: "GB" }, validFor: { end: "2026-01-01T00:00:00Z" } }),
+          now,
+        ),
+      ).toBe("expired");
+    });
+
+    it("is pending when validFor.start is in the future", () => {
+      expect(bucketState(mk({ validFor: { start: "2026-12-01T00:00:00Z" } }), now)).toBe("pending");
+    });
+
+    it("prefers expired over pending when a range is wholly in the past", () => {
+      expect(
+        bucketState(
+          mk({ validFor: { start: "2026-01-01T00:00:00Z", end: "2026-02-01T00:00:00Z" } }),
+          now,
+        ),
+      ).toBe("expired");
+    });
+
+    // An unlimited bucket carries no total/remaining — build it without those keys so it is valid
+    // under exactOptionalPropertyTypes (omitted ≠ set-to-undefined).
+    const unlimited = (over: Partial<UsageBucket> = {}): UsageBucket => ({
+      bucketId: "u",
+      type: "data",
+      unlimited: true,
+      ...over,
+    });
+
+    it("is ok for an unlimited bucket that is currently active", () => {
+      expect(bucketState(unlimited(), now)).toBe("ok");
+    });
+
+    it("still reports expired/pending for an unlimited bucket outside its validity", () => {
+      expect(bucketState(unlimited({ validFor: { end: "2026-01-01T00:00:00Z" } }), now)).toBe(
+        "expired",
+      );
+      expect(bucketState(unlimited({ validFor: { start: "2026-12-01T00:00:00Z" } }), now)).toBe(
+        "pending",
+      );
+    });
+
+    it("is ok when remaining is unknown (can't invent a warning)", () => {
+      // Metered bucket with total but no remaining — omit the remaining key.
+      expect(
+        bucketState(
+          { bucketId: "b", type: "data", unlimited: false, total: { value: 10, unit: "GB" } },
+          now,
+        ),
+      ).toBe("ok");
+    });
+
+    it("is ok (not low) when there is no usable total to form a ratio", () => {
+      // No total key at all.
+      expect(
+        bucketState(
+          { bucketId: "b", type: "data", unlimited: false, remaining: { value: 1, unit: "GB" } },
+          now,
+        ),
+      ).toBe("ok");
+      // Zero total can't form a ratio.
+      expect(
+        bucketState(
+          mk({ total: { value: 0, unit: "GB" }, remaining: { value: 1, unit: "GB" } }),
+          now,
+        ),
+      ).toBe("ok");
+    });
+
+    it("ignores an unparseable validity date instead of throwing", () => {
+      expect(
+        bucketState(
+          mk({ validFor: { end: "not-a-date" }, remaining: { value: 5, unit: "GB" } }),
+          now,
+        ),
+      ).toBe("ok");
     });
   });
 });
