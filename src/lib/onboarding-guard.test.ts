@@ -27,6 +27,15 @@ describe("resolveOnboardingStep", () => {
     expect(resolveOnboardingStep("success", filled)).toBe("review");
     expect(resolveOnboardingStep("success", { ...filled, customerId: "c1" })).toBe("success");
   });
+  it("should keep the user on account until the name is filled in", () => {
+    const partial = {
+      ...empty,
+      selectedOfferId: "o1",
+      reservedMsisdn: "+4368140000001",
+      email: "a@b.at",
+    };
+    expect(resolveOnboardingStep("review", partial)).toBe("account");
+  });
   it("should always allow going back to welcome", () => {
     expect(resolveOnboardingStep("welcome", empty)).toBe("welcome");
   });

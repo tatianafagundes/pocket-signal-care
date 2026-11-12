@@ -109,7 +109,7 @@
     },
     "account": {
       "title": "Create your account",
-      "subtitle": "Your email and a password keep your service safe.",
+      "subtitle": "Your name, email and a password set up your profile and keep your service safe.",
       "email": "Email",
       "password": "Password",
       "confirm": "Confirm password",
@@ -124,7 +124,9 @@
         "hasNumber": "A number",
         "met": "met",
         "unmet": "not yet"
-      }
+      },
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     },
     "seamError": {
       "auth": {
@@ -139,8 +141,6 @@
       }
     },
     "details": {
-      "title": "Your details",
-      "subtitle": "Just your name — we'll use it to set up your profile.",
       "givenName": "First name",
       "familyName": "Last name",
       "givenNameRequired": "Enter your first name.",

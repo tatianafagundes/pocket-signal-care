@@ -141,7 +141,7 @@ function ReviewPage() {
             <SummaryRow
               label={t("onboarding.review.name", "Name")}
               value={[state.givenName, state.familyName].filter(Boolean).join(" ") || "—"}
-              onChange={() => navigate({ to: "/onboarding/details" })}
+              onChange={() => navigate({ to: "/onboarding/account" })}
               changeLabel={t("onboarding.review.change", "Change")}
               busy={busy}
             />
@@ -171,7 +171,7 @@ function ReviewPage() {
           ) : null}
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/details" })}
+            onBack={() => navigate({ to: "/onboarding/account" })}
             onContinue={() => void confirm()}
             continueLabel={t("onboarding.review.confirm", "Confirm and activate")}
             continueDisabled={!complete}

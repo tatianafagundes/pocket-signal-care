@@ -9,8 +9,9 @@ import type { OnboardingState, OnboardingStep } from "@/lib/onboarding-context";
 export function firstIncompleteStep(state: OnboardingState): OnboardingStep {
   if (state.selectedOfferId == null) return "plan";
   if (state.reservedMsisdn == null) return "number";
-  if (state.email == null) return "account";
-  if (state.givenName == null || state.familyName == null) return "details";
+  if (state.email == null || state.givenName == null || state.familyName == null) {
+    return "account";
+  }
   if (state.customerId == null) return "review";
   return "success";
 }
@@ -20,7 +21,6 @@ const ORDER: readonly OnboardingStep[] = [
   "plan",
   "number",
   "account",
-  "details",
   "review",
   "success",
 ];

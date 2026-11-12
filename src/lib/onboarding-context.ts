@@ -23,7 +23,6 @@ export const ONBOARDING_STEPS = [
   "plan",
   "number",
   "account",
-  "details",
   "review",
   "success",
 ] as const;

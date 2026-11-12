@@ -109,7 +109,7 @@
     },
     "account": {
       "title": "Konto erstellen",
-      "subtitle": "Deine E-Mail und ein Passwort schützen deinen Dienst.",
+      "subtitle": "Name, E-Mail und Passwort richten dein Profil ein und schützen deinen Anschluss.",
       "email": "E-Mail",
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -124,7 +124,9 @@
         "hasNumber": "Eine Zahl",
         "met": "erfüllt",
         "unmet": "noch nicht"
-      }
+      },
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen"
     },
     "seamError": {
       "auth": {
@@ -139,8 +141,6 @@
       }
     },
     "details": {
-      "title": "Deine Daten",
-      "subtitle": "Nur dein Name — damit richten wir dein Profil ein.",
       "givenName": "Vorname",
       "familyName": "Nachname",
       "givenNameRequired": "Gib deinen Vornamen ein.",
