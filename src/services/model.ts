@@ -199,9 +199,9 @@ export interface EsimProfile {
   installUrl?: string;
   /** ISO date the profile download window expires. */
   expiresAt?: string;
-  /** Immediate result of requesting the profile. */
+  /** Immediate result of the `requestEsimProfile` call — stable once the request resolves. */
   status: "requested" | "ready" | "failed";
-  /** Lifecycle state the SM-DP+ reports (read via getEsimProfile). */
+  /** Ongoing SM-DP+ lifecycle state, polled via `getEsimProfile`. Superset of `status` values. */
   state?: "requested" | "ready" | "downloaded" | "installed" | "deleted" | "expired" | "failed";
   /** Reason when status/state is "failed" (catalog key for localized copy). */
   reasonKey?: string;
@@ -215,6 +215,7 @@ export interface EsimProfile {
 export interface PaymentResult {
   authorizationRef: string;
   amountMinor: number;
+  /** EUR-only is a deliberate base-case scope reduction (like Balance); widen for multi-currency. */
   currency: "EUR";
   status:
     | "authorized"

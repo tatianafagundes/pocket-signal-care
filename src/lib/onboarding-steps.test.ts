@@ -22,10 +22,18 @@ describe("workingStepsFor", () => {
     ]);
   });
 
-  it("physical SIM → keeps delivery, keeps sim", () => {
+  it("physical SIM → keeps delivery and sim, in the exact order", () => {
     const steps = workingStepsFor({ offersEsim: true, simType: "physical" });
-    expect(steps).toContain("sim");
-    expect(steps).toContain("delivery");
+    expect(steps).toEqual([
+      "welcome",
+      "plan",
+      "sim",
+      "addons",
+      "number",
+      "account",
+      "delivery",
+      "review",
+    ]);
   });
 
   it("eSIM → drops delivery (no shipping), keeps sim", () => {

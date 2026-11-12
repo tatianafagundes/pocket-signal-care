@@ -54,6 +54,11 @@ export const ONBOARDING_WORKING_STEPS = ONBOARDING_STEPS.filter(
  * `delivery` is kept in the count (optimistic) so the number doesn't jump UP later; choosing eSIM
  * only ever removes a step, and the stepper hides the total until the choice is made (see
  * wizard-page) so the user never sees the count shrink on screen.
+ *
+ * INVARIANT: `simType` is only ever non-null when `offersEsim` is true — `/sim` is the only place
+ * it gets set. The combination `{ offersEsim: false, simType: "physical" }` is impossible in a
+ * real flow; the filter still returns a valid list for it (no `sim`, keeps `delivery`), but don't
+ * construct that combination by hand in later tasks.
  */
 export function workingStepsFor(opts: {
   offersEsim: boolean;
@@ -104,6 +109,11 @@ export interface OnboardingState {
    * Fase 7 money/order orchestration ids the submit fills in. BOTH must be persisted and REUSED
    * on retry (like partyId/customerId) so a retry never authorizes the card twice nor re-submits
    * the order — the dossiê's "Don't pay again" rule. No PAN/CVV/token is ever stored here.
+   *
+   * `addressId`: returned by `logistics.createAddress` (TMF673), physical SIM only.
+   * `authorizationRef`: set from `PaymentResult.authorizationRef` at the authorize step; 7.4 reuses
+   *   it on every retry path (skip authorize if present).
+   * `orderId`: captured from `submitOrder`'s result (today discarded); skip submitOrder if present.
    */
   addressId: string | null;
   authorizationRef: string | null;
