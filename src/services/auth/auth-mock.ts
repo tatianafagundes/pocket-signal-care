@@ -58,6 +58,38 @@ export function createAuthMock(): AuthDriver {
       });
     },
 
+    changeEmail(change) {
+      return withMock("auth.changeEmail", () => {
+        if (!validateEmail(change.newEmail)) {
+          return err(seamError("auth.changeEmail.invalid", "validation", "fixInput"));
+        }
+        const from = key(change.currentEmail);
+        const to = key(change.newEmail);
+        const existing = accounts.get(from);
+        if (from === to) {
+          // Same address (maybe different casing): nothing to move.
+          const same = existing ?? {
+            email: change.newEmail.trim(),
+            createdAt: new Date().toISOString(),
+          };
+          return ok(same);
+        }
+        if (accounts.has(to)) {
+          return err(
+            seamError("auth.register.emailInUse", "conflict", "fixInput", "Email already in use."),
+          );
+        }
+        // The in-memory store resets on reload; an unknown current email is recreated, not refused.
+        const moved: Account = {
+          email: change.newEmail.trim(),
+          createdAt: existing?.createdAt ?? new Date().toISOString(),
+        };
+        accounts.delete(from);
+        accounts.set(to, moved);
+        return ok(moved);
+      });
+    },
+
     login(credentials) {
       return withMock("auth.login", () => {
         // Demo: accept any FORMAT-valid credential. Only shape is checked, not a stored password.

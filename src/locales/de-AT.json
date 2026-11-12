@@ -116,7 +116,8 @@
     },
     "nav": {
       "back": "Zurück",
-      "continue": "Weiter"
+      "continue": "Weiter",
+      "returnToReview": "Speichern und zurück zur Übersicht"
     },
     "error": {
       "generic": "Etwas ist schiefgelaufen. Bitte versuch es erneut.",
@@ -232,7 +233,10 @@
         "unmet": "noch nicht"
       },
       "showPassword": "Passwort anzeigen",
-      "hidePassword": "Passwort verbergen"
+      "hidePassword": "Passwort verbergen",
+      "editNote": "Dein Konto ist schon eingerichtet. Hier kannst du Name oder E-Mail ändern – dein Passwort bleibt gleich.",
+      "editTitle": "Deine Daten",
+      "editSubtitle": "Prüf deinen Namen und deine E-Mail – so erreichen wir dich."
     },
     "seamError": {
       "auth": {

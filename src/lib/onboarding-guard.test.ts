@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveOnboardingStep, firstIncompleteStep } from "@/lib/onboarding-guard";
+import { continueTarget, resolveOnboardingStep, firstIncompleteStep } from "@/lib/onboarding-guard";
 import { initialOnboardingState } from "@/lib/onboarding-persistence";
 import type { OnboardingState } from "@/lib/onboarding-context";
 
@@ -113,5 +113,34 @@ describe("firstIncompleteStep — the sim/delivery gates (Fase 7.5)", () => {
       deliveryAddress: null,
     };
     expect(firstIncompleteStep(s)).toBe("delivery");
+  });
+});
+
+describe("continueTarget", () => {
+  it("should go to the next step on a first pass", () => {
+    const planOnly = { ...empty, selectedOfferId: "o1" };
+    expect(continueTarget("plan", planOnly)).toEqual({ to: "number", returnsToReview: false });
+  });
+
+  it("should return to review when the plan is changed and everything else is still filled in", () => {
+    expect(continueTarget("plan", esimFlow)).toEqual({ to: "review", returnsToReview: true });
+  });
+
+  it("should return to review after changing the number from review", () => {
+    expect(continueTarget("number", esimFlow)).toEqual({ to: "review", returnsToReview: true });
+  });
+
+  it("should stop at delivery when switching to a physical SIM with no address yet", () => {
+    const physical = { ...esimFlow, simType: "physical" as const };
+    expect(continueTarget("sim", physical)).toEqual({ to: "delivery", returnsToReview: false });
+  });
+
+  it("should stop at the SIM step when a plan change cleared the SIM choice", () => {
+    const simCleared = { ...esimFlow, simType: null };
+    expect(continueTarget("plan", simCleared)).toEqual({ to: "sim", returnsToReview: false });
+  });
+
+  it("should not label it a return when review is simply the next step", () => {
+    expect(continueTarget("sim", esimFlow)).toEqual({ to: "review", returnsToReview: false });
   });
 });

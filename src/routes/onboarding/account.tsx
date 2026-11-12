@@ -3,7 +3,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { stepAfter, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
+import { stepBefore, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
+import { continueTarget } from "@/lib/onboarding-guard";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -22,7 +23,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { api, SeamFailure } from "@/services/api";
-import { buildAccountFormSchema, type AccountFormValues } from "@/schemas/account-form";
+import {
+  buildAccountEditSchema,
+  buildAccountFormSchema,
+  type AccountFormValues,
+} from "@/schemas/account-form";
 import { PasswordInput } from "@/components/onboarding/password-input";
 
 export const Route = createFileRoute("/onboarding/account")({
@@ -52,21 +57,24 @@ function AccountPage() {
   // SeamFailure surfaced from register (e.g. emailInUse). Form-field errors are handled by RHF.
   const [seamError, setSeamError] = useState<SeamFailure | null>(null);
 
+  // Once the account exists (registered earlier in this flow), this step only edits name/email:
+  // no password, and no second register call (which would fail with "email already in use").
+  const accountExists = state.registeredEmail != null;
+
   // Name + email + password in one step. Memoised on `t` so messages follow the locale.
-  const schema = useMemo(
-    () =>
-      buildAccountFormSchema({
-        givenNameRequired: t("onboarding.details.givenNameRequired", "Enter your first name."),
-        familyNameRequired: t("onboarding.details.familyNameRequired", "Enter your last name."),
-        emailInvalid: t("onboarding.account.emailInvalid", "Enter a valid email address."),
-        passwordWeak: t(
-          "onboarding.account.passwordWeak",
-          "Your password doesn't meet the requirements yet.",
-        ),
-        confirmMismatch: t("onboarding.account.confirmMismatch", "The passwords don't match."),
-      }),
-    [t],
-  );
+  const schema = useMemo(() => {
+    const messages = {
+      givenNameRequired: t("onboarding.details.givenNameRequired", "Enter your first name."),
+      familyNameRequired: t("onboarding.details.familyNameRequired", "Enter your last name."),
+      emailInvalid: t("onboarding.account.emailInvalid", "Enter a valid email address."),
+      passwordWeak: t(
+        "onboarding.account.passwordWeak",
+        "Your password doesn't meet the requirements yet.",
+      ),
+      confirmMismatch: t("onboarding.account.confirmMismatch", "The passwords don't match."),
+    };
+    return accountExists ? buildAccountEditSchema(messages) : buildAccountFormSchema(messages);
+  }, [t, accountExists]);
 
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(schema),
@@ -82,24 +90,32 @@ function AccountPage() {
 
   const passwordValue = form.watch("password");
 
+  const target = (s: typeof state) => continueTarget("account", s, TENANT_OFFERS_ESIM);
+  const returnsToReview = accountExists && target(state).returnsToReview;
+
   async function onSubmit(values: AccountFormValues) {
     setSeamError(null);
+    const email = values.email.trim();
     try {
-      // The password is passed to the seam and NEVER persisted: only the email goes to context.
-      await api.register({
-        tenantId: tenant,
-        email: values.email,
-        password: values.password,
-      });
-      patch({
-        email: values.email,
+      if (state.registeredEmail == null) {
+        // The password is passed to the seam and NEVER persisted: only the email goes to context.
+        await api.register({ tenantId: tenant, email, password: values.password });
+      } else if (email.toLowerCase() !== state.registeredEmail.toLowerCase()) {
+        // Account already exists: move it to the new email instead of registering again.
+        await api.changeEmail({
+          tenantId: tenant,
+          currentEmail: state.registeredEmail,
+          newEmail: email,
+        });
+      }
+      const update = {
+        email,
+        registeredEmail: email,
         givenName: values.givenName.trim(),
         familyName: values.familyName.trim(),
-      });
-      // A physical SIM needs a shipping address before review; eSIM (or no SIM choice) skips it.
-      // Next is the SIM choice (or delivery/review when the tenant offers no eSIM).
-      const next = stepAfter("account", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType });
-      await navigate({ to: `/onboarding/${next}` });
+      };
+      patch(update);
+      await navigate({ to: `/onboarding/${target({ ...state, ...update }).to}` });
     } catch (err) {
       if (err instanceof SeamFailure) {
         setSeamError(err);
@@ -112,16 +128,36 @@ function AccountPage() {
   return (
     <WizardPage
       step="account"
-      title={t("onboarding.account.title", "Create your account")}
-      subtitle={t(
-        "onboarding.account.subtitle",
-        "Your name, email and a password set up your profile and keep your service safe.",
-      )}
+      title={
+        accountExists
+          ? t("onboarding.account.editTitle", "Your details")
+          : t("onboarding.account.title", "Create your account")
+      }
+      subtitle={
+        accountExists
+          ? t(
+              "onboarding.account.editSubtitle",
+              "Check your name and email — this is how we reach you.",
+            )
+          : t(
+              "onboarding.account.subtitle",
+              "Your name, email and a password set up your profile and keep your service safe.",
+            )
+      }
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4" noValidate>
           {/* emailInUse is a conflict (not retryable): the notice shows the mapped copy, no retry. */}
           {seamError ? <SeamErrorNotice error={seamError} /> : null}
+
+          {accountExists ? (
+            <p className="rounded-card bg-accent-tint p-3 type-caption text-accent-ink">
+              {t(
+                "onboarding.account.editNote",
+                "Your account is already set up. You can update your name or email here — your password stays the same.",
+              )}
+            </p>
+          ) : null}
 
           {(["givenName", "familyName"] as const).map((name) => (
             <FormField
@@ -161,43 +197,54 @@ function AccountPage() {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("onboarding.account.password", "Password")}</FormLabel>
-                <FormControl>
-                  <PasswordInput
-                    autoComplete="new-password"
-                    aria-describedby="pw-checklist"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {accountExists ? null : (
+            <>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("onboarding.account.password", "Password")}</FormLabel>
+                    <FormControl>
+                      <PasswordInput
+                        autoComplete="new-password"
+                        aria-describedby="pw-checklist"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <PasswordChecklist id="pw-checklist" password={passwordValue} />
+              <PasswordChecklist id="pw-checklist" password={passwordValue} />
 
-          <FormField
-            control={form.control}
-            name="confirm"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("onboarding.account.confirm", "Confirm password")}</FormLabel>
-                <FormControl>
-                  <PasswordInput autoComplete="new-password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="confirm"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("onboarding.account.confirm", "Confirm password")}</FormLabel>
+                    <FormControl>
+                      <PasswordInput autoComplete="new-password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/number" })}
+            onBack={() =>
+              navigate({
+                to: `/onboarding/${stepBefore("account", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType })}`,
+              })
+            }
             continueType="submit"
+            {...(returnsToReview
+              ? { continueLabel: t("onboarding.nav.returnToReview", "Save and return to review") }
+              : {})}
             busy={form.formState.isSubmitting}
           />
         </form>

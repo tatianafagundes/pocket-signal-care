@@ -137,7 +137,7 @@ function ReviewPage() {
       }
       const planPriceMinor = offer.priceMinor;
       // Tokenize the entered card (mock). The PAN never leaves this function — only the token is
-      // passed on, and nothing card-related is persisted to state/sessionStorage.
+      // passed on, and nothing card-related is persisted to state/localStorage.
       const methodToken = tokenizeCardMock(cardNumber);
       const customerId = await runOnboardingSubmit({
         state,

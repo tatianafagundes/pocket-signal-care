@@ -1,5 +1,5 @@
 import { err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Session } from "@/services/model";
+import type { Account, Session } from "@/services/model";
 import type { AuthDriver } from "@/services/auth/auth-driver";
 
 /*
@@ -16,6 +16,8 @@ import type { AuthDriver } from "@/services/auth/auth-driver";
  *   login    → Authorization Code Flow + PKCE (redirect to Keycloak, code → token exchange).
  *              Returns access_token (JWT) + refresh_token. The JWT carries the tenant; the app
  *              then sends `Authorization: Bearer <JWT>` and `X-Tenant-Id` on seam calls.
+ *   changeEmail → Keycloak Admin REST API (PUT /admin/realms/{realm}/users/{id}), done
+ *              server-side for the signed-up user; the SPA never holds admin credentials.
  *   NEVER use the Resource Owner Password Credentials (ROPC) grant — it exposes the password to
  *   the client and is deprecated in OAuth 2.1. Use Authorization Code + PKCE with state+nonce.
  *   Token storage must be secure (httpOnly cookie via a backend, or the adapter's storage) —
@@ -41,6 +43,9 @@ export function createAuthHttp(): AuthDriver {
     },
     login(): Promise<SeamResult<Session>> {
       return Promise.resolve(notImplemented<Session>("login"));
+    },
+    changeEmail(): Promise<SeamResult<Account>> {
+      return Promise.resolve(notImplemented<Account>("changeEmail"));
     },
   };
 }

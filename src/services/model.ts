@@ -87,9 +87,9 @@ export interface PartyInteraction {
    * party itself (order, MSISDN, cart). Used to link the timeline back to what happened.
    */
   relatedEntities?: {
-    orderId?: string;
-    msisdn?: string;
-    cartId?: string;
+    orderId?: string | undefined;
+    msisdn?: string | undefined;
+    cartId?: string | undefined;
   };
   /** Catalogue key for localized copy when status is failed (or a reason label). */
   reasonKey?: string;
@@ -337,6 +337,13 @@ export interface Session {
  * Credentials travel UI → auth seam only. The password is validated then discarded — never
  * persisted, never logged, never sent to the CPR.
  */
+/** Change the email of an account that already exists (no password needed during onboarding). */
+export interface EmailChange {
+  tenantId: TenantId;
+  currentEmail: string;
+  newEmail: string;
+}
+
 export interface Credentials {
   tenantId: TenantId;
   email: string;

@@ -79,6 +79,7 @@ export const api = {
   // Auth seam (mock + Keycloak stub) — register/login. Password never leaves the seam.
   register: (input: unknown) => unwrap(auth.registerAccount(input)),
   login: (input: unknown) => unwrap(auth.loginAccount(input)),
+  changeEmail: (input: unknown) => unwrap(auth.changeAccountEmail(input)),
 
   // Payment seam (extensão paymentAuthorization, mock) — authorize/capture/void. No PAN here.
   authorizePayment: (input: unknown) => unwrap(payment.authorize(input)),

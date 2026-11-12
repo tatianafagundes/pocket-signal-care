@@ -27,3 +27,16 @@ export function buildAccountFormSchema(m: AccountFormMessages) {
 }
 
 export type AccountFormValues = z.infer<ReturnType<typeof buildAccountFormSchema>>;
+
+/** Editing an account that already exists: name + email only, no password. */
+export function buildAccountEditSchema(
+  m: Omit<AccountFormMessages, "passwordWeak" | "confirmMismatch">,
+) {
+  return z.object({
+    givenName: z.string().trim().min(1, m.givenNameRequired),
+    familyName: z.string().trim().min(1, m.familyNameRequired),
+    email: z.string().trim().email(m.emailInvalid),
+    password: z.string(),
+    confirm: z.string(),
+  });
+}

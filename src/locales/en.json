@@ -116,7 +116,8 @@
     },
     "nav": {
       "back": "Back",
-      "continue": "Continue"
+      "continue": "Continue",
+      "returnToReview": "Save and return to review"
     },
     "error": {
       "generic": "Something went wrong. Please try again.",
@@ -232,7 +233,10 @@
         "unmet": "not yet"
       },
       "showPassword": "Show password",
-      "hidePassword": "Hide password"
+      "hidePassword": "Hide password",
+      "editNote": "Your account is already set up. You can update your name or email here — your password stays the same.",
+      "editTitle": "Your details",
+      "editSubtitle": "Check your name and email — this is how we reach you."
     },
     "seamError": {
       "auth": {

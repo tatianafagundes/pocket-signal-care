@@ -1,5 +1,5 @@
 import type { SeamResult } from "@/services/seam-result";
-import type { Credentials, Session } from "@/services/model";
+import type { Account, Credentials, EmailChange, Session } from "@/services/model";
 
 /*
  * AuthDriver — the interface the mock and the http (Keycloak) client implement. (Spec Fase 5)
@@ -13,4 +13,6 @@ export interface AuthDriver {
   register(credentials: Credentials): Promise<SeamResult<Session>>;
   /** Authenticate. In the mock, any format-valid credential succeeds (demo); the real IdP checks. */
   login(credentials: Credentials): Promise<SeamResult<Session>>;
+  /** Move an existing account to a new email. Fails if the new email already has an account. */
+  changeEmail(change: EmailChange): Promise<SeamResult<Account>>;
 }

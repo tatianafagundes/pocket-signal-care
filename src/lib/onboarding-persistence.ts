@@ -9,10 +9,9 @@ import type { DeliveryAddress, SimChoice } from "@/services/model";
 /*
  * Onboarding persistence. (Spec Fase 5 / Req 6.3, 9.1)
  *
- * Non-secret wizard state survives a page refresh WITHIN the same session via sessionStorage,
- * with an expiry so a stale, abandoned flow doesn't resurrect hours later (and, in the real
- * backend, doesn't confirm a MSISDN the resource seam has long since released). sessionStorage
- * (not localStorage) scopes it to the tab/session, matching "resume within the same session".
+ * Non-secret wizard state survives reloads, closed tabs and new browser sessions via localStorage,
+ * with an expiry so an abandoned flow doesn't resurrect days later (and, in the real backend,
+ * doesn't confirm a MSISDN the resource seam has long since released).
  *
  * Reads are defensive: anything malformed, expired, or from a DIFFERENT tenant is ignored and the
  * wizard starts clean. The password/token are never part of OnboardingState, so there is nothing
@@ -24,7 +23,7 @@ import type { DeliveryAddress, SimChoice } from "@/services/model";
 
 const STORAGE_KEY = "onboarding:v1";
 /** How long a persisted flow stays resumable. Abandoned flows expire rather than mislead. */
-const TTL_MS = 60 * 60 * 1000; // 60 minutes
+export const ONBOARDING_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface Envelope {
   savedAt: number;
@@ -32,7 +31,7 @@ interface Envelope {
 }
 
 function hasWindow(): boolean {
-  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
+  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
 /** Build the clean initial state for a tenant — the start of the wizard. */
@@ -45,6 +44,7 @@ export function initialOnboardingState(tenant: TenantId): OnboardingState {
     simType: null,
     reservedMsisdn: null,
     email: null,
+    registeredEmail: null,
     givenName: null,
     familyName: null,
     deliveryAddress: null,
@@ -73,7 +73,7 @@ function isOnboardingStep(value: unknown): value is OnboardingStep {
 function reviveForTenant(raw: unknown, tenant: TenantId, now: number): OnboardingState | null {
   if (typeof raw !== "object" || raw === null) return null;
   const env = raw as Partial<Envelope>;
-  if (typeof env.savedAt !== "number" || now - env.savedAt > TTL_MS) return null;
+  if (typeof env.savedAt !== "number" || now - env.savedAt > ONBOARDING_TTL_MS) return null;
 
   const s = env.state;
   if (typeof s !== "object" || s === null) return null;
@@ -100,6 +100,7 @@ function reviveForTenant(raw: unknown, tenant: TenantId, now: number): Onboardin
     simType: simType(state.simType),
     reservedMsisdn: str(state.reservedMsisdn),
     email: str(state.email),
+    registeredEmail: str(state.registeredEmail),
     givenName: str(state.givenName),
     familyName: str(state.familyName),
     deliveryAddress: reviveDeliveryAddress(state.deliveryAddress),
@@ -141,7 +142,7 @@ function reviveDeliveryAddress(v: unknown): DeliveryAddress | null {
 export function loadOnboardingState(tenant: TenantId): OnboardingState {
   if (!hasWindow()) return initialOnboardingState(tenant);
   try {
-    const rawJson = window.sessionStorage.getItem(STORAGE_KEY);
+    const rawJson = window.localStorage.getItem(STORAGE_KEY);
     if (!rawJson) return initialOnboardingState(tenant);
     const revived = reviveForTenant(JSON.parse(rawJson), tenant, Date.now());
     return revived ?? initialOnboardingState(tenant);
@@ -155,9 +156,9 @@ export function saveOnboardingState(state: OnboardingState): void {
   if (!hasWindow()) return;
   try {
     const env: Envelope = { savedAt: Date.now(), state };
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(env));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(env));
   } catch {
-    // Storage full / disabled (private mode) — the wizard still works in-memory this session.
+    // Storage full / disabled (private mode) — the wizard still works in memory for this visit.
   }
 }
 
@@ -165,7 +166,7 @@ export function saveOnboardingState(state: OnboardingState): void {
 export function clearOnboardingState(): void {
   if (!hasWindow()) return;
   try {
-    window.sessionStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(STORAGE_KEY);
   } catch {
     // ignore
   }

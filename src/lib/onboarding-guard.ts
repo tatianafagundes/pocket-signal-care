@@ -1,5 +1,6 @@
 import {
   ONBOARDING_STEPS,
+  stepAfter,
   type OnboardingState,
   type OnboardingStep,
 } from "@/lib/onboarding-context";
@@ -45,4 +46,30 @@ export function resolveOnboardingStep(
 ): OnboardingStep {
   const gap = firstIncompleteStep(state, offersEsim);
   return ORDER.indexOf(target) <= ORDER.indexOf(gap) ? target : gap;
+}
+
+export interface ContinueTarget {
+  /** Where Continue leads. */
+  to: OnboardingStep;
+  /** True when Continue skips ahead to Review (label it "Save and return to review"). */
+  returnsToReview: boolean;
+}
+
+/**
+ * Where Continue on `step` leads, given the state AFTER this step's change. Normally the next
+ * step; but when every step after it is still complete (the user came back from Review to change
+ * one thing), it skips straight to the first unfinished step — usually Review. If the change made
+ * a later step incomplete (e.g. switching to a physical SIM now needs an address), it stops there.
+ */
+export function continueTarget(
+  step: Exclude<OnboardingStep, "success" | "review">,
+  state: OnboardingState,
+  offersEsim = true,
+): ContinueTarget {
+  const natural = stepAfter(step, { offersEsim, simType: state.simType });
+  const gap = firstIncompleteStep(state, offersEsim);
+  // Never skip past Review: the order is placed there, not here.
+  const capped: OnboardingStep = gap === "success" ? "review" : gap;
+  const to = ORDER.indexOf(capped) > ORDER.indexOf(natural) ? capped : natural;
+  return { to, returnsToReview: to === "review" && natural !== "review" };
 }

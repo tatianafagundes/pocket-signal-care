@@ -86,3 +86,6 @@ backend; every other system is mocked behind a seam). The design system is
   TMF mapping lives ONLY in a seam's `*-http.ts` client — never in the seam, a rule, or the UI.
 - Onboarding step access is decided by the pure resolver in `src/lib/onboarding-guard.ts`, applied in the /onboarding layout on route change — keeps deep links from skipping steps.
 - Onboarding Back/Continue targets come from `stepAfter`/`stepBefore` in `src/lib/onboarding-context.ts` (derived from the step order and SIM type) — keeps navigation from drifting when steps move.
+- Onboarding Continue targets come from `continueTarget` in `src/lib/onboarding-guard.ts`: it skips ahead to the first unfinished step (usually Review) when later steps are still complete — so editing from Review never forces a replay.
+- Once `registeredEmail` is set, the account step edits name/email in place (`api.changeEmail`) and never calls `register` again — avoids the "email already in use" dead end.
+- Onboarding progress persists in localStorage with a 24-hour expiry (non-secret fields only) — so a closed tab or new browser session can resume.

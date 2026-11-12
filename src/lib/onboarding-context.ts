@@ -11,7 +11,7 @@ import type { DeliveryAddress, SimChoice } from "@/services/model";
  * truth for "where the user is" and "what they've chosen so far".
  *
  * SECRETS NEVER LIVE HERE. The password is an auth secret — it stays in the account form's memory
- * and the auth seam argument, and never touches this context, sessionStorage, a log, or CPR
+ * and the auth seam argument, and never touches this context, localStorage, a log, or CPR
  * (locked decision, Fase A). The session token is likewise out of scope here.
  *
  * Context identity is kept in src/lib/ (outside the provider component and the hook) so Fast
@@ -80,7 +80,7 @@ export function workingStepsFor(opts: {
 }
 
 /**
- * The persisted, non-secret wizard state. Everything here is safe to write to sessionStorage:
+ * The persisted, non-secret wizard state. Everything here is safe to write to localStorage:
  * identifiers and user-entered non-secret fields. NO password, NO token.
  */
 export interface OnboardingState {
@@ -101,6 +101,12 @@ export interface OnboardingState {
   reservedMsisdn: string | null;
   /** Account email (not a secret; the password is never stored). */
   email: string | null;
+  /*
+   * The email the auth account was registered under, set once `register` succeeds. Non-null means
+   * the account already exists: revisiting the account step edits name/email in place (email via
+   * `changeEmail`) instead of registering again, and no password is asked for.
+   */
+  registeredEmail: string | null;
   /** Personal details. */
   givenName: string | null;
   familyName: string | null;

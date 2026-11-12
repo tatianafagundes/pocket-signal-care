@@ -11,6 +11,7 @@ import type { OnboardingState } from "@/lib/onboarding-context";
 const STORAGE_KEY = "onboarding:v1";
 
 afterEach(() => {
+  window.localStorage.clear();
   window.sessionStorage.clear();
   vi.useRealTimers();
 });
@@ -35,9 +36,26 @@ describe("onboarding-persistence", () => {
     expect(loadOnboardingState("drei")).toEqual(saved);
   });
 
+  it("saves to localStorage (survives a closed tab), not sessionStorage", () => {
+    saveOnboardingState({ ...initialOnboardingState("drei"), step: "plan" });
+    expect(window.localStorage.getItem(STORAGE_KEY)).not.toBeNull();
+    expect(window.sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("round-trips the registered email so a revisit doesn't register again", () => {
+    const saved: OnboardingState = {
+      ...initialOnboardingState("drei"),
+      step: "review",
+      email: "a@b.at",
+      registeredEmail: "a@b.at",
+    };
+    saveOnboardingState(saved);
+    expect(loadOnboardingState("drei").registeredEmail).toBe("a@b.at");
+  });
+
   it("never persists a password or token field (shape is non-secret only)", () => {
     saveOnboardingState({ ...initialOnboardingState("drei"), email: "a@b.at" });
-    const rawJson = window.sessionStorage.getItem(STORAGE_KEY) ?? "";
+    const rawJson = window.localStorage.getItem(STORAGE_KEY) ?? "";
     expect(rawJson).not.toMatch(/password|token/i);
   });
 
@@ -52,13 +70,13 @@ describe("onboarding-persistence", () => {
     expect(asDreigo).toEqual(initialOnboardingState("dreigo"));
   });
 
-  it("expires state older than the TTL", () => {
+  it("expires state older than 24 hours", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     saveOnboardingState({ ...initialOnboardingState("drei"), step: "plan" });
 
-    // 61 minutes later — past the 60-minute TTL.
-    vi.setSystemTime(new Date("2026-01-01T01:01:00Z"));
+    // 24 h 1 min later — past the 24-hour TTL.
+    vi.setSystemTime(new Date("2026-01-02T00:01:00Z"));
     expect(loadOnboardingState("drei")).toEqual(initialOnboardingState("drei"));
   });
 
@@ -67,18 +85,18 @@ describe("onboarding-persistence", () => {
     vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     saveOnboardingState({ ...initialOnboardingState("drei"), step: "plan" });
 
-    // 59 minutes later — within the window.
-    vi.setSystemTime(new Date("2026-01-01T00:59:00Z"));
+    // 23 hours later — within the window.
+    vi.setSystemTime(new Date("2026-01-01T23:00:00Z"));
     expect(loadOnboardingState("drei").step).toBe("plan");
   });
 
-  it("still resumes at exactly the TTL boundary (60 min is not yet expired)", () => {
+  it("still resumes at exactly the TTL boundary (24 h is not yet expired)", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     saveOnboardingState({ ...initialOnboardingState("drei"), step: "plan" });
 
-    // Exactly 60 minutes: `now - savedAt > TTL` is false, so it still resumes.
-    vi.setSystemTime(new Date("2026-01-01T01:00:00Z"));
+    // Exactly 24 hours: `now - savedAt > TTL` is false, so it still resumes.
+    vi.setSystemTime(new Date("2026-01-02T00:00:00Z"));
     expect(loadOnboardingState("drei").step).toBe("plan");
   });
 
@@ -87,14 +105,14 @@ describe("onboarding-persistence", () => {
       savedAt: Date.now(),
       state: { ...initialOnboardingState("drei"), step: "plan", injected: "evil" },
     };
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(env));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(env));
     const loaded = loadOnboardingState("drei") as unknown as Record<string, unknown>;
     expect(loaded["injected"]).toBeUndefined();
     expect(Object.keys(loaded).sort()).toEqual(Object.keys(initialOnboardingState("drei")).sort());
   });
 
   it("starts clean on malformed JSON", () => {
-    window.sessionStorage.setItem(STORAGE_KEY, "{ not json");
+    window.localStorage.setItem(STORAGE_KEY, "{ not json");
     expect(loadOnboardingState("drei")).toEqual(initialOnboardingState("drei"));
   });
 
@@ -103,14 +121,14 @@ describe("onboarding-persistence", () => {
       savedAt: Date.now(),
       state: { ...initialOnboardingState("drei"), step: "bogus" },
     };
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(env));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(env));
     expect(loadOnboardingState("drei")).toEqual(initialOnboardingState("drei"));
   });
 
   it("clear removes persisted state", () => {
     saveOnboardingState({ ...initialOnboardingState("drei"), step: "review" });
     clearOnboardingState();
-    expect(window.sessionStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(loadOnboardingState("drei")).toEqual(initialOnboardingState("drei"));
   });
 
@@ -164,7 +182,7 @@ describe("onboarding-persistence", () => {
         deliveryAddress: { line1: "x", city: "Wien" }, // missing required fields
       },
     };
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(env));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(env));
     const loaded = loadOnboardingState("drei");
     expect(loaded.simType).toBeNull();
     expect(loaded.deliveryAddress).toBeNull();
@@ -176,7 +194,7 @@ describe("onboarding-persistence", () => {
       simType: "physical",
       authorizationRef: "auth-7f3a",
     });
-    const env = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? "{}");
+    const env = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}");
     // The persisted shape carries no card data at all — not a field name, not a value. (A broad
     // digit-run check would false-positive on the savedAt timestamp, so assert on the keys/values
     // of the state that actually gets stored.)

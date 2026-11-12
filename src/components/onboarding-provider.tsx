@@ -17,7 +17,7 @@ import { useTenant } from "@/hooks/use-tenant";
 /*
  * OnboardingProvider. (Spec Fase 5 / Req 1, 6.3, 9.1)
  *
- * Owns the wizard state for the current tenant, persists non-secret state to sessionStorage on
+ * Owns the wizard state for the current tenant, persists non-secret state to localStorage on
  * every patch (so a refresh resumes where the user was), and exposes `patch`/`reset`.
  *
  * Tenant pinning: the tenant is captured ONCE, from the tenant context at mount. If the brand

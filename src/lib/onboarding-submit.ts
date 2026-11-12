@@ -37,7 +37,7 @@ import type { TenantId } from "@/lib/tenant-rules";
  *
  * The SIM is NOT a catalogue offer — it reuses the order seam's "<tenant>-sim-po" provisioning id.
  * The methodToken is an opaque (mock) payment token passed in by the caller; it is NEVER stored in
- * state, sessionStorage, or a log. submitOrder is synchronous in the mock (status "completed"); a
+ * state, localStorage, or a log. submitOrder is synchronous in the mock (status "completed"); a
  * non-terminal real EOC status that needs polling is a Fase 8 concern. On any seam failure this
  * throws (the SeamFailure bubbles to the page); partial progress is persisted so a retry resumes.
  */

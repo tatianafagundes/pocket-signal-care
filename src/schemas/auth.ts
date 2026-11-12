@@ -25,3 +25,9 @@ export const credentialsSchema = z.object({
 });
 
 export type CredentialsInput = z.infer<typeof credentialsSchema>;
+
+export const emailChangeSchema = z.object({
+  tenantId: tenantIdSchema,
+  currentEmail: z.string().trim().min(1).max(256),
+  newEmail: z.string().trim().min(1).max(256),
+});

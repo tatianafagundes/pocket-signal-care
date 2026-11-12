@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
-import { stepAfter, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
+import { stepBefore, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
+import { continueTarget } from "@/lib/onboarding-guard";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -83,10 +84,11 @@ function SimPage() {
     patch({ simType: value as SimChoice });
   }
 
+  // A physical SIM goes on to /delivery (or back to /review when the address is already in);
+  // an eSIM goes straight to /review.
+  const next = continueTarget("sim", state, TENANT_OFFERS_ESIM);
   function onContinue() {
-    // A physical SIM goes on to /delivery; an eSIM goes straight to /review.
-    const next = stepAfter("sim", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType });
-    void navigate({ to: `/onboarding/${next}` });
+    void navigate({ to: `/onboarding/${next.to}` });
   }
 
   return (
@@ -158,8 +160,15 @@ function SimPage() {
           </p>
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/account" })}
+            onBack={() =>
+              navigate({
+                to: `/onboarding/${stepBefore("sim", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType })}`,
+              })
+            }
             onContinue={onContinue}
+            {...(next.returnsToReview
+              ? { continueLabel: t("onboarding.nav.returnToReview", "Save and return to review") }
+              : {})}
             continueDisabled={state.simType == null}
             disabledHint={t("onboarding.sim.disabledHint", "Choose a SIM type to continue.")}
           />

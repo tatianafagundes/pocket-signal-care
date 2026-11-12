@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { registerAccount, loginAccount } from "@/services/auth.functions";
+import { changeAccountEmail, registerAccount, loginAccount } from "@/services/auth.functions";
 import { clearForcedError, forceError } from "@/services/mock-support";
 
 afterEach(() => clearForcedError());
@@ -92,5 +92,40 @@ describe("auth seam (mock)", () => {
     const r = await loginAccount({ tenantId: "drei", email: uniqueEmail(), password: strong });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.category).toBe("unavailable");
+  });
+
+  it("should move an existing account to a new email without a password", async () => {
+    const currentEmail = uniqueEmail();
+    const newEmail = uniqueEmail();
+    await registerAccount({ tenantId: "drei", email: currentEmail, password: strong });
+    const r = await changeAccountEmail({ tenantId: "drei", currentEmail, newEmail });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.email).toBe(newEmail);
+    // The old email is free again; the new one is taken.
+    const again = await registerAccount({
+      tenantId: "drei",
+      email: currentEmail,
+      password: strong,
+    });
+    expect(again.ok).toBe(true);
+    const taken = await registerAccount({ tenantId: "drei", email: newEmail, password: strong });
+    expect(taken.ok).toBe(false);
+  });
+
+  it("should refuse to change to an email that already has an account", async () => {
+    const a = uniqueEmail();
+    const b = uniqueEmail();
+    await registerAccount({ tenantId: "drei", email: a, password: strong });
+    await registerAccount({ tenantId: "drei", email: b, password: strong });
+    const r = await changeAccountEmail({ tenantId: "drei", currentEmail: a, newEmail: b });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.code).toBe("auth.register.emailInUse");
+  });
+
+  it("should accept the same email again (no change, no conflict)", async () => {
+    const email = uniqueEmail();
+    await registerAccount({ tenantId: "drei", email, password: strong });
+    const r = await changeAccountEmail({ tenantId: "drei", currentEmail: email, newEmail: email });
+    expect(r.ok).toBe(true);
   });
 });

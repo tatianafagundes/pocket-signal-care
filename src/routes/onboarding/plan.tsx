@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
+import { TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
+import { continueTarget } from "@/lib/onboarding-guard";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import { useTenant } from "@/hooks/use-tenant";
 import { WizardPage } from "@/components/onboarding/wizard-page";
@@ -43,8 +45,17 @@ function PlanPage() {
   function selectOffer(offerId: string) {
     // B1: selecting a plan is the single source of the chosen plan. The review summary is rebuilt
     // from `selectedOfferId` at render, so there is no stale plan-derived cache to clear here.
-    patch({ selectedOfferId: offerId });
+    // One exception: if the new plan doesn't offer the SIM form chosen earlier, that choice is
+    // cleared so Continue sends the user back through the SIM step instead of to Review.
+    const offer = offersQuery.data?.find((o) => o.offerId === offerId);
+    const simStillAllowed =
+      state.simType == null || offer?.simTypes == null || offer.simTypes.includes(state.simType);
+    patch(
+      simStillAllowed ? { selectedOfferId: offerId } : { selectedOfferId: offerId, simType: null },
+    );
   }
+
+  const next = continueTarget("plan", state, TENANT_OFFERS_ESIM);
 
   return (
     <WizardPage
@@ -103,7 +114,10 @@ function PlanPage() {
 
           <WizardNav
             onBack={() => navigate({ to: "/onboarding/welcome" })}
-            onContinue={() => navigate({ to: "/onboarding/number" })}
+            onContinue={() => navigate({ to: `/onboarding/${next.to}` })}
+            {...(next.returnsToReview
+              ? { continueLabel: t("onboarding.nav.returnToReview", "Save and return to review") }
+              : {})}
             continueDisabled={state.selectedOfferId == null}
             disabledHint={t("onboarding.plan.disabledHint", "Choose a plan to continue.")}
           />
