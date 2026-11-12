@@ -51,13 +51,58 @@ export interface Product {
   simType?: SimChoice;
 }
 
-/** Prepaid balance (TMF654). Minor units to avoid float errors. */
+/** Prepaid balance (TMF654 billing-account). Minor units to avoid float errors. */
 export interface Balance {
   /** Balance in minor units (euro cents). */
   amountMinor: number;
   currency: "EUR";
   /** ISO date the balance/plan validity expires, when applicable. */
   validUntil?: string;
+}
+
+/**
+ * Unit of measure for a usage bucket: data in GB, voice in minutes, SMS as a count. GB (not MB)
+ * matches both the catalogue (`Offer.dataAmount` is "10 GB") and the live TMF654 payload the real
+ * ECEV/CBEV connector returns (`productBucket[].remainingValue[].units: "GB"`), so a bucket maps
+ * straight in with no unit conversion.
+ */
+export type UsageUnit = "GB" | "min" | "sms";
+
+/** A measured quantity + its unit — mirrors the money axis's { amountMinor, currency } shape. */
+export interface UsageQuantity {
+  value: number;
+  unit: UsageUnit;
+}
+
+/**
+ * A non-monetary allowance bucket (TMF654 "Prepay Balance Management" product bucket). This is the
+ * USAGE axis — what the line consumes (data/voice/SMS/roaming) — kept distinct from the monetary
+ * `Balance` (how much money is on the account). The prepaid dashboard shows both; a user can be
+ * "out of data" (needs an add-on) yet have money, or "out of money" (needs a top-up) yet have data.
+ *
+ * Contract: TMF654 bucket + the DMP Customer-360 requirement C360_011 (total vs available balance,
+ * expiry, offer name) / C360_012 (below a configured % → warning). Validity is a RANGE (TMF654
+ * `validFor`) so a not-yet-started bucket (a future-dated add-on) is representable, not just an end.
+ */
+export interface UsageBucket {
+  bucketId: string;
+  /** All prepaid bucket kinds the 360 may show (C360_011). */
+  type: "data" | "voice" | "sms" | "roaming";
+  /** Unlimited buckets have no meaningful remaining number — the UI shows the word, no bar. */
+  unlimited: boolean;
+  /** Granted total. Absent when unlimited. */
+  total?: UsageQuantity;
+  /** Available remaining. Absent when unlimited. */
+  remaining?: UsageQuantity;
+  /** Validity RANGE (TMF654 validFor). `start` future ⇒ pending; `end` past ⇒ expired. Both ISO. */
+  validFor?: {
+    start?: string;
+    end?: string;
+  };
+  /** Stable reference to the offer that granted this bucket — lets the 360 group/route by offer. */
+  offerId?: string;
+  /** Human offer name for display (C360_011 "offer name"). */
+  offerName?: string;
 }
 
 /**
@@ -117,6 +162,19 @@ export interface Customer360 {
   /** Installed base, each product joined to its catalogue Offer (null when not in the catalogue). */
   installedBase: EnrichedProduct[];
   balance: Balance | null;
+  /**
+   * Non-monetary allowance buckets (TMF654), the USAGE axis — data/voice/SMS/roaming the line has
+   * left. Correlated to the offer that granted each via `UsageBucket.offerId` (= DMP's
+   * `productOfferingId` join key), so a real ECEV/CBEV connector maps `productBucket[]` straight in
+   * (productOfferingId→offerId, initialValue→total, remainingValue→remaining) with no reshaping.
+   * Ordered data→voice→sms→roaming by composition. Empty when none.
+   *
+   * NOTE: the real catalogue (ECM/RMCA) does NOT carry these as fields on the plan Offer — each
+   * allowance is its own Benefit PO (PS_*_BEN_DATA_NAT, _BEN_VOICE_NAT_UNL, _BEN_MSG_NAT,
+   * _BEN_DATA_INT_R) hung off the plan bundle. If the catalogue ever becomes the structural source
+   * of truth, model that as benefit-offer references, not an allowance field on the plan Offer.
+   */
+  usage: UsageBucket[];
   /** Party interactions (TMF683), newest first — the activity timeline. Empty when none. */
   interactions: PartyInteraction[];
 }

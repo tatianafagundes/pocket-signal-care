@@ -7,6 +7,7 @@ import type {
   Party,
   PartyInteraction,
   Product,
+  UsageBucket,
 } from "@/services/model";
 
 /*
@@ -34,6 +35,11 @@ export interface Customer360Parts {
    * to null (the screen falls back to the product's own name).
    */
   offers?: Offer[];
+  /**
+   * Non-monetary allowance buckets (TMF654) from the charging/ECEV seam; empty/absent when the
+   * line has no buckets or the seam is unavailable (the 360 then shows no usage, never an error).
+   */
+  usage?: UsageBucket[];
 }
 
 /** Compose the canonical Customer360 from the sources. Deterministic. */
@@ -58,11 +64,27 @@ export function composeCustomer360(parts: Customer360Parts): Customer360 {
       .sort((a, b) => productKindRank(a.kind) - productKindRank(b.kind))
       .map((p): EnrichedProduct => ({ ...p, offer: offerById.get(p.offerId) ?? null })),
     balance: parts.balance,
+    // Stable order data→voice→sms→roaming, so the usage panel reads the same way every time
+    // regardless of the order the seam returned buckets in.
+    usage: [...(parts.usage ?? [])].sort((a, b) => usageTypeRank(a.type) - usageTypeRank(b.type)),
     // Newest first, so the activity timeline reads top-down regardless of source order.
     interactions: [...(parts.interactions ?? [])].sort((a, b) =>
       b.occurredAt.localeCompare(a.occurredAt),
     ),
   };
+}
+
+function usageTypeRank(type: UsageBucket["type"]): number {
+  switch (type) {
+    case "data":
+      return 0;
+    case "voice":
+      return 1;
+    case "sms":
+      return 2;
+    case "roaming":
+      return 3;
+  }
 }
 
 function productKindRank(kind: Product["kind"]): number {
