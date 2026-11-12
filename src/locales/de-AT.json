@@ -290,31 +290,31 @@
       },
       "offers": {
         "drei-up-start": {
-          "tagline": "Gut für Anrufe, Chat und leichtes Surfen.",
+          "tagline": "Gut für Nachrichten, Anrufe und Karten – meist im WLAN.",
           "description": "Ein leichter Einsteigertarif für alltägliches Nachrichten, Anrufe und ab und zu Karte oder Suche. Ideal, wenn du meist im WLAN bist."
         },
         "drei-up": {
-          "tagline": "Gut für Social Media, Karten und Musik im Alltag.",
+          "tagline": "Gut für Social Media, Musik und etwas Video, auch in der EU.",
           "description": "Unser beliebtester Tarif: genug 5G-Daten für tägliches Social Media, Navigation und Musikstreaming, mit EU-Roaming für Reisen."
         },
         "drei-up-max": {
-          "tagline": "Gut für viel Streaming und Hotspot-Nutzung.",
+          "tagline": "Gut für viel Video jeden Tag oder regelmäßig Hotspot.",
           "description": "Ein großes 5G-Datenvolumen für alle, die täglich Video streamen oder einen Laptop tethern, mit EU-Roaming inklusive."
         },
         "drei-up-unlimited": {
-          "tagline": "Gut für Streaming den ganzen Tag, ohne Datensorgen.",
+          "tagline": "Gut, wenn du streamst und teilst, ohne mitzuzählen.",
           "description": "Unbegrenzte 5G-Daten — streamen, tethern und surfen, ohne auf den Zähler zu schauen. Ideal für Vielnutzer."
         },
         "dreigo-go-8": {
-          "tagline": "Gut, um günstig verbunden zu bleiben.",
+          "tagline": "Gut für Nachrichten, Anrufe und leichtes Surfen zum kleinen Preis.",
           "description": "Ein einfacher, günstiger Tarif für Anrufe, Chat und leichte Daten. Ein guter erster Wertkartentarif."
         },
         "dreigo-go-20": {
-          "tagline": "Gut für tägliches Streaming und Reisen in der EU.",
+          "tagline": "Gut für täglich Social Media und Video, auch in der EU.",
           "description": "Ein ausgewogener 5G-Tarif für alltägliches Streaming und Surfen, mit EU-Roaming für Reisen."
         },
         "dreigo-go-unlimited": {
-          "tagline": "Gut für unbegrenztes Streaming und Tethering.",
+          "tagline": "Gut für Streaming und Hotspot den ganzen Tag, auch in der EU.",
           "description": "Unbegrenzte 5G-Daten mit EU-Roaming — streame und tethere frei, zu Hause und in der ganzen EU."
         }
       }

@@ -290,31 +290,31 @@
       },
       "offers": {
         "drei-up-start": {
-          "tagline": "Good for calls, chat and light browsing.",
+          "tagline": "Good for messages, calls and maps — mostly on Wi-Fi.",
           "description": "A light starter plan for everyday messaging, calls and the occasional map or search. Best if most of your day is on Wi-Fi."
         },
         "drei-up": {
-          "tagline": "Good for everyday social, maps and music.",
+          "tagline": "Good for daily social, music and some video, plus EU trips.",
           "description": "Our most popular plan: enough 5G data for daily social media, navigation and streaming music, with EU roaming for trips."
         },
         "drei-up-max": {
-          "tagline": "Good for heavy streaming and hotspot use.",
+          "tagline": "Good for lots of video every day or regular hotspot use.",
           "description": "A large 5G allowance for people who stream video daily or tether a laptop, with EU roaming included."
         },
         "drei-up-unlimited": {
-          "tagline": "Good for streaming all day with no data worries.",
+          "tagline": "Good if you stream and share your hotspot without counting.",
           "description": "Unlimited 5G data — stream, tether and browse without watching a counter. Best for heavy users."
         },
         "dreigo-go-8": {
-          "tagline": "Good for staying connected on a budget.",
+          "tagline": "Good for messages, calls and light browsing on a budget.",
           "description": "A simple, low-cost plan for calls, chat and light data. A good first prepaid plan."
         },
         "dreigo-go-20": {
-          "tagline": "Good for daily streaming and travel in the EU.",
+          "tagline": "Good for daily social and video, plus EU trips.",
           "description": "A balanced 5G plan for everyday streaming and browsing, with EU roaming for travel."
         },
         "dreigo-go-unlimited": {
-          "tagline": "Good for unlimited streaming and tethering.",
+          "tagline": "Good for all-day streaming and hotspot, at home and in the EU.",
           "description": "Unlimited 5G data with EU roaming — stream and tether freely, at home and across the EU."
         }
       }
