@@ -88,6 +88,18 @@ describe("resource seam (DSIMA mock)", () => {
     if (first.ok && second.ok) expect(second.data).toEqual(first.data);
   });
 
+  it("isolates profiles across tenants — same customerId on another tenant is a new profile", async () => {
+    const drei = await requestEsimProfile({ customerId: "esim-shared", tenantId: "drei" });
+    const dreigo = await requestEsimProfile({ customerId: "esim-shared", tenantId: "dreigo" });
+    expect(drei.ok).toBe(true);
+    expect(dreigo.ok).toBe(true);
+    if (drei.ok && dreigo.ok) {
+      expect(dreigo.data.esimProfileId).not.toBe(drei.data.esimProfileId);
+      expect(drei.data.activationCode).toContain("smdp.drei.at");
+      expect(dreigo.data.activationCode).toContain("smdp.dreigo.at");
+    }
+  });
+
   it("reads an eSIM profile back by id, and 404s an unknown id", async () => {
     const created = await requestEsimProfile({ customerId: "esim-cust-3", tenantId: "drei" });
     if (!created.ok) throw new Error("request failed in setup");

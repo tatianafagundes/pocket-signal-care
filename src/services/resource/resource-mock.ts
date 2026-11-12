@@ -97,7 +97,9 @@ export function createResourceMock(): ResourceDriver {
       return withMock("resource.requestEsimProfile", () => {
         // Idempotent per customer+tenant: a retry returns the same profile, never a second eSIM
         // (the dossiê's "Don't pay again" discipline, applied to resource provisioning).
-        const key = `${customerId}:${tenantId}`;
+        // NUL separator (not ":") so a customerId containing the separator can't be confused
+        // with the tenant boundary if the id schema is ever relaxed.
+        const key = `${customerId}\u0000${tenantId}`;
         const existingId = esimByCustomer.get(key);
         if (existingId) {
           const existing = esimProfiles.get(existingId);

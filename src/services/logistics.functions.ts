@@ -39,6 +39,8 @@ export function createAddress(input: unknown): Promise<SeamResult<AddressResult>
 export function getAddress(addressIdRaw: unknown): Promise<SeamResult<AddressResult>> {
   const parsed = addressIdSchema.safeParse(addressIdRaw);
   if (!parsed.success) return invalid<AddressResult>("logistics.getAddress.invalid");
+  // A read by addressId carries no tenant; "logistics" is the logging label (same convention as
+  // resource.validateSim → "resource", payment.getPayment → "payment").
   return runRead({ tenantId: "logistics" }, "logistics.getAddress", () =>
     driver.getAddress(parsed.data),
   );
