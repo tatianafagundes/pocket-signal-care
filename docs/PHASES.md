@@ -469,3 +469,41 @@ failed · expired. Estado snapshotado antes do efeito `reset()`.
 197 testes (guard atualizado para os novos gates), build + lint verdes; telas de dinheiro sem
 hold/free/soon e sem "Charged today". Dívida conscente: token de cartão é mock (PSP/3-D Secure reais
 = Fase 8); captura ainda síncrona; "current customer" = demo até o login real.
+
+### Fase 7.6 — entregue: verify + captura 390×844 + revisão de telas renderizadas
+
+Commit `f3af61d`. A fase de fechamento: capturei os dois caminhos de onboarding + os estados de
+pagamento a 390×844 com Playwright e rodei as revisões de **tela renderizada** que as passadas de
+source não conseguiram.
+
+**Captura:** `scripts/capture-fase7.mjs` (harness reutilizável, `playwright-core` como dev dep — o
+chromium já estava em cache na máquina) percorre os caminhos eSIM, físico e cartão-recusado e faz
+screenshot de cada tela-chave. PNGs ficam **git-ignored** (evidência regenerável, convenção do repo);
+o relatório de revisão fica em `docs/design/2025-02-16-fase7-rendered-visual-review.md`.
+
+**Veredito da revisão renderizada (design-review): ZERO blockers.** Os três blockers das rodadas de
+source estão **confirmados fechados no render**: (1) caminhos de eSIM honestos — link "Install eSIM"
+real + código de ativação, sem QR fantasma; (2) a timeline de dinheiro lê como timeline — "Authorized"
+círculo cheio + check, "Charged when…"/"Added when…" vazados, nenhum "today"×3; (3) recusa de cartão é
+erro de campo recuperável sob o input, "Place order" segue acessível.
+
+**Correção aplicada (V1):** o código de ativação do eSIM estava em accent-ink sobre accent-tint (o
+menor contraste da tela, num texto que o cliente transcreve à mão) → trocado para `text-primary`
+(regra do DESIGN.md), verificado no re-render. **V2** ("blocos vazios" no /addons) era artefato de
+timing da captura (o skeleton de loading); recaptura com espera mostra os add-ons reais. **V3** (passo
+de plano sem "of N") é o comportamento S5 deliberado (esconder o total até a escolha de SIM).
+
+197 testes, build + lint verdes, paridade i18n 245/245.
+
+---
+
+## Fase 7 — COMPLETA
+
+Entregue em seis sub-fases (7.1 modelo+estado · 7.2 seam payment · 7.3 seam logistics + eSIM · 7.4
+orquestração 3 tempos + idempotência · 7.5 telas+guard+i18n · 7.6 verify+captura+revisão), cada uma
+com revisão multi-perspectiva e refinamentos aplicados. O onboarding pré-pago agora cobre escolha
+SIM físico/eSIM, endereço de entrega (TMF673), provisionamento eSIM (GSMA SGP.22), e pagamento em
+três tempos (autoriza→captura→credita) com idempotência de dinheiro, tudo mock-fiel aos contratos
+TMF, no caso-base EUA sem identidade. Dívidas conscientes para a Fase 8: PSP/3-D Secure reais,
+tokenização real, captura assíncrona no marco, QR de eSIM, login real email→customer, cobrança de
+add-on no saldo, e a infraestrutura Journey Mesh/BFF/Composite API do dossiê.
