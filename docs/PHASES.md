@@ -119,12 +119,12 @@ announces its title only, not "Step 7 of 7"; dropped a redundant `aria-live`; co
 price doc example and added `format.test.ts` pinning the real ICU output; added an exact-TTL and
 an extra-key-leak persistence test.
 
-## Fase D — Screens wired to seams — shipped
+## Fase D — Screens wired to seams — shipped, reviewed
 
 Commits `ea44dc1` (welcome + plan + shared nav/error) → `e62e15e` (assist + account) →
-`c4e3359` (details + number + review + success). 115 tests. This phase established the repo's
-first form (react-hook-form + zod via `components/ui/form`), data-fetching (react-query), and
-navigation (`useNavigate`) patterns.
+`c4e3359` (details + number + review + success) → `d373682` (review fixes). 117 tests. This phase
+established the repo's first form (react-hook-form + zod via `components/ui/form`), data-fetching
+(react-query), and navigation (`useNavigate`) patterns.
 
 Shipped:
 - Shared: `WizardNav` (back/continue), `SeamErrorNotice` (maps a `SeamFailure` to localized copy
@@ -165,6 +165,15 @@ Verification caveat: the pages are verified by build, typecheck, and unit tests 
 running the app in a browser (there's a pre-existing `vite preview` env issue). Runtime render,
 focus/announcement behaviour, and the state matrix across both brands belong to Fase E
 (`ui-capture`).
+
+Review outcome (revisor APPROVED, code-reviewer CHANGES REQUESTED, 1 blocker): wired the password
+input to the checklist via `aria-describedby` (the blocker — SR users had no strength feedback);
+forced the terminal-error category to "unavailable" to match `retryable`; fixed a doubled assist
+reason i18n key (was resolving only by i18next fuzzy traversal); memoised the account/details zod
+schemas; made the review incomplete-notice `role="alert"`; removed the unused `OfferOption.qualify`
+prop and ~14 dead locale keys; added a locale-parity test (keys + interpolation placeholders) as a
+standing guard. The password-isolation invariant, B1, B4, and idempotent retry were all confirmed
+clean by both reviewers (traced + mutation-tested).
 
 ---
 
