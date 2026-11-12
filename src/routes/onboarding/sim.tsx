@@ -131,7 +131,9 @@ function SimPage() {
               return (
                 <div
                   key={opt.value}
-                  className="rounded-card border border-hairline bg-surface transition-colors hover:border-accent-ink has-[[data-state=checked]]:border-2 has-[[data-state=checked]]:border-accent-ink"
+                  // 1px border + 1px outline = the 2px accent-ink selected ring, without the 1px
+                  // content shift that a border-2 would cause when a SIM type is picked.
+                  className="rounded-card border border-hairline bg-surface transition-colors hover:border-accent-ink has-[[data-state=checked]]:border-accent-ink has-[[data-state=checked]]:outline has-[[data-state=checked]]:outline-1 has-[[data-state=checked]]:outline-accent-ink"
                 >
                   <label htmlFor={radioId} className="flex items-start gap-3 p-4 cursor-pointer">
                     <RadioGroupItem

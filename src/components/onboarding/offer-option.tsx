@@ -72,9 +72,11 @@ export function OfferOption({ offer, recommendedLabel }: OfferOptionProps) {
   }
 
   return (
-    // Selected state = a 2px accent-ink border (DESIGN.md), driven by the radio's data-state via
-    // `has-[]` — so selection is signalled by the card border AND the radio dot, not colour alone.
-    <div className="rounded-card border border-hairline bg-surface transition-colors hover:border-accent-ink has-[[data-state=checked]]:border-2 has-[[data-state=checked]]:border-accent-ink">
+    // Selected state = a 2px accent-ink ring (DESIGN.md), driven by the radio's data-state via
+    // `has-[]` — so selection is signalled by the card ring AND the radio dot, not colour alone.
+    // The ring is 1px border + 1px outline: thickening the border instead would shift the card
+    // content by 1px the moment a plan is picked, which makes the radio dot look off-centre.
+    <div className="rounded-card border border-hairline bg-surface transition-colors hover:border-accent-ink has-[[data-state=checked]]:border-accent-ink has-[[data-state=checked]]:outline has-[[data-state=checked]]:outline-1 has-[[data-state=checked]]:outline-accent-ink">
       <label htmlFor={radioId} className="flex items-start gap-3 p-4 cursor-pointer">
         <RadioGroupItem
           id={radioId}
