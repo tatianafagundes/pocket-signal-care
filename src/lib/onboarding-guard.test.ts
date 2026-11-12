@@ -22,9 +22,10 @@ describe("resolveOnboardingStep", () => {
     expect(resolveOnboardingStep("success", empty)).toBe("plan");
   });
 
-  it("should require the SIM choice right after a plan is chosen (eSIM offered)", () => {
-    // offersEsim defaults true, so /sim is a gate until simType is set.
-    expect(resolveOnboardingStep("number", { ...empty, selectedOfferId: "o1" })).toBe("sim");
+  it("should require the SIM choice after the account step (eSIM offered)", () => {
+    // New order: plan → number → account → sim. /sim gates review until simType is set.
+    const beforeSim = { ...esimFlow, simType: null };
+    expect(resolveOnboardingStep("review", beforeSim)).toBe("sim");
   });
 
   it("should allow the number step once a plan AND a SIM form are chosen", () => {
@@ -97,8 +98,8 @@ describe("resolveOnboardingStep", () => {
 });
 
 describe("firstIncompleteStep — the sim/delivery gates (Fase 7.5)", () => {
-  it("points at sim first when eSIM is offered and no form is chosen", () => {
-    expect(firstIncompleteStep({ ...empty, selectedOfferId: "o1" })).toBe("sim");
+  it("points at sim once plan, number and account are done and no form is chosen", () => {
+    expect(firstIncompleteStep({ ...esimFlow, simType: null })).toBe("sim");
   });
 
   it("skips the sim gate when eSIM is not offered", () => {

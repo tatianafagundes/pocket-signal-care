@@ -332,7 +332,11 @@
         "credit": "Dein erstes Guthaben wird hinzugefügt…",
         "finalizing": "Wird abgeschlossen…"
       },
-      "terminalError": "Wir konnten deinen Tarif nicht fertig aktivieren. Dein Konto ist gespeichert — du kannst es erneut versuchen."
+      "terminalError": "Wir konnten deinen Tarif nicht fertig aktivieren. Dein Konto ist gespeichert — du kannst es erneut versuchen.",
+      "extras": {
+        "heading": "Extras hinzufügen",
+        "body": "Optional – erweitere deinen Tarif jetzt oder füge Extras später hinzu."
+      }
     },
     "success": {
       "title": "Alles erledigt, {{name}}",

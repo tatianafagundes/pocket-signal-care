@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ONBOARDING_WORKING_STEPS, workingStepsFor } from "@/lib/onboarding-context";
+import { ONBOARDING_WORKING_STEPS, stepAfter, stepBefore, workingStepsFor } from "@/lib/onboarding-context";
 
 /*
  * workingStepsFor — the conditional "Step N of M" sequence (Fase 7). `sim` appears only when the
@@ -13,10 +13,9 @@ describe("workingStepsFor", () => {
     expect(steps).toEqual([
       "welcome",
       "plan",
-      "sim",
-      "addons",
       "number",
       "account",
+      "sim",
       "delivery",
       "review",
     ]);
@@ -27,10 +26,9 @@ describe("workingStepsFor", () => {
     expect(steps).toEqual([
       "welcome",
       "plan",
-      "sim",
-      "addons",
       "number",
       "account",
+      "sim",
       "delivery",
       "review",
     ]);
@@ -62,5 +60,32 @@ describe("workingStepsFor", () => {
     const canonicalIndex = (s: string) => ONBOARDING_WORKING_STEPS.indexOf(s as never);
     const indices = steps.map(canonicalIndex);
     expect(indices).toEqual([...indices].sort((a, b) => a - b));
+  });
+});
+
+describe("stepAfter / stepBefore", () => {
+  const esim = { offersEsim: true, simType: "esim" } as const;
+  const physical = { offersEsim: true, simType: "physical" } as const;
+
+  it("should go plan → number → account → sim", () => {
+    expect(stepAfter("plan", esim)).toBe("number");
+    expect(stepAfter("number", esim)).toBe("account");
+    expect(stepAfter("account", esim)).toBe("sim");
+  });
+
+  it("should send a physical SIM to delivery and an eSIM straight to review", () => {
+    expect(stepAfter("sim", physical)).toBe("delivery");
+    expect(stepAfter("sim", esim)).toBe("review");
+  });
+
+  it("should go back from review to delivery for physical and to sim for eSIM", () => {
+    expect(stepBefore("review", physical)).toBe("delivery");
+    expect(stepBefore("review", esim)).toBe("sim");
+    expect(stepBefore("delivery", physical)).toBe("sim");
+    expect(stepBefore("sim", esim)).toBe("account");
+  });
+
+  it("should go from account to delivery when the brand offers no eSIM", () => {
+    expect(stepAfter("account", { offersEsim: false, simType: null })).toBe("delivery");
   });
 });

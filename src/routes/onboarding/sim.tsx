@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
+import { stepAfter, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -83,9 +84,9 @@ function SimPage() {
   }
 
   function onContinue() {
-    // The chosen form decides whether /delivery is in the flow; the next working step is /addons
-    // either way (delivery comes later, only for physical).
-    void navigate({ to: "/onboarding/addons" });
+    // A physical SIM goes on to /delivery; an eSIM goes straight to /review.
+    const next = stepAfter("sim", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType });
+    void navigate({ to: `/onboarding/${next}` });
   }
 
   return (
@@ -157,7 +158,7 @@ function SimPage() {
           </p>
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/plan" })}
+            onBack={() => navigate({ to: "/onboarding/account" })}
             onContinue={onContinue}
             continueDisabled={state.simType == null}
             disabledHint={t("onboarding.sim.disabledHint", "Choose a SIM type to continue.")}

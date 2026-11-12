@@ -22,10 +22,9 @@ import type { DeliveryAddress, SimChoice } from "@/services/model";
 export const ONBOARDING_STEPS = [
   "welcome",
   "plan",
-  "sim",
-  "addons",
   "number",
   "account",
+  "sim",
   "delivery",
   "review",
   "success",
@@ -148,3 +147,18 @@ export interface OnboardingContextValue {
 
 // Keep context identity outside refreshable components and hooks (Fast Refresh stability).
 export const OnboardingContext = createContext<OnboardingContextValue | null>(null);
+
+type WorkingStep = Exclude<OnboardingStep, "success">;
+type FlowOpts = { offersEsim: boolean; simType: SimChoice | null };
+
+/** The step Continue leads to from `step` in this flow (review leads to success). */
+export function stepAfter(step: WorkingStep, opts: FlowOpts): OnboardingStep {
+  const steps = workingStepsFor(opts);
+  return steps[steps.indexOf(step) + 1] ?? "success";
+}
+
+/** The step Back leads to from `step` in this flow (welcome stays on welcome). */
+export function stepBefore(step: WorkingStep, opts: FlowOpts): WorkingStep {
+  const steps = workingStepsFor(opts);
+  return steps[Math.max(0, steps.indexOf(step) - 1)] ?? "welcome";
+}

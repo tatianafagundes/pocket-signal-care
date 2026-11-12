@@ -332,7 +332,11 @@
         "credit": "Adding your first top-up…",
         "finalizing": "Finishing up…"
       },
-      "terminalError": "We couldn't finish activating your plan. Your account is saved — you can try again."
+      "terminalError": "We couldn't finish activating your plan. Your account is saved — you can try again.",
+      "extras": {
+        "heading": "Add extras",
+        "body": "Optional — boost your plan now, or add them any time later."
+      }
     },
     "success": {
       "title": "You're all set, {{name}}",

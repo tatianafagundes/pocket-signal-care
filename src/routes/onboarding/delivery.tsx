@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { stepBefore, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -169,7 +170,11 @@ function DeliveryPage() {
           ))}
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/account" })}
+            onBack={() =>
+              navigate({
+                to: `/onboarding/${stepBefore("delivery", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType })}`,
+              })
+            }
             continueType="submit"
             continueLabel={t("onboarding.delivery.continue", "Save address")}
             busy={form.formState.isSubmitting}

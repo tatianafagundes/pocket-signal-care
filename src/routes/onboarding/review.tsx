@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
+import { stepBefore, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -9,6 +10,7 @@ import { useSession } from "@/hooks/use-session";
 import { useTenant } from "@/hooks/use-tenant";
 import { WizardPage } from "@/components/onboarding/wizard-page";
 import { WizardNav } from "@/components/onboarding/wizard-nav";
+import { SelectableAddOn } from "@/components/onboarding/selectable-add-on";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,14 +83,19 @@ function ReviewPage() {
   const priceLabel = offer ? offerPriceLabel(offer, locale) : null;
   const planPrice = priceLabel ? t(priceLabel.key, priceLabel.args) : "";
 
-  // Chosen add-ons, rebuilt from state at render (B1): looked up fresh against the add-on list.
+  // Add-on catalogue for the optional extras section.
   const addOnsQuery = useQuery({
     queryKey: ["add-ons", tenant],
     queryFn: () => api.listAddOns(tenant),
   });
-  const selectedAddOns = (addOnsQuery.data ?? []).filter((o) =>
-    state.selectedAddOnIds.includes(o.offerId),
-  );
+
+  function toggleAddOn(offerId: string, checked: boolean) {
+    if (busy) return;
+    const current = state.selectedAddOnIds;
+    patch({
+      selectedAddOnIds: checked ? [...current, offerId] : current.filter((id) => id !== offerId),
+    });
+  }
 
   const complete =
     state.selectedOfferId != null &&
@@ -213,19 +220,6 @@ function ReviewPage() {
               busy={busy}
             />
             <SummaryRow
-              label={t("onboarding.review.addOns", "Add-ons")}
-              value={
-                selectedAddOns.length > 0
-                  ? selectedAddOns
-                      .map((a) => `${a.name} · ${formatPrice(a.priceMinor, a.currency, locale)}`)
-                      .join(", ")
-                  : t("onboarding.review.noAddOns", "None")
-              }
-              onChange={() => navigate({ to: "/onboarding/addons" })}
-              changeLabel={t("onboarding.review.change", "Change")}
-              busy={busy}
-            />
-            <SummaryRow
               label={t("onboarding.review.number", "Number")}
               value={state.reservedMsisdn ? formatMsisdn(state.reservedMsisdn) : "—"}
               onChange={() => navigate({ to: "/onboarding/number" })}
@@ -247,6 +241,35 @@ function ReviewPage() {
               busy={busy}
             />
           </dl>
+
+          {/* Optional extras: offered here, at the end, instead of as a separate step. */}
+          {addOnsQuery.data && addOnsQuery.data.length > 0 ? (
+            <section className="mt-6 border-t border-hairline pt-5" aria-labelledby="extras-heading">
+              <h2 id="extras-heading" className="type-title text-text-primary">
+                {t("onboarding.review.extras.heading", "Add extras")}
+              </h2>
+              <p className="mt-1 type-caption text-text-secondary">
+                {t(
+                  "onboarding.review.extras.body",
+                  "Optional — boost your plan now, or add them any time later.",
+                )}
+              </p>
+              <ul
+                className="mt-3 grid gap-3"
+                aria-label={t("onboarding.addons.listLabel", "Available add-ons")}
+              >
+                {addOnsQuery.data.map((addOn) => (
+                  <li key={addOn.offerId}>
+                    <SelectableAddOn
+                      offer={addOn}
+                      checked={state.selectedAddOnIds.includes(addOn.offerId)}
+                      onToggle={(checked) => toggleAddOn(addOn.offerId, checked)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           {/* Payment block. Each money line DECLARES its nature; the screen never SUMS — it reads
               the plan price and labels it. "Authorized today" is a reservation, not a charge. */}
@@ -337,7 +360,11 @@ function ReviewPage() {
           ) : null}
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/account" })}
+            onBack={() =>
+              navigate({
+                to: `/onboarding/${stepBefore("review", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType })}`,
+              })
+            }
             onContinue={() => void confirm()}
             continueLabel={t("onboarding.review.placeOrder", "Place order")}
             continueDisabled={!complete}

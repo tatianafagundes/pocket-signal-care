@@ -24,11 +24,11 @@ import {
  */
 export function firstIncompleteStep(state: OnboardingState, offersEsim = true): OnboardingStep {
   if (state.selectedOfferId == null) return "plan";
-  if (offersEsim && state.simType == null) return "sim";
   if (state.reservedMsisdn == null) return "number";
   if (state.email == null || state.givenName == null || state.familyName == null) {
     return "account";
   }
+  if (offersEsim && state.simType == null) return "sim";
   if (state.simType === "physical" && state.deliveryAddress == null) return "delivery";
   if (state.customerId == null) return "review";
   return "success";

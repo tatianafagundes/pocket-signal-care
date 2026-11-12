@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { stepAfter, TENANT_OFFERS_ESIM } from "@/lib/onboarding-context";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
 import { useOnboarding } from "@/hooks/use-onboarding";
@@ -96,9 +97,9 @@ function AccountPage() {
         familyName: values.familyName.trim(),
       });
       // A physical SIM needs a shipping address before review; eSIM (or no SIM choice) skips it.
-      await navigate({
-        to: state.simType === "physical" ? "/onboarding/delivery" : "/onboarding/review",
-      });
+      // Next is the SIM choice (or delivery/review when the tenant offers no eSIM).
+      const next = stepAfter("account", { offersEsim: TENANT_OFFERS_ESIM, simType: state.simType });
+      await navigate({ to: `/onboarding/${next}` });
     } catch (err) {
       if (err instanceof SeamFailure) {
         setSeamError(err);
