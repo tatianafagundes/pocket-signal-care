@@ -120,3 +120,76 @@ From the research + Mobbin (Cash App, Saily, N26, Airalo, Ahead):
 3. Is a `roaming` bucket worth seeding in the base-case demo (US, no identity), or defer roaming
    until it's actually needed?
 4. Should `bucketState` live with the other pure rules (`customer360-rules.ts`) or its own file?
+
+---
+
+## As-built addendum (shipped) — supersedes the plan body where they differ
+
+> STATUS: implemented and merged. Commits: `39fce8c` (model + compose), `83c2e8b` (bucketState),
+> `f0c1eb4` (ECEV seam + stateful mock + add-on refill), `9eea77f` (compose into getCustomer360).
+> The sections above are the pre-build plan; where this addendum differs, the addendum is correct.
+> The two review rounds that fed these changes: `...plan-review.md`, `...plan-review-r2.md`.
+
+### What changed from the plan (and why)
+
+1. **Quantity shape: `{ value, unit }`, not plain `totalUnits`/`remainingUnits` + a sibling `unit`.**
+   Shipped `UsageQuantity { value: number; unit: UsageUnit }`, with `total?` / `remaining?` of that
+   type on `UsageBucket`. Mirrors the money axis's `{ amountMinor, currency }` and TMF654's
+   `{ amount, units }`, so a real connector maps straight in. (Open question #2 → richer shape.)
+
+2. **Data unit is `GB`, not `MB`.** `UsageUnit = "GB" | "min" | "sms"`. The plan proposed MB as the
+   canonical unit; the live DMP TMF654 payload (Glean: `remainingValue[].units: "GB"`) **and** the
+   catalogue (`Offer.dataAmount` is "10 GB") both speak GB, so storing MB would force a conversion
+   on the way in — the exact reshaping we wanted to avoid. Decimal (as sold) is preserved; the unit
+   label is just GB. Found in the Task #1 review before any value was seeded (zero migration cost).
+
+3. **Validity is a RANGE `validFor { start?, end? }`, not a single `validUntil`.** TMF654 `validFor`.
+   This makes a **`pending`** bucket representable (a future-dated add-on, `start` in the future),
+   which the plan's single `validUntil` could not express.
+
+4. **State machine gained `pending`; order is a priority ladder.** Shipped
+   `BucketState = "ok" | "low" | "depleted" | "expired" | "pending"`, evaluated first-match:
+   `expired` (end past) → `pending` (start future) → unlimited ⇒ `ok` → `depleted` (remaining ≤ 0)
+   → `low` (remaining ≤ `LOW_REMAINING_RATIO`·total) → `ok`. Validity is checked **before** quantity
+   on purpose (a lapsed/future bucket reads as such even if its numbers look healthy or empty).
+   `LOW_REMAINING_RATIO = 0.2` is a named, exported constant; the **50% notice tier was deferred**
+   (open question #1 → single threshold for now). Guards: unknown `remaining` → `ok` (don't invent a
+   warning); no/zero `total` → can't form a ratio → `ok`. `now` is injectable for deterministic tests.
+
+5. **`offerId` correlation added beside `offerName`.** `UsageBucket.offerId` = DMP's
+   `productOfferingId` join key (confirmed against DMP Evolved docs: `contract[].product[].productBucket[]`
+   correlates on `productOfferingId`). This is the real-catalogue integration seam — not an allowance
+   field on the plan Offer. **The plan `Offer` was left untouched**; the catalogue decision was the
+   minimal `offerId`-correlation option precisely because it maps 1:1 onto the real catalog later
+   (the real catalogue models allowances as separate **Benefit POs**, not fields on the plan).
+
+### Answers to the plan's open questions
+
+1. **Threshold** → single `LOW_REMAINING_RATIO = 0.2`; 50% notice tier deferred until a product need.
+2. **Quantity shape** → richer `{ value, unit }` (see change #1).
+3. **Roaming bucket in the base demo** → **yes, seeded.** All four types (data/voice/sms/roaming)
+   are seeded so both the composer ordering and all render paths are demonstrable.
+4. **Where `bucketState` lives** → with the other pure rules in `customer360-rules.ts`.
+
+### Recharge / add-on consistency (not in the original plan; added per user requirement)
+
+The mock is **stateful** and actions move the numbers:
+- **Top-up** moves the **money axis only** (decision **A1**) — credit is not allowance.
+- **Add-on purchase** moves the **usage axis**: `purchaseAddOn(customerId, offer)` calls
+  `grantAllowance` after `submitOrder` (decision **B1** — client-side orchestration, the two mocks
+  stay decoupled). `allowanceGrantForAddOn(offer)` derives the grant: `euRoaming`→roaming, else→data;
+  unlimited add-on→unlimited grant; unparseable label (e.g. streaming pass)→`null` (entitlement-only,
+  no bucket fabricated). Refill rule: same `offerId` ⇒ top up (total + remaining both grow); else a
+  new bucket. Mirrors real DMP (order fulfilment → CBEV creates the product bucket); the grant step
+  is **deleted, not unwound**, when the real ECEV http driver lands.
+- `getUsage`/`grantAllowance` return deep-ish copies so a caller can't mutate the mock's stored
+  state through nested `total`/`remaining`/`validFor` (hardened in the Task #3 review).
+
+### Still deferred (conscious debt, unchanged)
+
+- The **dashboard UI** that renders `Customer360.usage` — being planned next, from the Figma prototype.
+- Real TMF654 ECEV (http driver), usage history (TMF635), notifications/threshold alerts.
+- **Pre-existing flaky test** observed during this work: `cpr.functions.test.ts > ... records an
+  onboarding interaction ... newest-first` failed once in a full-suite run, passed in isolation and
+  on re-run. Not introduced by this work (timestamp nondeterminism in the interaction sort seed).
+  Fix later by injecting a clock or using distinct `occurredAt` values in that test's seed.
