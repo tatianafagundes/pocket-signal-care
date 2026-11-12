@@ -15,6 +15,13 @@ import type { CprDriver } from "@/services/cpr/cpr-driver";
  * It is a stub: the fetch calls + TMF mappers are scaffolded but the endpoints are not live, so
  * every op returns a clear "not configured" SeamError until Fase 8 wires the real base URL.
  * The mapping functions (toTmfParty / fromTmfCustomer / …) are the single place TMF shapes live.
+ *
+ * ⚠️ FASE 8 — EDIT HERE to go live (see src/services/README.md + docs/contracts/dxp-customer-management-cpr.md):
+ *   1. The paths below use generic /tmf-api/party/v5/... — the REAL DXP CPR endpoints are
+ *      /customerManagement/v1/party, /customer, and /customerview/{id}. Reconcile before use.
+ *   2. Complete getCustomerAndParty (currently notConfigured) → GET /customerManagement/v1/customerview/{id}.
+ *   3. Keep TMF mapping in the toTmf / fromTmf mapper functions only. Everything else
+ *      (seam, api, UI) stays untouched.
  */
 
 interface CprHttpConfig {
