@@ -13,8 +13,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AddOnsRouteImport } from './routes/add-ons'
 import { Route as MyPlanRouteImport } from './routes/my-plan'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TopUpRouteImport } from './routes/top-up'
+import { Route as OnboardingAccountRouteImport } from './routes/onboarding/account'
+import { Route as OnboardingDetailsRouteImport } from './routes/onboarding/details'
+import { Route as OnboardingNumberRouteImport } from './routes/onboarding/number'
+import { Route as OnboardingPlanRouteImport } from './routes/onboarding/plan'
+import { Route as OnboardingReviewRouteImport } from './routes/onboarding/review'
+import { Route as OnboardingSuccessRouteImport } from './routes/onboarding/success'
+import { Route as OnboardingWelcomeRouteImport } from './routes/onboarding/welcome'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,6 +44,11 @@ const MyPlanRoute = MyPlanRouteImport.update({
   path: '/my-plan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -46,22 +59,73 @@ const TopUpRoute = TopUpRouteImport.update({
   path: '/top-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingAccountRoute = OnboardingAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingDetailsRoute = OnboardingDetailsRouteImport.update({
+  id: '/details',
+  path: '/details',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingNumberRoute = OnboardingNumberRouteImport.update({
+  id: '/number',
+  path: '/number',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingPlanRoute = OnboardingPlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingReviewRoute = OnboardingReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingSuccessRoute = OnboardingSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingWelcomeRoute = OnboardingWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/add-ons': typeof AddOnsRoute
   '/my-plan': typeof MyPlanRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
+  '/onboarding/account': typeof OnboardingAccountRoute
+  '/onboarding/details': typeof OnboardingDetailsRoute
+  '/onboarding/number': typeof OnboardingNumberRoute
+  '/onboarding/plan': typeof OnboardingPlanRoute
+  '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/success': typeof OnboardingSuccessRoute
+  '/onboarding/welcome': typeof OnboardingWelcomeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/add-ons': typeof AddOnsRoute
   '/my-plan': typeof MyPlanRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
+  '/onboarding/account': typeof OnboardingAccountRoute
+  '/onboarding/details': typeof OnboardingDetailsRoute
+  '/onboarding/number': typeof OnboardingNumberRoute
+  '/onboarding/plan': typeof OnboardingPlanRoute
+  '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/success': typeof OnboardingSuccessRoute
+  '/onboarding/welcome': typeof OnboardingWelcomeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,22 +133,66 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/add-ons': typeof AddOnsRoute
   '/my-plan': typeof MyPlanRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
+  '/onboarding/account': typeof OnboardingAccountRoute
+  '/onboarding/details': typeof OnboardingDetailsRoute
+  '/onboarding/number': typeof OnboardingNumberRoute
+  '/onboarding/plan': typeof OnboardingPlanRoute
+  '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/success': typeof OnboardingSuccessRoute
+  '/onboarding/welcome': typeof OnboardingWelcomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/account' | '/add-ons' | '/my-plan' | '/support' | '/top-up'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/add-ons'
+    | '/my-plan'
+    | '/onboarding'
+    | '/support'
+    | '/top-up'
+    | '/onboarding/account'
+    | '/onboarding/details'
+    | '/onboarding/number'
+    | '/onboarding/plan'
+    | '/onboarding/review'
+    | '/onboarding/success'
+    | '/onboarding/welcome'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/add-ons' | '/my-plan' | '/support' | '/top-up'
+  to:
+    | '/'
+    | '/account'
+    | '/add-ons'
+    | '/my-plan'
+    | '/onboarding'
+    | '/support'
+    | '/top-up'
+    | '/onboarding/account'
+    | '/onboarding/details'
+    | '/onboarding/number'
+    | '/onboarding/plan'
+    | '/onboarding/review'
+    | '/onboarding/success'
+    | '/onboarding/welcome'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/add-ons'
     | '/my-plan'
+    | '/onboarding'
     | '/support'
     | '/top-up'
+    | '/onboarding/account'
+    | '/onboarding/details'
+    | '/onboarding/number'
+    | '/onboarding/plan'
+    | '/onboarding/review'
+    | '/onboarding/success'
+    | '/onboarding/welcome'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -92,6 +200,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AddOnsRoute: typeof AddOnsRoute
   MyPlanRoute: typeof MyPlanRoute
+  OnboardingRoute: typeof OnboardingRouteWithChildren
   SupportRoute: typeof SupportRoute
   TopUpRoute: typeof TopUpRoute
 }
@@ -126,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/support': {
       id: '/support'
       path: '/support'
@@ -140,14 +256,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TopUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding/account': {
+      id: '/onboarding/account'
+      path: '/account'
+      fullPath: '/onboarding/account'
+      preLoaderRoute: typeof OnboardingAccountRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/details': {
+      id: '/onboarding/details'
+      path: '/details'
+      fullPath: '/onboarding/details'
+      preLoaderRoute: typeof OnboardingDetailsRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/number': {
+      id: '/onboarding/number'
+      path: '/number'
+      fullPath: '/onboarding/number'
+      preLoaderRoute: typeof OnboardingNumberRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/plan': {
+      id: '/onboarding/plan'
+      path: '/plan'
+      fullPath: '/onboarding/plan'
+      preLoaderRoute: typeof OnboardingPlanRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/review': {
+      id: '/onboarding/review'
+      path: '/review'
+      fullPath: '/onboarding/review'
+      preLoaderRoute: typeof OnboardingReviewRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/success': {
+      id: '/onboarding/success'
+      path: '/success'
+      fullPath: '/onboarding/success'
+      preLoaderRoute: typeof OnboardingSuccessRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/welcome': {
+      id: '/onboarding/welcome'
+      path: '/welcome'
+      fullPath: '/onboarding/welcome'
+      preLoaderRoute: typeof OnboardingWelcomeRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
   }
 }
+
+interface OnboardingRouteChildren {
+  OnboardingAccountRoute: typeof OnboardingAccountRoute
+  OnboardingDetailsRoute: typeof OnboardingDetailsRoute
+  OnboardingNumberRoute: typeof OnboardingNumberRoute
+  OnboardingPlanRoute: typeof OnboardingPlanRoute
+  OnboardingReviewRoute: typeof OnboardingReviewRoute
+  OnboardingSuccessRoute: typeof OnboardingSuccessRoute
+  OnboardingWelcomeRoute: typeof OnboardingWelcomeRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingAccountRoute: OnboardingAccountRoute,
+  OnboardingDetailsRoute: OnboardingDetailsRoute,
+  OnboardingNumberRoute: OnboardingNumberRoute,
+  OnboardingPlanRoute: OnboardingPlanRoute,
+  OnboardingReviewRoute: OnboardingReviewRoute,
+  OnboardingSuccessRoute: OnboardingSuccessRoute,
+  OnboardingWelcomeRoute: OnboardingWelcomeRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AddOnsRoute: AddOnsRoute,
   MyPlanRoute: MyPlanRoute,
+  OnboardingRoute: OnboardingRouteWithChildren,
   SupportRoute: SupportRoute,
   TopUpRoute: TopUpRoute,
 }

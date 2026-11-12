@@ -38,5 +38,53 @@
       "title": "Hilfe",
       "subtitle": "Wir sind für dich da. Das Hilfecenter folgt in Kürze."
     }
+  },
+  "onboarding": {
+    "progressLabel": "Fortschritt der Einrichtung",
+    "stepProgress": "Schritt {{current}} von {{total}}",
+    "step": {
+      "done": "Abgeschlossener Schritt",
+      "current": "Aktueller Schritt",
+      "upcoming": "Nächster Schritt"
+    },
+    "nav": {
+      "back": "Zurück",
+      "continue": "Weiter"
+    },
+    "welcome": {
+      "title": "Willkommen",
+      "subtitle": "In wenigen klaren Schritten vom Besuch zum aktiven Prepaid-Kunden.",
+      "body": "Tarif wählen, Konto erstellen, Nummer sichern und bestätigen — du kannst jederzeit zurück."
+    },
+    "plan": {
+      "title": "Tarif wählen",
+      "subtitle": "Wähl den Tarif, der zu deiner Handynutzung passt.",
+      "placeholder": "Die Tarifübersicht erscheint hier."
+    },
+    "account": {
+      "title": "Konto erstellen",
+      "subtitle": "Deine E-Mail und ein Passwort schützen deinen Dienst.",
+      "placeholder": "Das Konto-Formular erscheint hier."
+    },
+    "details": {
+      "title": "Deine Daten",
+      "subtitle": "Nur dein Name — damit richten wir dein Profil ein.",
+      "placeholder": "Das Daten-Formular erscheint hier."
+    },
+    "number": {
+      "title": "Nummer wählen",
+      "subtitle": "Wähl eine neue Handynummer, wir halten sie für dich.",
+      "placeholder": "Die Nummernauswahl erscheint hier."
+    },
+    "review": {
+      "title": "Prüfen und aktivieren",
+      "subtitle": "Prüf alles, bevor du bestätigst — du kannst noch zurück und ändern.",
+      "placeholder": "Deine Bestellübersicht erscheint hier."
+    },
+    "success": {
+      "title": "Alles erledigt",
+      "subtitle": "Dein Tarif ist aktiv. Lad dein Guthaben auf, wann du möchtest.",
+      "placeholder": "Ein Link zu deinem Tarif erscheint hier."
+    }
   }
 }

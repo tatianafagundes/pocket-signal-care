@@ -38,5 +38,53 @@
       "title": "Support",
       "subtitle": "We're here for you. The help center is coming soon."
     }
+  },
+  "onboarding": {
+    "progressLabel": "Onboarding progress",
+    "stepProgress": "Step {{current}} of {{total}}",
+    "step": {
+      "done": "Completed step",
+      "current": "Current step",
+      "upcoming": "Upcoming step"
+    },
+    "nav": {
+      "back": "Back",
+      "continue": "Continue"
+    },
+    "welcome": {
+      "title": "Welcome",
+      "subtitle": "Go from visitor to active prepaid customer in a few clear steps.",
+      "body": "Pick a plan, create your account, get a number, and confirm — you can go back any time."
+    },
+    "plan": {
+      "title": "Choose a plan",
+      "subtitle": "Pick the plan that fits how you use your phone.",
+      "placeholder": "The plan grid will appear here."
+    },
+    "account": {
+      "title": "Create your account",
+      "subtitle": "Your email and a password keep your service safe.",
+      "placeholder": "The account form will appear here."
+    },
+    "details": {
+      "title": "Your details",
+      "subtitle": "Just your name — we'll use it to set up your profile.",
+      "placeholder": "The details form will appear here."
+    },
+    "number": {
+      "title": "Pick your number",
+      "subtitle": "Choose a new mobile number and we'll hold it for you.",
+      "placeholder": "The number picker will appear here."
+    },
+    "review": {
+      "title": "Review and activate",
+      "subtitle": "Check everything before you confirm — you can still go back and change it.",
+      "placeholder": "Your order summary will appear here."
+    },
+    "success": {
+      "title": "You're all set",
+      "subtitle": "Your plan is active. Make your first top up when you're ready.",
+      "placeholder": "A link to your plan will appear here."
+    }
   }
 }
