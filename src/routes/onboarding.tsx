@@ -29,18 +29,19 @@ function StepGuard() {
   const { state } = useOnboarding();
   const navigate = useNavigate();
 
-  // Evaluate on route change only: success resets the state after it mounts, which must not
-  // bounce the user away from the success screen.
+  // Re-evaluate on both route AND state change, so a fast navigation never guards against a
+  // previous render's state. Success is exempt explicitly: it resets the state after it mounts,
+  // and the guard must never bounce the user away from the success screen.
   useEffect(() => {
     const segment = pathname.split("/")[2] ?? "";
     if (!(ONBOARDING_STEPS as readonly string[]).includes(segment)) return;
     const target = segment as OnboardingStep;
+    if (target === "success") return;
     const allowed = resolveOnboardingStep(target, state);
     if (allowed !== target) {
       void navigate({ to: `/onboarding/${allowed}`, replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, state, navigate]);
 
   return null;
 }

@@ -101,7 +101,6 @@
       "priceRecurring": "{{price}} every {{days}} days · auto-renews",
       "priceOnce": "{{price}} every {{days}} days",
       "priceNoValidity": "{{price}}",
-      "euRoaming": "EU roaming included",
       "assist": {
         "open": "Help me choose",
         "heading": "A few quick questions",
@@ -246,7 +245,6 @@
       "titleNoName": "You're all set",
       "subtitle": "Your plan is active.",
       "balanceEmpty": "You have no balance yet — make your first top up to start using your plan.",
-      "goToPlan": "Go to my plan",
       "topUp": "Top up now",
       "later": "Maybe later"
     }

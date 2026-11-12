@@ -101,7 +101,6 @@
       "priceRecurring": "{{price}} alle {{days}} Tage · verlängert sich automatisch",
       "priceOnce": "{{price}} alle {{days}} Tage",
       "priceNoValidity": "{{price}}",
-      "euRoaming": "EU-Roaming inklusive",
       "assist": {
         "open": "Hilf mir bei der Wahl",
         "heading": "Ein paar kurze Fragen",
@@ -246,7 +245,6 @@
       "titleNoName": "Alles erledigt",
       "subtitle": "Dein Tarif ist aktiv.",
       "balanceEmpty": "Du hast noch kein Guthaben — lad zum ersten Mal auf, um deinen Tarif zu nutzen.",
-      "goToPlan": "Zu meinem Tarif",
       "topUp": "Jetzt aufladen",
       "later": "Vielleicht später"
     }

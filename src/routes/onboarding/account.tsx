@@ -67,9 +67,7 @@ function AccountPage() {
     [t],
   );
 
-  type Values = AccountFormValues;
-
-  const form = useForm<Values>({
+  const form = useForm<AccountFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       givenName: state.givenName ?? "",
@@ -83,7 +81,7 @@ function AccountPage() {
 
   const passwordValue = form.watch("password");
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: AccountFormValues) {
     setSeamError(null);
     try {
       // The password is passed to the seam and NEVER persisted: only the email goes to context.

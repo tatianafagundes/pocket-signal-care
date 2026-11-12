@@ -89,7 +89,9 @@ export function AssistPanel({ offers, onSuggest }: AssistPanelProps) {
             <legend className="type-caption text-text-primary">
               {t(`onboarding.plan.assist.q.${key}`, key)}
             </legend>
-            <div role="radiogroup" className="flex gap-2">
+            {/* The fieldset+legend groups the question; the buttons are aria-pressed toggles, so
+                this is NOT a role="radiogroup" (that would require role="radio" children). */}
+            <div className="flex gap-2">
               {(["yes", "no"] as const).map((value) => {
                 const active = answers[key] === value;
                 return (

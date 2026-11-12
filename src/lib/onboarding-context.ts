@@ -5,7 +5,7 @@ import type { TenantId } from "@/lib/tenant-rules";
 /*
  * Onboarding wizard context. (Spec Fase 5 / onboarding-journey Req 1, 6.3, 9.1)
  *
- * Holds the non-secret state that travels across the 7 wizard steps, plus the orchestration ids
+ * Holds the non-secret state that travels across the wizard steps, plus the orchestration ids
  * the submit step fills in (partyId/customerId/cartId). It is the single in-session source of
  * truth for "where the user is" and "what they've chosen so far".
  *
@@ -29,14 +29,11 @@ export const ONBOARDING_STEPS = [
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
-/** Total number of steps, including the terminal success screen. */
-export const ONBOARDING_STEP_COUNT = ONBOARDING_STEPS.length;
-
 /**
  * The steps the user actively works through, excluding the terminal "success" screen. This is the
- * "M" in "Step N of M": success is an outcome, not a step to complete, so it is not counted — and
- * the progress stepper shows exactly these. Keeping the count here means the announcement and the
- * stepper can't drift apart.
+ * "M" in "Step N of M" (currently 5: welcome, plan, number, account, review): success is an
+ * outcome, not a step to complete, so it is not counted — and the progress stepper shows exactly
+ * these. Keeping the count here means the announcement and the stepper can't drift apart.
  */
 export const ONBOARDING_WORKING_STEPS = ONBOARDING_STEPS.filter(
   (s) => s !== "success",

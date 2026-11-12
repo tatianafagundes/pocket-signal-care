@@ -50,9 +50,10 @@ function ReviewPage() {
     queryFn: () => api.listOffers(tenant),
   });
   const offer = offersQuery.data?.find((o) => o.offerId === state.selectedOfferId);
-  const planPrice = offer
-    ? t(offerPriceLabel(offer, locale).key, offerPriceLabel(offer, locale).args)
-    : "";
+  // Compute the price label once: calling offerPriceLabel twice could, under a concurrent locale
+  // change between calls, mix a key from one locale with args from another.
+  const priceLabel = offer ? offerPriceLabel(offer, locale) : null;
+  const planPrice = priceLabel ? t(priceLabel.key, priceLabel.args) : "";
 
   const complete =
     state.selectedOfferId != null &&

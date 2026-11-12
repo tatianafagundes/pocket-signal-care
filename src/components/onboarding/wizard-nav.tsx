@@ -36,6 +36,8 @@ export function WizardNav({
   disabledHint,
 }: WizardNavProps) {
   const { t } = useLocalizedTranslation();
+  const showHint = continueDisabled && !busy && !!disabledHint;
+  const hintId = "wizard-nav-hint";
 
   return (
     <div className="sticky bottom-0 -mx-5 -mb-5 mt-6 rounded-b-card border-t border-hairline bg-surface px-5 py-3">
@@ -51,12 +53,15 @@ export function WizardNav({
           disabled={continueDisabled || busy}
           className="ml-auto min-h-11"
           aria-busy={busy}
+          aria-describedby={showHint ? hintId : undefined}
         >
           {continueLabel ?? t("onboarding.nav.continue", "Continue")}
         </Button>
       </div>
-      {continueDisabled && !busy && disabledHint ? (
-        <p className="mt-2 text-right type-caption text-text-secondary">{disabledHint}</p>
+      {showHint ? (
+        <p id={hintId} className="mt-2 text-right type-caption text-text-secondary">
+          {disabledHint}
+        </p>
       ) : null}
     </div>
   );
