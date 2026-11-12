@@ -54,6 +54,7 @@ export type SubmitStep =
   | "addSim"
   | "addAddOns"
   | "submitOrder"
+  | "recordInteraction"
   | "capture"
   | "credit";
 
@@ -187,6 +188,26 @@ export async function runOnboardingSubmit({
     });
     orderId = submitted.orderId;
     patch({ orderId });
+  }
+
+  // 5b. Party Interaction (TMF683) — "a successful party interaction is created with order
+  //     fulfilment." Recorded once the order exists, referencing it (+ MSISDN) as TMF Related
+  //     Entities. Idempotent: skip if one was already recorded (reuse the persisted interactionId
+  //     on retry), so a resumed submit never double-logs. Tenant travels via the seam context.
+  if (!state.interactionId) {
+    onStep("recordInteraction");
+    const interaction = await api.createInteraction({
+      tenantId: tenant,
+      partyId,
+      customerId,
+      type: "onboarding",
+      status: "completed",
+      relatedEntities: {
+        orderId,
+        ...(state.reservedMsisdn ? { msisdn: state.reservedMsisdn } : {}),
+      },
+    });
+    patch({ interactionId: interaction.interactionId });
   }
 
   // 6. Capture — charge the authorization at the milestone (mock: synchronous post-submit). The

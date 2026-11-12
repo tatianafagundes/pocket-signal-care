@@ -253,7 +253,10 @@ function ReviewPage() {
 
           {/* Optional extras: offered here, at the end, instead of as a separate step. */}
           {addOnsQuery.data && addOnsQuery.data.length > 0 ? (
-            <section className="mt-6 border-t border-hairline pt-5" aria-labelledby="extras-heading">
+            <section
+              className="mt-6 border-t border-hairline pt-5"
+              aria-labelledby="extras-heading"
+            >
               <h2 id="extras-heading" className="type-title text-text-primary">
                 {t("onboarding.review.extras.heading", "Add extras")}
               </h2>

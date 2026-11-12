@@ -5,6 +5,8 @@ import {
   createParty,
   createCustomer,
   getCustomer360,
+  createInteraction,
+  listInteractions,
 } from "@/services/cpr.functions";
 import { clearForcedError, forceError } from "@/services/mock-support";
 
@@ -48,6 +50,9 @@ describe("cpr seam (mock driver)", () => {
         // seed has a plan + sim, sorted plan first
         expect(r.data.installedBase.map((p) => p.kind)).toEqual(["plan", "sim"]);
         expect(r.data.balance?.amountMinor).toBe(1500);
+        // The demo customer has a seeded onboarding interaction in the timeline.
+        expect(r.data.interactions.length).toBeGreaterThanOrEqual(1);
+        expect(r.data.interactions[0]!.type).toBe("onboarding");
       }
     });
 
@@ -116,6 +121,74 @@ describe("cpr seam (mock driver)", () => {
       });
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error.category).toBe("validation");
+    });
+  });
+
+  describe("party interactions (TMF683)", () => {
+    it("records an onboarding interaction and lists it newest-first", async () => {
+      // Fresh customer so the timeline starts empty.
+      const party = await createParty({
+        tenantId: "dreigo",
+        givenName: "Pia",
+        familyName: "Interact",
+        email: "pia@dreigo.example",
+      });
+      if (!party.ok) throw new Error("setup party failed");
+      const customer = await createCustomer({ tenantId: "dreigo", partyId: party.data.partyId });
+      if (!customer.ok) throw new Error("setup customer failed");
+      const customerId = customer.data.customerId;
+
+      const before = await listInteractions(customerId);
+      expect(before.ok).toBe(true);
+      if (before.ok) expect(before.data).toHaveLength(0);
+
+      const created = await createInteraction({
+        tenantId: "dreigo",
+        partyId: party.data.partyId,
+        customerId,
+        type: "onboarding",
+        status: "completed",
+        relatedEntities: { orderId: "order-xyz", msisdn: "+4368150000009" },
+      });
+      expect(created.ok).toBe(true);
+      if (created.ok) {
+        expect(created.data.interactionId).toMatch(/^pi-/);
+        expect(created.data.type).toBe("onboarding");
+        expect(created.data.tenantId).toBe("dreigo");
+        expect(created.data.relatedEntities?.orderId).toBe("order-xyz");
+      }
+
+      const after = await listInteractions(customerId);
+      expect(after.ok).toBe(true);
+      if (after.ok) {
+        expect(after.data).toHaveLength(1);
+        expect(after.data[0]!.type).toBe("onboarding");
+        expect(after.data[0]!.status).toBe("completed");
+      }
+
+      // It surfaces in the 360 timeline too.
+      const c360 = await getCustomer360(customerId);
+      if (c360.ok) expect(c360.data.interactions.map((i) => i.type)).toContain("onboarding");
+    });
+
+    it("defaults status to completed and rejects a bad type (validation)", async () => {
+      const ok = await createInteraction({
+        tenantId: "drei",
+        partyId: "demo-party-drei",
+        customerId: "demo-drei",
+        type: "topUp",
+      });
+      expect(ok.ok).toBe(true);
+      if (ok.ok) expect(ok.data.status).toBe("completed");
+
+      const bad = await createInteraction({
+        tenantId: "drei",
+        partyId: "p",
+        customerId: "c",
+        type: "not-a-type",
+      });
+      expect(bad.ok).toBe(false);
+      if (!bad.ok) expect(bad.error.category).toBe("validation");
     });
   });
 });

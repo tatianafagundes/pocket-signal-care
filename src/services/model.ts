@@ -61,15 +61,52 @@ export interface Balance {
 }
 
 /**
+ * Party Interaction (TMF683). A record of a past interaction between the operator and the party,
+ * kept so it can be reused later — the customer-facing activity timeline, and the CSR panel's
+ * history. In the real DXP this is its own microservice (eric-dxp-party-interaction-management);
+ * here the CPR seam records one at onboarding fulfilment ("a successful party interaction is
+ * created with order fulfilment"). Tenant-scoped — it carries the tenant the interaction belongs
+ * to (the X-Tenant-Id the seam threads through its context).
+ */
+export interface PartyInteraction {
+  interactionId: string;
+  partyId: string;
+  customerId: string;
+  tenantId: TenantId;
+  /**
+   * What the interaction was. `onboarding` is the only one recorded today; the union is left open
+   * for later moments (topUp / planChange / support) so the timeline and CSR panel can grow
+   * without a model change.
+   */
+  type: "onboarding" | "topUp" | "planChange" | "support";
+  status: "inProgress" | "completed" | "failed";
+  /** ISO timestamp the interaction occurred. */
+  occurredAt: string;
+  /**
+   * TMF683 "Related Entity" references — the things this interaction touched, other than the
+   * party itself (order, MSISDN, cart). Used to link the timeline back to what happened.
+   */
+  relatedEntities?: {
+    orderId?: string;
+    msisdn?: string;
+    cartId?: string;
+  };
+  /** Catalogue key for localized copy when status is failed (or a reason label). */
+  reasonKey?: string;
+}
+
+/**
  * Customer360 — the composed view the Home/Account screens render. Assembled by the pure
- * `customer360-rules.compose(...)` from CPR (party/customer) + order (installed base) +
- * charging (balance). Composition is NOT done inside a connector.
+ * `customer360-rules.compose(...)` from CPR (party/customer + interactions) + order (installed
+ * base) + charging (balance). Composition is NOT done inside a connector.
  */
 export interface Customer360 {
   customer: Customer;
   party: Party;
   installedBase: Product[];
   balance: Balance | null;
+  /** Party interactions (TMF683), newest first — the activity timeline. Empty when none. */
+  interactions: PartyInteraction[];
 }
 
 /** Result of resolving a tenant against CPR (Fase 2 TODO wired to this in Fase 3.4). */

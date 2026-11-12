@@ -1,6 +1,6 @@
 import type { SeamResult } from "@/services/seam-result";
-import type { Customer, Party } from "@/services/model";
-import type { PartyInput, CustomerInput } from "@/schemas/cpr";
+import type { Customer, Party, PartyInteraction } from "@/services/model";
+import type { PartyInput, CustomerInput, CreateInteractionInput } from "@/schemas/cpr";
 import type { TenantId } from "@/lib/tenant-rules";
 
 /*
@@ -24,6 +24,10 @@ export interface CprDriver {
   getCustomerAndParty(
     customerId: string,
   ): Promise<SeamResult<{ customer: Customer; party: Party }>>;
+  /** Record a Party Interaction (TMF683) — e.g. onboarding fulfilment. Tenant comes from input. */
+  createInteraction(input: CreateInteractionInput): Promise<SeamResult<PartyInteraction>>;
+  /** The customer's party interactions, newest first — the activity timeline / CSR history. */
+  listInteractions(customerId: string): Promise<SeamResult<PartyInteraction[]>>;
 }
 
 /** Re-exported so driver files have the party/customer shapes without a deep import. */

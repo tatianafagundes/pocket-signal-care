@@ -1,6 +1,6 @@
 import { ok, err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Customer, Party } from "@/services/model";
-import type { PartyInput, CustomerInput } from "@/schemas/cpr";
+import type { Customer, Party, PartyInteraction } from "@/services/model";
+import type { PartyInput, CustomerInput, CreateInteractionInput } from "@/schemas/cpr";
 import { tenantName, type TenantId } from "@/lib/tenant-rules";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 import { withMock } from "@/services/mock-support";
@@ -22,6 +22,8 @@ interface MockRecord {
 
 // customerId -> record. Module-level = survives across calls in the session.
 const store = new Map<string, MockRecord>();
+// customerId -> party interactions (TMF683), newest first. Survives the session like the store.
+const interactions = new Map<string, PartyInteraction[]>();
 let seeded = false;
 
 /** Seed one demo customer per tenant, once. Ids are stable so the demo can deep-link. */
@@ -48,6 +50,20 @@ function seed(): void {
       createdAt: "2026-01-15T10:00:00Z",
     };
     store.set(customerId, { party, customer });
+    // The demo customer onboarded once — seed the matching Party Interaction so the 360 timeline
+    // has the same history a freshly onboarded customer gets (a completed onboarding interaction).
+    interactions.set(customerId, [
+      {
+        interactionId: `pi-seed-${tenantId}`,
+        partyId,
+        customerId,
+        tenantId,
+        type: "onboarding",
+        status: "completed",
+        occurredAt: "2026-01-15T10:00:00Z",
+        relatedEntities: { msisdn: party.msisdn },
+      },
+    ]);
   }
 }
 
@@ -109,6 +125,33 @@ export function createCprMock(): CprDriver {
         }
         return ok({ customer: rec.customer, party: rec.party });
       });
+    },
+
+    createInteraction(input: CreateInteractionInput): Promise<SeamResult<PartyInteraction>> {
+      return withMock("cpr.createInteraction", () => {
+        const interaction: PartyInteraction = {
+          interactionId: `pi-${cryptoId()}`,
+          partyId: input.partyId,
+          customerId: input.customerId,
+          tenantId: input.tenantId,
+          type: input.type,
+          status: input.status,
+          occurredAt: new Date().toISOString(),
+          ...(input.relatedEntities ? { relatedEntities: input.relatedEntities } : {}),
+          ...(input.reasonKey ? { reasonKey: input.reasonKey } : {}),
+        };
+        // Newest first.
+        const list = interactions.get(input.customerId) ?? [];
+        list.unshift(interaction);
+        interactions.set(input.customerId, list);
+        return ok({ ...interaction });
+      });
+    },
+
+    listInteractions(customerId: string): Promise<SeamResult<PartyInteraction[]>> {
+      return withMock("cpr.listInteractions", () =>
+        ok((interactions.get(customerId) ?? []).map((i) => ({ ...i }))),
+      );
     },
   };
 }

@@ -1,6 +1,6 @@
 import { ok, err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Customer, Party } from "@/services/model";
-import type { PartyInput, CustomerInput } from "@/schemas/cpr";
+import type { Customer, Party, PartyInteraction } from "@/services/model";
+import type { PartyInput, CustomerInput, CreateInteractionInput } from "@/schemas/cpr";
 import type { TenantId } from "@/lib/tenant-rules";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 
@@ -122,6 +122,15 @@ export function createCprHttp(): CprDriver {
     ): Promise<SeamResult<{ customer: Customer; party: Party }>> {
       // Real CPR GET customer + its engaged party (TMF629/632). Stubbed until Fase 8 wires it.
       return notConfigured<{ customer: Customer; party: Party }>();
+    },
+    async createInteraction(_input: CreateInteractionInput): Promise<SeamResult<PartyInteraction>> {
+      // Real TMF683 POST /partyInteraction (the eric-dxp-party-interaction-management service),
+      // X-Tenant-Id pinned by `request`. Stubbed until Fase 8 wires the endpoint.
+      return notConfigured<PartyInteraction>();
+    },
+    async listInteractions(_customerId: string): Promise<SeamResult<PartyInteraction[]>> {
+      // Real TMF683 GET /partyInteraction?relatedParty.id={customerId}. Stubbed until Fase 8.
+      return notConfigured<PartyInteraction[]>();
     },
   };
 }

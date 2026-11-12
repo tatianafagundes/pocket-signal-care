@@ -29,6 +29,15 @@ vi.mock("@/services/api", () => ({
     createCart: vi.fn(async () => ({ cartId: "cart-1" })),
     addItem: vi.fn(async (i: { cartId: string }) => ({ cartId: i.cartId })),
     submitOrder: vi.fn(async () => ({ orderId: "order-1", status: "completed" as const })),
+    createInteraction: vi.fn(async () => ({
+      interactionId: "pi-1",
+      partyId: "party-1",
+      customerId: "cust-1",
+      tenantId: "drei" as const,
+      type: "onboarding" as const,
+      status: "completed" as const,
+      occurredAt: "2026-01-15T10:00:00Z",
+    })),
     capturePayment: vi.fn(async () => ({
       authorizationRef: "auth-1",
       amountMinor: 1000,
@@ -50,6 +59,7 @@ const mockApi = api as unknown as Record<
   | "createCart"
   | "addItem"
   | "submitOrder"
+  | "createInteraction"
   | "capturePayment"
   | "topUp",
   ReturnType<typeof vi.fn>
@@ -98,6 +108,7 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
       "addPlan",
       "addSim",
       "submitOrder",
+      "recordInteraction",
       "capture",
       "credit",
     ]);
@@ -184,7 +195,15 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     expect(mockApi.authorizePayment).not.toHaveBeenCalled();
     expect(mockApi.createParty).not.toHaveBeenCalled();
     expect(mockApi.createCustomer).not.toHaveBeenCalled();
-    expect(steps).toEqual(["createCart", "addPlan", "addSim", "submitOrder", "capture", "credit"]);
+    expect(steps).toEqual([
+      "createCart",
+      "addPlan",
+      "addSim",
+      "submitOrder",
+      "recordInteraction",
+      "capture",
+      "credit",
+    ]);
   });
 
   it("skips the entire cart→submit block when an orderId already exists", async () => {
@@ -204,8 +223,8 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     expect(mockApi.createCart).not.toHaveBeenCalled();
     expect(mockApi.addItem).not.toHaveBeenCalled();
     expect(mockApi.submitOrder).not.toHaveBeenCalled();
-    // But money milestones still run (they weren't done yet).
-    expect(steps).toEqual(["capture", "credit"]);
+    // The interaction + money milestones still run (they weren't done yet).
+    expect(steps).toEqual(["recordInteraction", "capture", "credit"]);
   });
 
   it("GOLDEN: a retry after a late failure authorizes once, submits once, credits once", async () => {
@@ -250,11 +269,13 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     expect(mockApi.createCustomer).toHaveBeenCalledTimes(1);
     expect(mockApi.createAddress).toHaveBeenCalledTimes(1);
     expect(mockApi.submitOrder).toHaveBeenCalledTimes(1);
+    expect(mockApi.createInteraction).toHaveBeenCalledTimes(1); // onboarding interaction logged once
     expect(mockApi.capturePayment).toHaveBeenCalledTimes(1);
     expect(mockApi.topUp).toHaveBeenCalledTimes(2); // attempt 1 (rejected) + attempt 2 (ok)
     // The retry only did the remaining step.
     expect(steps2).toEqual(["credit"]);
     expect(state.credited).toBe(true);
+    expect(state.interactionId).toBe("pi-1");
   });
 
   it("persists each durable id + money milestone via patch as it happens", async () => {
@@ -264,8 +285,40 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     expect(patches).toContainEqual({ partyId: "party-1" });
     expect(patches).toContainEqual({ customerId: "cust-1" });
     expect(patches).toContainEqual({ orderId: "order-1" });
+    expect(patches).toContainEqual({ interactionId: "pi-1" });
     expect(patches).toContainEqual({ captured: true });
     expect(patches).toContainEqual({ credited: true });
+  });
+
+  it("records the onboarding interaction with the order + MSISDN as related entities", async () => {
+    await runOnboardingSubmit(deps(completeState({ reservedMsisdn: "+4368140000001" }), [], []));
+    expect(mockApi.createInteraction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tenantId: "drei",
+        type: "onboarding",
+        status: "completed",
+        relatedEntities: { orderId: "order-1", msisdn: "+4368140000001" },
+      }),
+    );
+  });
+
+  it("does not re-log the interaction when one already exists (idempotent)", async () => {
+    const steps: SubmitStep[] = [];
+    await runOnboardingSubmit(
+      deps(
+        completeState({
+          authorizationRef: "auth-1",
+          partyId: "p",
+          customerId: "c",
+          orderId: "order-existing",
+          interactionId: "pi-existing",
+        }),
+        steps,
+        [],
+      ),
+    );
+    expect(mockApi.createInteraction).not.toHaveBeenCalled();
+    expect(steps).not.toContain("recordInteraction");
   });
 
   it("throws when called with incomplete state", async () => {

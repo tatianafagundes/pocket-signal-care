@@ -1,4 +1,11 @@
-import type { Balance, Customer, Customer360, Party, Product } from "@/services/model";
+import type {
+  Balance,
+  Customer,
+  Customer360,
+  Party,
+  PartyInteraction,
+  Product,
+} from "@/services/model";
 
 /*
  * Customer360 composition — a PURE rule. (Spec Fase 3.2)
@@ -16,9 +23,11 @@ export interface Customer360Parts {
   installedBase: Product[];
   /** Balance from the charging seam; null when the customer has no prepaid balance yet. */
   balance: Balance | null;
+  /** Party interactions (TMF683) from CPR; empty when none. */
+  interactions?: PartyInteraction[];
 }
 
-/** Compose the canonical Customer360 from the three sources. Deterministic. */
+/** Compose the canonical Customer360 from the sources. Deterministic. */
 export function composeCustomer360(parts: Customer360Parts): Customer360 {
   return {
     customer: parts.customer,
@@ -29,6 +38,10 @@ export function composeCustomer360(parts: Customer360Parts): Customer360 {
       (a, b) => productKindRank(a.kind) - productKindRank(b.kind),
     ),
     balance: parts.balance,
+    // Newest first, so the activity timeline reads top-down regardless of source order.
+    interactions: [...(parts.interactions ?? [])].sort((a, b) =>
+      b.occurredAt.localeCompare(a.occurredAt),
+    ),
   };
 }
 

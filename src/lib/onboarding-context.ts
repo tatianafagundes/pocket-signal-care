@@ -132,6 +132,12 @@ export interface OnboardingState {
   orderId: string | null;
   captured: boolean;
   credited: boolean;
+  /**
+   * Party Interaction (TMF683) recorded at order fulfilment. Persisted + reused on retry so a
+   * resumed submit never logs the onboarding interaction twice ("Don't pay again", applied to the
+   * interaction log).
+   */
+  interactionId: string | null;
 }
 
 /** The fields a caller may patch. `tenant` is set once at init and not patched here. */

@@ -70,6 +70,32 @@ describe("customer360-rules", () => {
       const c360 = composeCustomer360({ customer, party, installedBase: [], balance: null });
       expect(c360.balance).toBeNull();
     });
+
+    it("defaults interactions to empty when none are provided", () => {
+      const c360 = composeCustomer360({ customer, party, installedBase: [], balance: null });
+      expect(c360.interactions).toEqual([]);
+    });
+
+    it("sorts interactions newest-first by occurredAt", () => {
+      const older = {
+        interactionId: "pi-old",
+        partyId: "p1",
+        customerId: "c1",
+        tenantId: "drei" as const,
+        type: "onboarding" as const,
+        status: "completed" as const,
+        occurredAt: "2026-01-15T10:00:00Z",
+      };
+      const newer = { ...older, interactionId: "pi-new", occurredAt: "2026-03-01T09:00:00Z" };
+      const c360 = composeCustomer360({
+        customer,
+        party,
+        installedBase: [],
+        balance: null,
+        interactions: [older, newer],
+      });
+      expect(c360.interactions.map((i) => i.interactionId)).toEqual(["pi-new", "pi-old"]);
+    });
   });
 
   describe("hasBalance", () => {

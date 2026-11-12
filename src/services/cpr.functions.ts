@@ -8,7 +8,9 @@ import {
   customerInputSchema,
   customerIdSchema,
   tenantIdSchema,
+  createInteractionSchema,
 } from "@/schemas/cpr";
+import type { PartyInteraction } from "@/services/model";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 import { createCprMock } from "@/services/cpr/cpr-mock";
 import { createCprHttp } from "@/services/cpr/cpr-http";
@@ -82,12 +84,15 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
     const cpr = await driver.getCustomerAndParty(customerId);
     if (!cpr.ok) return cpr;
 
-    const [baseRes, balanceRes] = await Promise.all([
+    const [baseRes, balanceRes, interactionsRes] = await Promise.all([
       getInstalledBase(customerId),
       getBalance(customerId),
+      driver.listInteractions(customerId),
     ]);
     const installedBase = baseRes.ok ? baseRes.data : [];
     const balance = balanceRes.ok ? balanceRes.data : null;
+    // Interactions degrade gracefully like base/balance: a failed timeline must not blank the 360.
+    const interactions = interactionsRes.ok ? interactionsRes.data : [];
 
     return {
       ok: true,
@@ -96,7 +101,40 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
         party: cpr.data.party,
         installedBase,
         balance,
+        interactions,
       }),
     };
   });
+}
+
+/**
+ * Record a Party Interaction (TMF683) for a customer — e.g. the onboarding fulfilment interaction.
+ * The tenant travels through the seam context (the X-Tenant-Id equivalent) and is also validated
+ * on the input, so the interaction is tenant-scoped end to end.
+ */
+export function createInteraction(input: unknown): Promise<SeamResult<PartyInteraction>> {
+  const parsed = createInteractionSchema.safeParse(input);
+  if (!parsed.success) {
+    return Promise.resolve<SeamResult<PartyInteraction>>({
+      ok: false,
+      error: seamError("cpr.interaction.invalid", "validation", "fixInput"),
+    });
+  }
+  return runWrite({ tenantId: parsed.data.tenantId }, "cpr.createInteraction", () =>
+    driver.createInteraction(parsed.data),
+  );
+}
+
+/** The customer's party interactions, newest first — the activity timeline. */
+export function listInteractions(customerIdRaw: string): Promise<SeamResult<PartyInteraction[]>> {
+  const parsed = customerIdSchema.safeParse(customerIdRaw);
+  if (!parsed.success) {
+    return Promise.resolve<SeamResult<PartyInteraction[]>>({
+      ok: false,
+      error: seamError("cpr.customer.invalid", "validation", "fixInput"),
+    });
+  }
+  return runRead({ tenantId: "cpr" }, "cpr.listInteractions", () =>
+    driver.listInteractions(parsed.data),
+  );
 }

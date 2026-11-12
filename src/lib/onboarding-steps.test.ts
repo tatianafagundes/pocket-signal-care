@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { ONBOARDING_WORKING_STEPS, stepAfter, stepBefore, workingStepsFor } from "@/lib/onboarding-context";
+import {
+  ONBOARDING_WORKING_STEPS,
+  stepAfter,
+  stepBefore,
+  workingStepsFor,
+} from "@/lib/onboarding-context";
 
 /*
  * workingStepsFor — the conditional "Step N of M" sequence (Fase 7). `sim` appears only when the
@@ -10,28 +15,12 @@ import { ONBOARDING_WORKING_STEPS, stepAfter, stepBefore, workingStepsFor } from
 describe("workingStepsFor", () => {
   it("offers eSIM, choice pending → includes both sim and delivery", () => {
     const steps = workingStepsFor({ offersEsim: true, simType: null });
-    expect(steps).toEqual([
-      "welcome",
-      "plan",
-      "number",
-      "account",
-      "sim",
-      "delivery",
-      "review",
-    ]);
+    expect(steps).toEqual(["welcome", "plan", "number", "account", "sim", "delivery", "review"]);
   });
 
   it("physical SIM → keeps delivery and sim, in the exact order", () => {
     const steps = workingStepsFor({ offersEsim: true, simType: "physical" });
-    expect(steps).toEqual([
-      "welcome",
-      "plan",
-      "number",
-      "account",
-      "sim",
-      "delivery",
-      "review",
-    ]);
+    expect(steps).toEqual(["welcome", "plan", "number", "account", "sim", "delivery", "review"]);
   });
 
   it("eSIM → drops delivery (no shipping), keeps sim", () => {

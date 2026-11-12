@@ -32,5 +32,28 @@ export const customerInputSchema = z.object({
 
 export const customerIdSchema = z.string().trim().min(1);
 
+/*
+ * Party Interaction (TMF683) create input. `type` is open for later moments; `status` defaults to
+ * "completed" (onboarding records a done interaction at fulfilment). `relatedEntities` carries the
+ * TMF "Related Entity" references (order/MSISDN/cart). tenantId is validated here but the seam
+ * also threads it through its context (the X-Tenant-Id equivalent).
+ */
+export const createInteractionSchema = z.object({
+  tenantId: tenantIdSchema,
+  partyId: z.string().trim().min(1),
+  customerId: customerIdSchema,
+  type: z.enum(["onboarding", "topUp", "planChange", "support"]),
+  status: z.enum(["inProgress", "completed", "failed"]).default("completed"),
+  relatedEntities: z
+    .object({
+      orderId: z.string().trim().min(1).optional(),
+      msisdn: z.string().trim().min(1).optional(),
+      cartId: z.string().trim().min(1).optional(),
+    })
+    .optional(),
+  reasonKey: z.string().trim().min(1).optional(),
+});
+
 export type PartyInput = z.infer<typeof partyInputSchema>;
 export type CustomerInput = z.infer<typeof customerInputSchema>;
+export type CreateInteractionInput = z.infer<typeof createInteractionSchema>;

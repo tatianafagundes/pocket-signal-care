@@ -50,6 +50,8 @@ export const api = {
   createParty: (input: unknown) => unwrap(cpr.createParty(input)),
   createCustomer: (input: unknown) => unwrap(cpr.createCustomer(input)),
   getCustomer360: (customerId: string) => unwrap(cpr.getCustomer360(customerId)),
+  createInteraction: (input: unknown) => unwrap(cpr.createInteraction(input)),
+  listInteractions: (customerId: string) => unwrap(cpr.listInteractions(customerId)),
 
   // Catalog seam (ECM, mock)
   listOffers: (tenantId: string) => unwrap(catalog.listOffers(tenantId)),
