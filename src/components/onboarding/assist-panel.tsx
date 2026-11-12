@@ -116,7 +116,8 @@ export function AssistPanel({ offers, onSuggest }: AssistPanelProps) {
             {t("onboarding.plan.assist.resultLabel", "Suggested for you")}
           </p>
           <p className="mt-1 type-caption text-text-secondary">
-            {t(`onboarding.plan.assist.reason.${result.reason}`, "")}
+            {/* result.reason is the full ReasonCode "assist.reason.<leaf>"; key by the leaf. */}
+            {t(`onboarding.plan.assist.reason.${result.reason.replace("assist.reason.", "")}`, "")}
           </p>
           <p className="mt-2 type-caption text-text-secondary">
             {t("onboarding.plan.assist.change", "Choose a different plan")}

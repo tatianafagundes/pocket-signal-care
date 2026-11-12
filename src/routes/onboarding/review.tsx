@@ -39,7 +39,8 @@ function ReviewPage() {
   const navigate = useNavigate();
   useSyncOnboardingStep("review");
 
-  const [busyStep, setBusyStep] = useState<SubmitStep | null>(null);
+  // The submit steps plus a "finalizing" phase (warming Customer 360 after the order completes).
+  const [busyStep, setBusyStep] = useState<SubmitStep | "finalizing" | null>(null);
   const [terminalError, setTerminalError] = useState<SeamFailure | null>(null);
 
   // The summary is rebuilt from state at RENDER (B1): the offer is looked up fresh from the grid,
@@ -49,6 +50,9 @@ function ReviewPage() {
     queryFn: () => api.listOffers(tenant),
   });
   const offer = offersQuery.data?.find((o) => o.offerId === state.selectedOfferId);
+  const planPrice = offer
+    ? t(offerPriceLabel(offer, locale).key, offerPriceLabel(offer, locale).args)
+    : "";
 
   const complete =
     state.selectedOfferId != null &&
@@ -65,7 +69,8 @@ function ReviewPage() {
         patch,
         onStep: (step) => setBusyStep(step),
       });
-      setBusyStep("submitOrder");
+      // Orchestration announced each step (incl. submitOrder) already; now the finishing phase.
+      setBusyStep("finalizing");
       // Warm the 360 so the success/my-plan screens have it; degrade-silent if it fails.
       await api.getCustomer360(customerId).catch(() => undefined);
       await navigate({ to: "/onboarding/success" });
@@ -103,10 +108,12 @@ function ReviewPage() {
           {terminalError ? (
             <SeamErrorNotice
               error={
-                // A terminal activation failure: the account is saved; offer a retry.
+                // A terminal activation failure: the account is saved; offer a retry. Force the
+                // category to "unavailable" so retryable:true stays consistent with the SeamError
+                // invariant (only "unavailable" is retryable).
                 new SeamFailure({
                   code: terminalError.code,
-                  category: terminalError.category,
+                  category: "unavailable",
                   retryable: true,
                   customerFacing: { key: "onboarding.review.terminalError" },
                 })
@@ -119,11 +126,7 @@ function ReviewPage() {
           <dl className="grid gap-4">
             <SummaryRow
               label={t("onboarding.review.plan", "Plan")}
-              value={
-                offer
-                  ? `${offer.name} · ${t(offerPriceLabel(offer, locale).key, offerPriceLabel(offer, locale).args)}`
-                  : "—"
-              }
+              value={offer ? `${offer.name} · ${planPrice}` : "—"}
               onChange={() => navigate({ to: "/onboarding/plan" })}
               changeLabel={t("onboarding.review.change", "Change")}
               busy={busy}
@@ -159,7 +162,7 @@ function ReviewPage() {
           </p>
 
           {!complete ? (
-            <p className="mt-4 type-caption text-destructive" role="status">
+            <p className="mt-4 type-caption text-destructive" role="alert">
               {t(
                 "onboarding.review.incomplete",
                 "Some steps are missing. Go back and complete them first.",

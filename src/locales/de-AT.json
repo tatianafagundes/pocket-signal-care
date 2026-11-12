@@ -64,20 +64,12 @@
     "plan": {
       "title": "Tarif wählen",
       "subtitle": "Wähl den Tarif, der zu deiner Handynutzung passt.",
-      "placeholder": "Die Tarifübersicht erscheint hier.",
-      "loadError": "Wir konnten die Tarife nicht laden.",
       "empty": "Zurzeit sind keine Tarife verfügbar.",
-      "retry": "Erneut versuchen",
       "recommended": "Empfohlen",
       "priceRecurring": "{{price}} alle {{days}} Tage · verlängert sich automatisch",
       "priceOnce": "{{price}} alle {{days}} Tage",
       "priceNoValidity": "{{price}}",
       "euRoaming": "EU-Roaming inklusive",
-      "network5g": "5G",
-      "network4g": "4G",
-      "ineligible": {
-        "offer.ineligible.insufficientBalance": "Lad zuerst auf — dieser Tarif kostet mehr als dein Guthaben."
-      },
       "assist": {
         "open": "Hilf mir bei der Wahl",
         "heading": "Ein paar kurze Fragen",
@@ -94,18 +86,17 @@
         "resultLabel": "Für dich vorgeschlagen",
         "change": "Anderen Tarif wählen",
         "reason": {
-          "assist.reason.videoAndTravel": "Für Video und EU-Reisen passt ein unbegrenzter Tarif am besten.",
-          "assist.reason.video": "Zum Videoschauen gibt dir ein mittlerer Tarif Spielraum.",
-          "assist.reason.heavyApps": "Bei intensiver App-Nutzung gibt dir ein mittlerer Tarif Spielraum.",
-          "assist.reason.light": "Für leichtere Nutzung reicht ein Starter-Tarif locker.",
-          "assist.reason.default": "Basierend auf deinen Antworten passt dieser gut."
+          "videoAndTravel": "Für Video und EU-Reisen passt ein unbegrenzter Tarif am besten.",
+          "video": "Zum Videoschauen gibt dir ein mittlerer Tarif Spielraum.",
+          "heavyApps": "Bei intensiver App-Nutzung gibt dir ein mittlerer Tarif Spielraum.",
+          "light": "Für leichtere Nutzung reicht ein Starter-Tarif locker.",
+          "default": "Basierend auf deinen Antworten passt dieser gut."
         }
       }
     },
     "account": {
       "title": "Konto erstellen",
       "subtitle": "Deine E-Mail und ein Passwort schützen deinen Dienst.",
-      "placeholder": "Das Konto-Formular erscheint hier.",
       "email": "E-Mail",
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -129,7 +120,6 @@
     "details": {
       "title": "Deine Daten",
       "subtitle": "Nur dein Name — damit richten wir dein Profil ein.",
-      "placeholder": "Das Daten-Formular erscheint hier.",
       "givenName": "Vorname",
       "familyName": "Nachname",
       "givenNameRequired": "Gib deinen Vornamen ein.",
@@ -138,18 +128,13 @@
     "number": {
       "title": "Nummer wählen",
       "subtitle": "Wähl eine neue Handynummer, wir halten sie für dich.",
-      "placeholder": "Die Nummernauswahl erscheint hier.",
-      "loadError": "Wir konnten keine verfügbaren Nummern laden.",
       "empty": "Zurzeit sind keine Nummern verfügbar.",
-      "reserved": "Für dich reserviert: {{msisdn}}",
       "reserve": "Diese Nummer reservieren",
-      "listLabel": "Verfügbare Nummern",
-      "retry": "Erneut versuchen"
+      "listLabel": "Verfügbare Nummern"
     },
     "review": {
       "title": "Prüfen und aktivieren",
       "subtitle": "Prüf alles, bevor du bestätigst — du kannst noch zurück und ändern.",
-      "placeholder": "Deine Bestellübersicht erscheint hier.",
       "plan": "Tarif",
       "number": "Nummer",
       "account": "Konto",
@@ -173,7 +158,6 @@
       "title": "Alles erledigt, {{name}}",
       "titleNoName": "Alles erledigt",
       "subtitle": "Dein Tarif ist aktiv.",
-      "placeholder": "Ein Link zu deinem Tarif erscheint hier.",
       "balanceEmpty": "Du hast noch kein Guthaben — lad zum ersten Mal auf, um deinen Tarif zu nutzen.",
       "goToPlan": "Zu meinem Tarif"
     }

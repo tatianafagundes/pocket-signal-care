@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,24 +51,34 @@ function AccountPage() {
   // SeamFailure surfaced from register (e.g. emailInUse). Form-field errors are handled by RHF.
   const [seamError, setSeamError] = useState<SeamFailure | null>(null);
 
-  // Form schema. The password rule mirrors scorePassword so the form and the seam agree.
-  const schema = z
-    .object({
-      email: z.string().email(t("onboarding.account.emailInvalid", "Enter a valid email address.")),
-      password: z
-        .string()
-        .refine(
-          (pw) => scorePassword(pw).ok,
-          t("onboarding.account.passwordWeak", "Your password doesn't meet the requirements yet."),
-        ),
-      confirm: z.string(),
-    })
-    .refine((v) => v.password === v.confirm, {
-      path: ["confirm"],
-      message: t("onboarding.account.confirmMismatch", "The passwords don't match."),
-    });
+  // Form schema. The password rule mirrors scorePassword so the form and the seam agree. Memoised
+  // on `t` so the localized messages refresh if the locale changes, without rebuilding per render.
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          email: z
+            .string()
+            .email(t("onboarding.account.emailInvalid", "Enter a valid email address.")),
+          password: z
+            .string()
+            .refine(
+              (pw) => scorePassword(pw).ok,
+              t(
+                "onboarding.account.passwordWeak",
+                "Your password doesn't meet the requirements yet.",
+              ),
+            ),
+          confirm: z.string(),
+        })
+        .refine((v) => v.password === v.confirm, {
+          path: ["confirm"],
+          message: t("onboarding.account.confirmMismatch", "The passwords don't match."),
+        }),
+    [t],
+  );
 
-  type Values = z.infer<typeof schema>;
+  type Values = { email: string; password: string; confirm: string };
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -133,14 +143,19 @@ function AccountPage() {
               <FormItem>
                 <FormLabel>{t("onboarding.account.password", "Password")}</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="new-password" {...field} />
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    aria-describedby="pw-checklist"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <PasswordChecklist password={passwordValue} />
+          <PasswordChecklist id="pw-checklist" password={passwordValue} />
 
           <FormField
             control={form.control}

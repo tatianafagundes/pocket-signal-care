@@ -64,20 +64,12 @@
     "plan": {
       "title": "Choose a plan",
       "subtitle": "Pick the plan that fits how you use your phone.",
-      "placeholder": "The plan grid will appear here.",
-      "loadError": "We couldn't load the plans.",
       "empty": "No plans are available right now.",
-      "retry": "Try again",
       "recommended": "Recommended",
       "priceRecurring": "{{price}} every {{days}} days · auto-renews",
       "priceOnce": "{{price}} every {{days}} days",
       "priceNoValidity": "{{price}}",
       "euRoaming": "EU roaming included",
-      "network5g": "5G",
-      "network4g": "4G",
-      "ineligible": {
-        "offer.ineligible.insufficientBalance": "Top up first — this plan costs more than your balance."
-      },
       "assist": {
         "open": "Help me choose",
         "heading": "A few quick questions",
@@ -94,18 +86,17 @@
         "resultLabel": "Suggested for you",
         "change": "Choose a different plan",
         "reason": {
-          "assist.reason.videoAndTravel": "For video and EU travel, an unlimited plan fits best.",
-          "assist.reason.video": "For watching video, a mid plan gives you room.",
-          "assist.reason.heavyApps": "For heavy app use, a mid plan gives you room.",
-          "assist.reason.light": "For lighter use, a starter plan is plenty.",
-          "assist.reason.default": "Based on your answers, this is a good fit."
+          "videoAndTravel": "For video and EU travel, an unlimited plan fits best.",
+          "video": "For watching video, a mid plan gives you room.",
+          "heavyApps": "For heavy app use, a mid plan gives you room.",
+          "light": "For lighter use, a starter plan is plenty.",
+          "default": "Based on your answers, this is a good fit."
         }
       }
     },
     "account": {
       "title": "Create your account",
       "subtitle": "Your email and a password keep your service safe.",
-      "placeholder": "The account form will appear here.",
       "email": "Email",
       "password": "Password",
       "confirm": "Confirm password",
@@ -129,7 +120,6 @@
     "details": {
       "title": "Your details",
       "subtitle": "Just your name — we'll use it to set up your profile.",
-      "placeholder": "The details form will appear here.",
       "givenName": "First name",
       "familyName": "Last name",
       "givenNameRequired": "Enter your first name.",
@@ -138,18 +128,13 @@
     "number": {
       "title": "Pick your number",
       "subtitle": "Choose a new mobile number and we'll hold it for you.",
-      "placeholder": "The number picker will appear here.",
-      "loadError": "We couldn't load available numbers.",
       "empty": "No numbers are available right now.",
-      "reserved": "Reserved for you: {{msisdn}}",
       "reserve": "Reserve this number",
-      "listLabel": "Available numbers",
-      "retry": "Try again"
+      "listLabel": "Available numbers"
     },
     "review": {
       "title": "Review and activate",
       "subtitle": "Check everything before you confirm — you can still go back and change it.",
-      "placeholder": "Your order summary will appear here.",
       "plan": "Plan",
       "number": "Number",
       "account": "Account",
@@ -173,7 +158,6 @@
       "title": "You're all set, {{name}}",
       "titleNoName": "You're all set",
       "subtitle": "Your plan is active.",
-      "placeholder": "A link to your plan will appear here.",
       "balanceEmpty": "You have no balance yet — make your first top up to start using your plan.",
       "goToPlan": "Go to my plan"
     }
