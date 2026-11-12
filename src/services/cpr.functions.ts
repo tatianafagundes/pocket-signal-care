@@ -134,6 +134,9 @@ export function listInteractions(customerIdRaw: string): Promise<SeamResult<Part
       error: seamError("cpr.customer.invalid", "validation", "fixInput"),
     });
   }
+  // Tenant label "cpr" matches every other per-customer read (getInstalledBase→"eoc" etc.); today
+  // SeamContext.tenantId is log-only, so this is safe. TODO(Fase 8): when RLS lands, this read must
+  // be tenant-scoped — derive the tenant from the customer (or take it as input) before querying.
   return runRead({ tenantId: "cpr" }, "cpr.listInteractions", () =>
     driver.listInteractions(parsed.data),
   );

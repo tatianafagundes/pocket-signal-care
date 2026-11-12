@@ -140,9 +140,9 @@ export function createCprMock(): CprDriver {
           ...(input.relatedEntities ? { relatedEntities: input.relatedEntities } : {}),
           ...(input.reasonKey ? { reasonKey: input.reasonKey } : {}),
         };
-        // Newest first.
-        const list = interactions.get(input.customerId) ?? [];
-        list.unshift(interaction);
+        // Newest first. Build a NEW array (don't mutate the stored/seeded one in place) so a
+        // future caller that holds a reference from .get() can't observe later writes.
+        const list = [interaction, ...(interactions.get(input.customerId) ?? [])];
         interactions.set(input.customerId, list);
         return ok({ ...interaction });
       });

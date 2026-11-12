@@ -194,6 +194,10 @@ export async function runOnboardingSubmit({
   //     fulfilment." Recorded once the order exists, referencing it (+ MSISDN) as TMF Related
   //     Entities. Idempotent: skip if one was already recorded (reuse the persisted interactionId
   //     on retry), so a resumed submit never double-logs. Tenant travels via the seam context.
+  //     DECISION: placed at ORDER FULFILMENT (after submitOrder), not after the money settles — the
+  //     interaction records that the line was fulfilled, matching the DXP model. If a later capture
+  //     fails the interaction still stands (the order exists); a future void/refund flow would log
+  //     its own compensating interaction rather than retract this one.
   if (!state.interactionId) {
     onStep("recordInteraction");
     const interaction = await api.createInteraction({

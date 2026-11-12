@@ -70,6 +70,17 @@ describe("cpr seam (mock driver)", () => {
       }
     });
 
+    it("degrades gracefully when the interactions timeline fails (empty, not error)", async () => {
+      forceError("cpr.listInteractions");
+      const r = await getCustomer360("demo-drei");
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.data.customer.customerId).toBe("demo-drei");
+        // A failed timeline yields [], never blanks the 360.
+        expect(r.data.interactions).toEqual([]);
+      }
+    });
+
     it("fails with notFound for an unknown customer (never throws)", async () => {
       const r = await getCustomer360("does-not-exist");
       expect(r.ok).toBe(false);
