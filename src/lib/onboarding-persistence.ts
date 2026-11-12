@@ -128,7 +128,7 @@ function reviveDeliveryAddress(v: unknown): DeliveryAddress | null {
   const postalCode = req("postalCode");
   const country = req("country");
   if (!line1 || !city || !region || !postalCode || !country) return null;
-  const line2 = typeof a.line2 === "string" ? a.line2 : undefined;
+  const line2 = typeof a["line2"] === "string" ? a["line2"] : undefined;
   return { line1, line2, city, region, postalCode, country };
 }
 

@@ -133,8 +133,8 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
       expect.objectContaining({ customerId: "cust-1", tenantId: "drei" }),
     );
     const submitArg = mockApi.submitOrder.mock.calls[0]![0] as Record<string, unknown>;
-    expect(submitArg.simType).toBe("esim");
-    expect(submitArg.addressId).toBeUndefined();
+    expect(submitArg["simType"]).toBe("esim");
+    expect(submitArg["addressId"]).toBeUndefined();
   });
 
   it("throws if a physical SIM has no delivery address", async () => {

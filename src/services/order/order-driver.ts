@@ -14,7 +14,7 @@ export interface OrderDriver {
    */
   submitOrder(
     cartId: string,
-    opts?: { addressId?: string; simType?: SimChoice },
+    opts?: { addressId?: string | undefined; simType?: SimChoice | undefined },
   ): Promise<SeamResult<{ orderId: string; status: "completed" | "pending" }>>;
   /** The customer's provisioned products — what the Customer360 reads for installed base. */
   getInstalledBase(customerId: string): Promise<SeamResult<Product[]>>;
