@@ -54,7 +54,11 @@
       "productsLabel": "Your products",
       "noProducts": "No products on your plan yet.",
       "statusActive": "Active",
-      "statusPending": "Pending"
+      "statusPending": "Pending",
+      "simType": {
+        "esim": "eSIM",
+        "physical": "Physical SIM"
+      }
     },
     "topUp": {
       "title": "Top up",
@@ -240,6 +244,12 @@
         "msisdn": {
           "taken": "That number was just taken. Pick another."
         }
+      },
+      "logistics": {
+        "addressOutsideDeliveryArea": "We can't ship a physical SIM to that address. Check it, or choose an eSIM instead."
+      },
+      "payment": {
+        "cardDeclined": "Your card was declined. Check the number or try a different card."
       }
     },
     "details": {
@@ -247,6 +257,35 @@
       "familyName": "Last name",
       "givenNameRequired": "Enter your first name.",
       "familyNameRequired": "Enter your last name."
+    },
+    "sim": {
+      "title": "Physical SIM or eSIM?",
+      "subtitle": "An eSIM activates on this device. A physical SIM is mailed to you.",
+      "disabledHint": "Choose a SIM type to continue.",
+      "esim": {
+        "title": "eSIM",
+        "description": "Install it on this device now — nothing to ship, nothing to wait for."
+      },
+      "physical": {
+        "title": "Physical SIM",
+        "description": "We mail you a SIM card. Best if your phone doesn't support eSIM."
+      }
+    },
+    "delivery": {
+      "title": "Where should we ship your SIM?",
+      "subtitle": "We'll mail your physical SIM to this address. You can still change your plan on the next step.",
+      "continue": "Save address",
+      "line1": "Street address",
+      "line2": "Apartment, suite (optional)",
+      "city": "City",
+      "region": "State or region",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "line1Required": "Enter your street address.",
+      "cityRequired": "Enter your city.",
+      "regionRequired": "Enter your state or region.",
+      "postalCodeRequired": "Enter your postal code.",
+      "countryInvalid": "Enter a 2-letter country code (e.g. AT)."
     },
     "number": {
       "title": "Pick your number",
@@ -268,8 +307,17 @@
       "name": "Name",
       "change": "Change",
       "confirm": "Confirm and activate",
-      "incomplete": "Some steps are missing. Go back and complete them first.",
+      "placeOrder": "Place order",
+      "incomplete": "Enter your card and authorize the payment to place your order.",
       "balanceNote": "You start with no balance — top up any time to use your plan.",
+      "payment": {
+        "heading": "Payment",
+        "firstTopUp": "Plan · first top-up",
+        "authorizedToday": "Authorized today",
+        "authorizeNote": "What you authorize today becomes your first balance. We only charge it when your plan is ready.",
+        "cardLabel": "Card number",
+        "consent": "I authorize this payment as my first top-up."
+      },
       "progress": {
         "authorize": "Authorizing your payment…",
         "createParty": "Creating your profile…",
@@ -293,7 +341,28 @@
       "subtitle": "Your plan is active.",
       "balanceEmpty": "You have no balance yet — make your first top up to start using your plan.",
       "topUp": "Top up now",
-      "later": "Maybe later"
+      "later": "Maybe later",
+      "money": {
+        "heading": "Your first top-up",
+        "authorized": "Authorized",
+        "authorizedDetail": "We've reserved your first top-up.",
+        "chargedPhysical": "Charged when your SIM ships",
+        "chargedEsim": "Charged when your eSIM is ready",
+        "chargedDetail": "You're not charged until then.",
+        "added": "Added when your line is active",
+        "addedDetail": "Your first top-up becomes your balance."
+      },
+      "esim": {
+        "heading": "Your eSIM",
+        "readyIntro": "Install your eSIM on this device. Choose whichever is easiest:",
+        "pathUniversal": "1. Tap the install link we emailed you, on this phone.",
+        "pathQr": "2. Scan the QR code from another device.",
+        "pathManual": "3. Enter the activation code manually in your phone's eSIM settings.",
+        "codeLabel": "Activation code",
+        "requested": "Your eSIM is being prepared — we'll email the install details shortly.",
+        "failed": "We couldn't load your eSIM yet. Check My plan in a moment, or contact support.",
+        "expired": "This eSIM install window expired. Contact support to re-issue your eSIM."
+      }
     }
   }
 }

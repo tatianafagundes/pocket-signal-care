@@ -20,9 +20,11 @@ import { Route as TopUpRouteImport } from './routes/top-up'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding/account'
 import { Route as OnboardingAddonsRouteImport } from './routes/onboarding/addons'
+import { Route as OnboardingDeliveryRouteImport } from './routes/onboarding/delivery'
 import { Route as OnboardingNumberRouteImport } from './routes/onboarding/number'
 import { Route as OnboardingPlanRouteImport } from './routes/onboarding/plan'
 import { Route as OnboardingReviewRouteImport } from './routes/onboarding/review'
+import { Route as OnboardingSimRouteImport } from './routes/onboarding/sim'
 import { Route as OnboardingSuccessRouteImport } from './routes/onboarding/success'
 import { Route as OnboardingWelcomeRouteImport } from './routes/onboarding/welcome'
 
@@ -81,6 +83,11 @@ const OnboardingAddonsRoute = OnboardingAddonsRouteImport.update({
   path: '/addons',
   getParentRoute: () => OnboardingRoute,
 } as any)
+const OnboardingDeliveryRoute = OnboardingDeliveryRouteImport.update({
+  id: '/delivery',
+  path: '/delivery',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 const OnboardingNumberRoute = OnboardingNumberRouteImport.update({
   id: '/number',
   path: '/number',
@@ -94,6 +101,11 @@ const OnboardingPlanRoute = OnboardingPlanRouteImport.update({
 const OnboardingReviewRoute = OnboardingReviewRouteImport.update({
   id: '/review',
   path: '/review',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingSimRoute = OnboardingSimRouteImport.update({
+  id: '/sim',
+  path: '/sim',
   getParentRoute: () => OnboardingRoute,
 } as any)
 const OnboardingSuccessRoute = OnboardingSuccessRouteImport.update({
@@ -118,9 +130,11 @@ export interface FileRoutesByFullPath {
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
   '/onboarding/addons': typeof OnboardingAddonsRoute
+  '/onboarding/delivery': typeof OnboardingDeliveryRoute
   '/onboarding/number': typeof OnboardingNumberRoute
   '/onboarding/plan': typeof OnboardingPlanRoute
   '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/sim': typeof OnboardingSimRoute
   '/onboarding/success': typeof OnboardingSuccessRoute
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
   '/onboarding/': typeof OnboardingIndexRoute
@@ -135,9 +149,11 @@ export interface FileRoutesByTo {
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
   '/onboarding/addons': typeof OnboardingAddonsRoute
+  '/onboarding/delivery': typeof OnboardingDeliveryRoute
   '/onboarding/number': typeof OnboardingNumberRoute
   '/onboarding/plan': typeof OnboardingPlanRoute
   '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/sim': typeof OnboardingSimRoute
   '/onboarding/success': typeof OnboardingSuccessRoute
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
   '/onboarding': typeof OnboardingIndexRoute
@@ -154,9 +170,11 @@ export interface FileRoutesById {
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
   '/onboarding/addons': typeof OnboardingAddonsRoute
+  '/onboarding/delivery': typeof OnboardingDeliveryRoute
   '/onboarding/number': typeof OnboardingNumberRoute
   '/onboarding/plan': typeof OnboardingPlanRoute
   '/onboarding/review': typeof OnboardingReviewRoute
+  '/onboarding/sim': typeof OnboardingSimRoute
   '/onboarding/success': typeof OnboardingSuccessRoute
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
   '/onboarding/': typeof OnboardingIndexRoute
@@ -174,9 +192,11 @@ export interface FileRouteTypes {
     | '/top-up'
     | '/onboarding/account'
     | '/onboarding/addons'
+    | '/onboarding/delivery'
     | '/onboarding/number'
     | '/onboarding/plan'
     | '/onboarding/review'
+    | '/onboarding/sim'
     | '/onboarding/success'
     | '/onboarding/welcome'
     | '/onboarding/'
@@ -191,9 +211,11 @@ export interface FileRouteTypes {
     | '/top-up'
     | '/onboarding/account'
     | '/onboarding/addons'
+    | '/onboarding/delivery'
     | '/onboarding/number'
     | '/onboarding/plan'
     | '/onboarding/review'
+    | '/onboarding/sim'
     | '/onboarding/success'
     | '/onboarding/welcome'
     | '/onboarding'
@@ -209,9 +231,11 @@ export interface FileRouteTypes {
     | '/top-up'
     | '/onboarding/account'
     | '/onboarding/addons'
+    | '/onboarding/delivery'
     | '/onboarding/number'
     | '/onboarding/plan'
     | '/onboarding/review'
+    | '/onboarding/sim'
     | '/onboarding/success'
     | '/onboarding/welcome'
     | '/onboarding/'
@@ -307,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingAddonsRouteImport
       parentRoute: typeof OnboardingRoute
     }
+    '/onboarding/delivery': {
+      id: '/onboarding/delivery'
+      path: '/delivery'
+      fullPath: '/onboarding/delivery'
+      preLoaderRoute: typeof OnboardingDeliveryRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/onboarding/number': {
       id: '/onboarding/number'
       path: '/number'
@@ -326,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/review'
       fullPath: '/onboarding/review'
       preLoaderRoute: typeof OnboardingReviewRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/sim': {
+      id: '/onboarding/sim'
+      path: '/sim'
+      fullPath: '/onboarding/sim'
+      preLoaderRoute: typeof OnboardingSimRouteImport
       parentRoute: typeof OnboardingRoute
     }
     '/onboarding/success': {
@@ -348,9 +386,11 @@ declare module '@tanstack/react-router' {
 interface OnboardingRouteChildren {
   OnboardingAccountRoute: typeof OnboardingAccountRoute
   OnboardingAddonsRoute: typeof OnboardingAddonsRoute
+  OnboardingDeliveryRoute: typeof OnboardingDeliveryRoute
   OnboardingNumberRoute: typeof OnboardingNumberRoute
   OnboardingPlanRoute: typeof OnboardingPlanRoute
   OnboardingReviewRoute: typeof OnboardingReviewRoute
+  OnboardingSimRoute: typeof OnboardingSimRoute
   OnboardingSuccessRoute: typeof OnboardingSuccessRoute
   OnboardingWelcomeRoute: typeof OnboardingWelcomeRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
@@ -359,9 +399,11 @@ interface OnboardingRouteChildren {
 const OnboardingRouteChildren: OnboardingRouteChildren = {
   OnboardingAccountRoute: OnboardingAccountRoute,
   OnboardingAddonsRoute: OnboardingAddonsRoute,
+  OnboardingDeliveryRoute: OnboardingDeliveryRoute,
   OnboardingNumberRoute: OnboardingNumberRoute,
   OnboardingPlanRoute: OnboardingPlanRoute,
   OnboardingReviewRoute: OnboardingReviewRoute,
+  OnboardingSimRoute: OnboardingSimRoute,
   OnboardingSuccessRoute: OnboardingSuccessRoute,
   OnboardingWelcomeRoute: OnboardingWelcomeRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,

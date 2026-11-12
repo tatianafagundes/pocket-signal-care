@@ -97,7 +97,17 @@ function Page() {
                     key={product.productId}
                     className="flex items-center justify-between gap-2 rounded-card border border-hairline bg-surface p-3"
                   >
-                    <span className="type-body text-text-primary">{product.name}</span>
+                    <span className="min-w-0">
+                      <span className="type-body text-text-primary">{product.name}</span>
+                      {/* SIM form (Fase 7.5): the proof the /sim choice had an effect. */}
+                      {product.kind === "sim" && product.simType ? (
+                        <span className="mt-0.5 block type-caption text-text-secondary">
+                          {product.simType === "esim"
+                            ? t("pages.myPlan.simType.esim", "eSIM")
+                            : t("pages.myPlan.simType.physical", "Physical SIM")}
+                        </span>
+                      ) : null}
+                    </span>
                     <span className="type-caption text-text-secondary">
                       {product.status === "active"
                         ? t("pages.myPlan.statusActive", "Active")

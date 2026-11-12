@@ -95,7 +95,10 @@ function AccountPage() {
         givenName: values.givenName.trim(),
         familyName: values.familyName.trim(),
       });
-      await navigate({ to: "/onboarding/review" });
+      // A physical SIM needs a shipping address before review; eSIM (or no SIM choice) skips it.
+      await navigate({
+        to: state.simType === "physical" ? "/onboarding/delivery" : "/onboarding/review",
+      });
     } catch (err) {
       if (err instanceof SeamFailure) {
         setSeamError(err);

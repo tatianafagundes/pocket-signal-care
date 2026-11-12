@@ -11,10 +11,27 @@ import { WizardPage } from "@/components/onboarding/wizard-page";
 import { WizardNav } from "@/components/onboarding/wizard-nav";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
 import { formatMsisdn, formatPrice, offerPriceLabel } from "@/lib/format";
 import { runOnboardingSubmit, type SubmitStep } from "@/lib/onboarding-submit";
+
+/*
+ * Turn the (mock) entered card number into an opaque method token. In the real flow a PSP SDK
+ * tokenizes the card in the browser and we only ever see the token — the PAN never reaches our
+ * code or state. Here we mimic that: keep only the digits' last 4 for a label-ish token, and
+ * preserve a "4000" marker so the payment mock's deterministic decline path stays reachable
+ * (a card number containing 4000 declines; 4242 authorizes). NEVER stored in onboarding state.
+ */
+function tokenizeCardMock(cardNumber: string): string {
+  const digits = cardNumber.replace(/\D/g, "");
+  if (digits.includes("4000")) return "tok-visa-4000";
+  const last4 = digits.slice(-4) || "0000";
+  return `tok-visa-${last4}`;
+}
 
 export const Route = createFileRoute("/onboarding/review")({
   head: () => ({
@@ -44,6 +61,13 @@ function ReviewPage() {
   // The submit steps plus a "finalizing" phase (warming Customer 360 after the order completes).
   const [busyStep, setBusyStep] = useState<SubmitStep | "finalizing" | null>(null);
   const [terminalError, setTerminalError] = useState<SeamFailure | null>(null);
+
+  // Mock payment block. The card number is tokenized to a method token on submit and is NEVER
+  // persisted (same discipline as the password). A card decline is a FIELD error here, not a
+  // terminal failure — the user can fix the card and place the order again.
+  const [cardNumber, setCardNumber] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [cardError, setCardError] = useState<SeamFailure | null>(null);
 
   // The summary is rebuilt from state at RENDER (B1): the offer is looked up fresh from the grid,
   // so changing the plan upstream can never leave a stale price/plan in the summary.
@@ -75,14 +99,18 @@ function ReviewPage() {
     state.reservedMsisdn != null &&
     state.email != null &&
     state.givenName != null &&
-    state.familyName != null;
+    state.familyName != null &&
+    // Payment: a card number must be entered and the authorization consent given.
+    cardNumber.replace(/\D/g, "").length >= 12 &&
+    consent;
 
   async function confirm() {
     setTerminalError(null);
+    setCardError(null);
     try {
       // The plan price is the first top-up (same money, no separate amount step). Read fresh from
       // the looked-up offer so a plan change upstream can't leave a stale amount. The `complete`
-      // guard already disables Confirm when the offer is unresolvable; this is the money-boundary
+      // guard already disables Place order when the offer is unresolvable; this is the money-boundary
       // backstop so a 0/absent price can NEVER reach authorize/topUp (silent €0 activation).
       if (!offer || offer.priceMinor <= 0) {
         throw new SeamFailure({
@@ -93,11 +121,9 @@ function ReviewPage() {
         });
       }
       const planPriceMinor = offer.priceMinor;
-      // MOCK payment token. Fase 7.5 replaces this with the token the payment step collects from
-      // the (tokenized) card form; it is NEVER a PAN and is never stored in state. "4242" authorizes
-      // in the payment mock; a token containing "4000" would decline.
-      // TODO(Fase 7.5): thread the real collected method token here.
-      const methodToken = "tok-visa-4242";
+      // Tokenize the entered card (mock). The PAN never leaves this function — only the token is
+      // passed on, and nothing card-related is persisted to state/sessionStorage.
+      const methodToken = tokenizeCardMock(cardNumber);
       const customerId = await runOnboardingSubmit({
         state,
         patch,
@@ -123,7 +149,14 @@ function ReviewPage() {
       await navigate({ to: "/onboarding/success" });
     } catch (err) {
       if (err instanceof SeamFailure) {
-        setTerminalError(err);
+        // A card decline is recoverable and about the CARD — show it at the card field so the user
+        // fixes the card and places the order again, rather than the terminal "account saved" copy
+        // (nothing was created: authorize runs first and failed). Everything else is terminal.
+        if (err.code === "payment.cardDeclined") {
+          setCardError(err);
+        } else {
+          setTerminalError(err);
+        }
       } else {
         throw err;
       }
@@ -215,18 +248,88 @@ function ReviewPage() {
             />
           </dl>
 
-          <p className="mt-4 type-caption text-text-secondary">
-            {t(
-              "onboarding.review.balanceNote",
-              "You start with no balance — top up any time to use your plan.",
-            )}
-          </p>
+          {/* Payment block. Each money line DECLARES its nature; the screen never SUMS — it reads
+              the plan price and labels it. "Authorized today" is a reservation, not a charge. */}
+          <section className="mt-6 border-t border-hairline pt-5" aria-labelledby="pay-heading">
+            <h2 id="pay-heading" className="type-title text-text-primary">
+              {t("onboarding.review.payment.heading", "Payment")}
+            </h2>
+
+            <dl className="mt-3 grid gap-2">
+              <div className="flex items-baseline justify-between gap-2">
+                <dt className="type-body text-text-secondary">
+                  {t("onboarding.review.payment.firstTopUp", "Plan · first top-up")}
+                </dt>
+                <dd className="type-body text-text-primary tabular-nums">
+                  {offer ? formatPrice(offer.priceMinor, offer.currency, locale) : "—"}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-2">
+                <dt className="type-body font-medium text-text-primary">
+                  {t("onboarding.review.payment.authorizedToday", "Authorized today")}
+                </dt>
+                <dd className="type-body font-medium text-text-primary tabular-nums">
+                  {offer ? formatPrice(offer.priceMinor, offer.currency, locale) : "—"}
+                </dd>
+              </div>
+            </dl>
+
+            <p className="mt-2 type-caption text-text-secondary">
+              {t(
+                "onboarding.review.payment.authorizeNote",
+                "What you authorize today becomes your first balance. We only charge it when your plan is ready.",
+              )}
+            </p>
+
+            <div className="mt-4 grid gap-2">
+              <Label htmlFor="card-number">
+                {t("onboarding.review.payment.cardLabel", "Card number")}
+              </Label>
+              <Input
+                id="card-number"
+                inputMode="numeric"
+                autoComplete="cc-number"
+                placeholder="4242 4242 4242 4242"
+                value={cardNumber}
+                onChange={(e) => {
+                  setCardNumber(e.target.value);
+                  if (cardError) setCardError(null);
+                }}
+                aria-describedby={cardError ? "card-error" : undefined}
+                aria-invalid={cardError != null}
+                disabled={busy}
+              />
+              {/* Card decline = field-level, recoverable (no retry button; fixing the card is the
+                  retry). Lives next to the input it's about. */}
+              {cardError ? (
+                <div id="card-error">
+                  <SeamErrorNotice error={cardError} />
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-4 flex items-start gap-3">
+              <Checkbox
+                id="pay-consent"
+                checked={consent}
+                onCheckedChange={(v) => setConsent(v === true)}
+                disabled={busy}
+                className="mt-0.5"
+              />
+              <Label htmlFor="pay-consent" className="type-caption text-text-secondary font-normal">
+                {t(
+                  "onboarding.review.payment.consent",
+                  "I authorize this payment as my first top-up.",
+                )}
+              </Label>
+            </div>
+          </section>
 
           {!complete ? (
             <p className="mt-4 type-caption text-destructive" role="alert">
               {t(
                 "onboarding.review.incomplete",
-                "Some steps are missing. Go back and complete them first.",
+                "Enter your card and authorize the payment to place your order.",
               )}
             </p>
           ) : null}
@@ -234,7 +337,7 @@ function ReviewPage() {
           <WizardNav
             onBack={() => navigate({ to: "/onboarding/account" })}
             onContinue={() => void confirm()}
-            continueLabel={t("onboarding.review.confirm", "Confirm and activate")}
+            continueLabel={t("onboarding.review.placeOrder", "Place order")}
             continueDisabled={!complete}
             busy={busy}
           />

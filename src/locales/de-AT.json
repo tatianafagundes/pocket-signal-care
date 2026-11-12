@@ -54,7 +54,11 @@
       "productsLabel": "Deine Produkte",
       "noProducts": "Noch keine Produkte in deinem Tarif.",
       "statusActive": "Aktiv",
-      "statusPending": "Ausstehend"
+      "statusPending": "Ausstehend",
+      "simType": {
+        "esim": "eSIM",
+        "physical": "Physische SIM"
+      }
     },
     "topUp": {
       "title": "Aufladen",
@@ -240,6 +244,12 @@
         "msisdn": {
           "taken": "Diese Nummer wurde gerade vergeben. Wähl eine andere."
         }
+      },
+      "logistics": {
+        "addressOutsideDeliveryArea": "An diese Adresse können wir keine physische SIM schicken. Prüf sie oder wähl stattdessen eine eSIM."
+      },
+      "payment": {
+        "cardDeclined": "Deine Karte wurde abgelehnt. Prüf die Nummer oder versuch eine andere Karte."
       }
     },
     "details": {
@@ -247,6 +257,35 @@
       "familyName": "Nachname",
       "givenNameRequired": "Gib deinen Vornamen ein.",
       "familyNameRequired": "Gib deinen Nachnamen ein."
+    },
+    "sim": {
+      "title": "Physische SIM oder eSIM?",
+      "subtitle": "Eine eSIM aktivierst du auf diesem Gerät. Eine physische SIM schicken wir dir zu.",
+      "disabledHint": "Wähl einen SIM-Typ, um fortzufahren.",
+      "esim": {
+        "title": "eSIM",
+        "description": "Installier sie jetzt auf diesem Gerät — nichts zu verschicken, nichts abzuwarten."
+      },
+      "physical": {
+        "title": "Physische SIM",
+        "description": "Wir schicken dir eine SIM-Karte. Am besten, wenn dein Handy keine eSIM unterstützt."
+      }
+    },
+    "delivery": {
+      "title": "Wohin sollen wir deine SIM schicken?",
+      "subtitle": "Wir schicken deine physische SIM an diese Adresse. Deinen Tarif kannst du im nächsten Schritt noch ändern.",
+      "continue": "Adresse speichern",
+      "line1": "Straße und Hausnummer",
+      "line2": "Wohnung, Stiege (optional)",
+      "city": "Stadt",
+      "region": "Bundesland oder Region",
+      "postalCode": "Postleitzahl",
+      "country": "Land",
+      "line1Required": "Gib deine Straße und Hausnummer ein.",
+      "cityRequired": "Gib deine Stadt ein.",
+      "regionRequired": "Gib dein Bundesland oder deine Region ein.",
+      "postalCodeRequired": "Gib deine Postleitzahl ein.",
+      "countryInvalid": "Gib einen 2-stelligen Ländercode ein (z. B. AT)."
     },
     "number": {
       "title": "Nummer wählen",
@@ -268,8 +307,17 @@
       "name": "Name",
       "change": "Ändern",
       "confirm": "Bestätigen und aktivieren",
-      "incomplete": "Es fehlen noch Schritte. Geh zurück und schließ sie zuerst ab.",
+      "placeOrder": "Bestellung aufgeben",
+      "incomplete": "Gib deine Karte ein und autorisier die Zahlung, um die Bestellung aufzugeben.",
       "balanceNote": "Du startest ohne Guthaben — lad jederzeit auf, um deinen Tarif zu nutzen.",
+      "payment": {
+        "heading": "Zahlung",
+        "firstTopUp": "Tarif · erste Aufladung",
+        "authorizedToday": "Heute autorisiert",
+        "authorizeNote": "Was du heute autorisierst, wird dein erstes Guthaben. Wir belasten es erst, wenn dein Tarif bereit ist.",
+        "cardLabel": "Kartennummer",
+        "consent": "Ich autorisiere diese Zahlung als meine erste Aufladung."
+      },
       "progress": {
         "authorize": "Deine Zahlung wird autorisiert…",
         "createParty": "Dein Profil wird erstellt…",
@@ -293,7 +341,28 @@
       "subtitle": "Dein Tarif ist aktiv.",
       "balanceEmpty": "Du hast noch kein Guthaben — lad zum ersten Mal auf, um deinen Tarif zu nutzen.",
       "topUp": "Jetzt aufladen",
-      "later": "Vielleicht später"
+      "later": "Vielleicht später",
+      "money": {
+        "heading": "Deine erste Aufladung",
+        "authorized": "Autorisiert",
+        "authorizedDetail": "Wir haben deine erste Aufladung reserviert.",
+        "chargedPhysical": "Belastet, sobald deine SIM verschickt wird",
+        "chargedEsim": "Belastet, sobald deine eSIM bereit ist",
+        "chargedDetail": "Bis dahin wird dir nichts belastet.",
+        "added": "Gutgeschrieben, sobald deine Leitung aktiv ist",
+        "addedDetail": "Deine erste Aufladung wird zu deinem Guthaben."
+      },
+      "esim": {
+        "heading": "Deine eSIM",
+        "readyIntro": "Installier deine eSIM auf diesem Gerät. Wähl, was am einfachsten ist:",
+        "pathUniversal": "1. Tipp auf diesem Handy auf den Installationslink, den wir dir per E-Mail geschickt haben.",
+        "pathQr": "2. Scann den QR-Code von einem anderen Gerät.",
+        "pathManual": "3. Gib den Aktivierungscode manuell in den eSIM-Einstellungen deines Handys ein.",
+        "codeLabel": "Aktivierungscode",
+        "requested": "Deine eSIM wird vorbereitet — wir schicken dir die Installationsdetails in Kürze per E-Mail.",
+        "failed": "Wir konnten deine eSIM noch nicht laden. Schau gleich unter „Mein Tarif“ nach oder kontaktier den Support.",
+        "expired": "Das Installationsfenster dieser eSIM ist abgelaufen. Kontaktier den Support, um deine eSIM neu auszustellen."
+      }
     }
   }
 }

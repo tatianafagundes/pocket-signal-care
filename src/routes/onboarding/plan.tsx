@@ -103,7 +103,7 @@ function PlanPage() {
 
           <WizardNav
             onBack={() => navigate({ to: "/onboarding/welcome" })}
-            onContinue={() => navigate({ to: "/onboarding/addons" })}
+            onContinue={() => navigate({ to: "/onboarding/sim" })}
             continueDisabled={state.selectedOfferId == null}
             disabledHint={t("onboarding.plan.disabledHint", "Choose a plan to continue.")}
           />
