@@ -24,3 +24,16 @@ export const reserveMsisdnSchema = z.object({
 });
 
 export type ReserveMsisdnInput = z.infer<typeof reserveMsisdnSchema>;
+
+/*
+ * eSIM provisioning (GSMA SGP.22 via the esimProfile extension). requestEsimProfile asks the
+ * SM-DP+ (mock) for a profile for a customer; getEsimProfile polls its lifecycle by id.
+ */
+export const esimProfileIdSchema = z.string().trim().min(1);
+
+export const requestEsimProfileSchema = z.object({
+  customerId: z.string().trim().min(1),
+  tenantId: tenantIdSchema,
+});
+
+export type RequestEsimProfileInput = z.infer<typeof requestEsimProfileSchema>;

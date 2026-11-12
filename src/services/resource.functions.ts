@@ -1,9 +1,14 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
 import { runRead, runWrite } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
-import type { Msisdn, SimValidation } from "@/services/model";
+import type { EsimProfile, Msisdn, SimValidation } from "@/services/model";
 import { tenantIdSchema } from "@/schemas/cpr";
-import { reserveMsisdnSchema, iccidSchema } from "@/schemas/resource";
+import {
+  reserveMsisdnSchema,
+  iccidSchema,
+  requestEsimProfileSchema,
+  esimProfileIdSchema,
+} from "@/schemas/resource";
 import type { ResourceDriver } from "@/services/resource/resource-driver";
 import { createResourceMock } from "@/services/resource/resource-mock";
 import { createResourceHttp } from "@/services/resource/resource-http";
@@ -45,5 +50,23 @@ export function validateSim(iccidRaw: string): Promise<SeamResult<SimValidation>
   if (!parsed.success) return invalid<SimValidation>("resource.iccid.invalid");
   return runRead({ tenantId: "resource" }, "resource.validateSim", () =>
     driver.validateSim(parsed.data),
+  );
+}
+
+/** Ask the SM-DP+ (mock) for an eSIM profile. Idempotent per customer+tenant. */
+export function requestEsimProfile(input: unknown): Promise<SeamResult<EsimProfile>> {
+  const parsed = requestEsimProfileSchema.safeParse(input);
+  if (!parsed.success) return invalid<EsimProfile>("resource.requestEsimProfile.invalid");
+  return runWrite({ tenantId: parsed.data.tenantId }, "resource.requestEsimProfile", () =>
+    driver.requestEsimProfile(parsed.data.customerId, parsed.data.tenantId),
+  );
+}
+
+/** Poll an eSIM profile's lifecycle by id. */
+export function getEsimProfile(esimProfileIdRaw: unknown): Promise<SeamResult<EsimProfile>> {
+  const parsed = esimProfileIdSchema.safeParse(esimProfileIdRaw);
+  if (!parsed.success) return invalid<EsimProfile>("resource.getEsimProfile.invalid");
+  return runRead({ tenantId: "resource" }, "resource.getEsimProfile", () =>
+    driver.getEsimProfile(parsed.data),
   );
 }

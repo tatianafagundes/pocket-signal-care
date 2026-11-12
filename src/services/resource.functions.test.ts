@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { listAvailableMsisdn, reserveMsisdn, validateSim } from "@/services/resource.functions";
+import {
+  listAvailableMsisdn,
+  reserveMsisdn,
+  validateSim,
+  requestEsimProfile,
+  getEsimProfile,
+} from "@/services/resource.functions";
 import { clearForcedError } from "@/services/mock-support";
 
 afterEach(() => clearForcedError());
@@ -58,6 +64,44 @@ describe("resource seam (DSIMA mock)", () => {
 
   it("rejects a malformed ICCID (validation)", async () => {
     const r = await validateSim("not-an-iccid");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("validation");
+  });
+
+  it("requests an eSIM profile with an LPA activation code, ready", async () => {
+    const r = await requestEsimProfile({ customerId: "esim-cust-1", tenantId: "drei" });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.esimProfileId).toMatch(/^esim-/);
+      expect(r.data.status).toBe("ready");
+      // LPA:1$<smdp-fqdn>$<matchingId>
+      expect(r.data.activationCode).toMatch(/^LPA:1\$smdp\.drei\.at\$[A-Z0-9]+$/);
+      expect(r.data.iccid).toMatch(/^\d{19}$/);
+    }
+  });
+
+  it("is idempotent per customer+tenant — a retry returns the same profile", async () => {
+    const first = await requestEsimProfile({ customerId: "esim-cust-2", tenantId: "dreigo" });
+    const second = await requestEsimProfile({ customerId: "esim-cust-2", tenantId: "dreigo" });
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    if (first.ok && second.ok) expect(second.data).toEqual(first.data);
+  });
+
+  it("reads an eSIM profile back by id, and 404s an unknown id", async () => {
+    const created = await requestEsimProfile({ customerId: "esim-cust-3", tenantId: "drei" });
+    if (!created.ok) throw new Error("request failed in setup");
+    const read = await getEsimProfile(created.data.esimProfileId);
+    expect(read.ok).toBe(true);
+    if (read.ok) expect(read.data.esimProfileId).toBe(created.data.esimProfileId);
+
+    const missing = await getEsimProfile("esim-does-not-exist");
+    expect(missing.ok).toBe(false);
+    if (!missing.ok) expect(missing.error.category).toBe("notFound");
+  });
+
+  it("rejects a malformed eSIM request (validation)", async () => {
+    const r = await requestEsimProfile({ customerId: "", tenantId: "drei" });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.category).toBe("validation");
   });

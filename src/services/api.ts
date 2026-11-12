@@ -6,6 +6,7 @@ import * as charging from "@/services/charging.functions";
 import * as resource from "@/services/resource.functions";
 import * as auth from "@/services/auth.functions";
 import * as payment from "@/services/payment.functions";
+import * as logistics from "@/services/logistics.functions";
 
 /*
  * api — the single port the UI uses. (Spec Fase 0.3 / 3.4)
@@ -66,10 +67,12 @@ export const api = {
   topUp: (input: unknown) => unwrap(charging.topUp(input)),
   rateAndDeduct: (input: unknown) => unwrap(charging.rateAndDeduct(input)),
 
-  // Resource seam (DSIMA, mock) — SIM/MSISDN
+  // Resource seam (DSIMA, mock) — SIM/MSISDN + eSIM provisioning (esimProfile, GSMA SGP.22)
   listAvailableMsisdn: (tenantId: string) => unwrap(resource.listAvailableMsisdn(tenantId)),
   reserveMsisdn: (input: unknown) => unwrap(resource.reserveMsisdn(input)),
   validateSim: (iccid: string) => unwrap(resource.validateSim(iccid)),
+  requestEsimProfile: (input: unknown) => unwrap(resource.requestEsimProfile(input)),
+  getEsimProfile: (esimProfileId: string) => unwrap(resource.getEsimProfile(esimProfileId)),
 
   // Auth seam (mock + Keycloak stub) — register/login. Password never leaves the seam.
   register: (input: unknown) => unwrap(auth.registerAccount(input)),
@@ -80,4 +83,8 @@ export const api = {
   capturePayment: (input: unknown) => unwrap(payment.capturePayment(input)),
   voidPayment: (input: unknown) => unwrap(payment.voidAuthorization(input)),
   getPayment: (authorizationRef: string) => unwrap(payment.getPayment(authorizationRef)),
+
+  // Logistics seam (TMF673 Address Management, mock) — delivery address for a physical SIM.
+  createAddress: (input: unknown) => unwrap(logistics.createAddress(input)),
+  getAddress: (addressId: string) => unwrap(logistics.getAddress(addressId)),
 };

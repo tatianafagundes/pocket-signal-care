@@ -1,5 +1,5 @@
 import { ok, err, seamError } from "@/services/seam-result";
-import type { Msisdn, SimValidation } from "@/services/model";
+import type { EsimProfile, Msisdn, SimValidation } from "@/services/model";
 import type { TenantId } from "@/lib/tenant-rules";
 import { withMock } from "@/services/mock-support";
 import type { ResourceDriver } from "@/services/resource/resource-driver";
@@ -28,6 +28,9 @@ function seedPool(tenantId: TenantId): Msisdn[] {
 const pools = new Map<TenantId, Msisdn[]>();
 // reservationId -> msisdn, so a reservation is traceable.
 const reservations = new Map<string, string>();
+// eSIM profiles: keyed by id for getEsimProfile, and a customer+tenant index for idempotency.
+const esimProfiles = new Map<string, EsimProfile>();
+const esimByCustomer = new Map<string, string>(); // "customerId:tenantId" -> esimProfileId
 
 function poolFor(tenantId: TenantId): Msisdn[] {
   let pool = pools.get(tenantId);
@@ -87,6 +90,46 @@ export function createResourceMock(): ResourceDriver {
           ? { iccid, valid: true, simType: "physical" }
           : { iccid, valid: false };
         return ok(result);
+      });
+    },
+
+    requestEsimProfile(customerId, tenantId) {
+      return withMock("resource.requestEsimProfile", () => {
+        // Idempotent per customer+tenant: a retry returns the same profile, never a second eSIM
+        // (the dossiê's "Don't pay again" discipline, applied to resource provisioning).
+        const key = `${customerId}:${tenantId}`;
+        const existingId = esimByCustomer.get(key);
+        if (existingId) {
+          const existing = esimProfiles.get(existingId);
+          if (existing) return ok({ ...existing });
+        }
+        const esimProfileId = `esim-${cryptoId()}`;
+        // 19-digit test ICCID (89 + AT MCC/MNC-ish filler + id-derived tail). Not a real ICCID.
+        const iccid =
+          `893143${esimProfileId.replace(/\D/g, "").padEnd(8, "0").slice(0, 8)}00000`.slice(0, 19);
+        const smdp = tenantId === "drei" ? "smdp.drei.at" : "smdp.dreigo.at";
+        const matchingId = cryptoId().toUpperCase();
+        const profile: EsimProfile = {
+          esimProfileId,
+          iccid,
+          activationCode: `LPA:1$${smdp}$${matchingId}`,
+          installUrl: `https://${smdp}/esim/${matchingId}`,
+          status: "ready",
+          state: "ready",
+        };
+        esimProfiles.set(esimProfileId, profile);
+        esimByCustomer.set(key, esimProfileId);
+        return ok({ ...profile });
+      });
+    },
+
+    getEsimProfile(esimProfileId) {
+      return withMock("resource.getEsimProfile", () => {
+        const profile = esimProfiles.get(esimProfileId);
+        if (!profile) {
+          return err(seamError("resource.esimProfile.notFound", "notFound", "contactSupport"));
+        }
+        return ok({ ...profile });
       });
     },
   };

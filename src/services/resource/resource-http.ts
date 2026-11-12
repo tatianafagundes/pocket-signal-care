@@ -1,5 +1,5 @@
 import { err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Msisdn, SimValidation } from "@/services/model";
+import type { EsimProfile, Msisdn, SimValidation } from "@/services/model";
 import type { ResourceDriver } from "@/services/resource/resource-driver";
 
 /*
@@ -23,5 +23,9 @@ export function createResourceHttp(): ResourceDriver {
     reserveMsisdn: () => Promise.resolve(notConfigured()),
     validateSim: (): Promise<SeamResult<SimValidation>> =>
       Promise.resolve(notConfigured<SimValidation>()),
+    requestEsimProfile: (): Promise<SeamResult<EsimProfile>> =>
+      Promise.resolve(notConfigured<EsimProfile>()),
+    getEsimProfile: (): Promise<SeamResult<EsimProfile>> =>
+      Promise.resolve(notConfigured<EsimProfile>()),
   };
 }
