@@ -36,7 +36,30 @@
     },
     "addOns": {
       "title": "Add-ons",
-      "subtitle": "Data, minutes and roaming bundles are coming soon."
+      "subtitle": "Boost your plan with extra data, roaming or streaming.",
+      "empty": "No add-ons are available right now.",
+      "listLabel": "Available add-ons",
+      "moreInfo": "More info",
+      "lessInfo": "Less info",
+      "detailHeading": "What's included",
+      "buyNote": "Buying add-ons is coming soon.",
+      "ineligible": {
+        "offer.ineligible.insufficientBalance": "Top up first — this add-on costs more than your balance."
+      },
+      "offers": {
+        "drei-addon-1gb": {
+          "tagline": "Good for a little extra data mid-cycle.",
+          "description": "Adds 1 GB of data to your current plan. Use it when you're close to your limit before the cycle resets."
+        },
+        "drei-addon-eu-1gb": {
+          "tagline": "Good for a top-up while travelling in the EU.",
+          "description": "Adds 1 GB of EU roaming data, so you stay connected on trips without changing your plan."
+        },
+        "dreigo-stream-pass": {
+          "tagline": "Good for streaming without using your data.",
+          "description": "Stream music and video from partner apps without it counting against your plan data.* Renews with your plan."
+        }
+      }
     },
     "account": {
       "title": "My account",

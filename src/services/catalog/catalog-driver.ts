@@ -10,6 +10,8 @@ import type { QualifyContext } from "@/schemas/catalog";
  */
 export interface CatalogDriver {
   listOffers(tenantId: TenantId): Promise<SeamResult<Offer[]>>;
+  /** The add-on offers (kind "addon") for a tenant — the add-ons route, not the onboarding grid. */
+  listAddOns(tenantId: TenantId): Promise<SeamResult<Offer[]>>;
   /**
    * Qualify an offer. `balanceMinor` is the customer's current balance (when one exists), which
    * the SEAM fetches from charging and passes in — the catalog driver owns the catalogue, not

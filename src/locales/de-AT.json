@@ -36,7 +36,30 @@
     },
     "addOns": {
       "title": "Zusatzpakete",
-      "subtitle": "Daten-, Minuten- und Roaming-Pakete folgen in Kürze."
+      "subtitle": "Erweitere deinen Tarif mit mehr Daten, Roaming oder Streaming.",
+      "empty": "Zurzeit sind keine Zusatzpakete verfügbar.",
+      "listLabel": "Verfügbare Zusatzpakete",
+      "moreInfo": "Mehr Infos",
+      "lessInfo": "Weniger Infos",
+      "detailHeading": "Das ist dabei",
+      "buyNote": "Zusatzpakete kaufen ist bald möglich.",
+      "ineligible": {
+        "offer.ineligible.insufficientBalance": "Lad zuerst auf — dieses Zusatzpaket kostet mehr als dein Guthaben."
+      },
+      "offers": {
+        "drei-addon-1gb": {
+          "tagline": "Gut für etwas mehr Daten mitten im Zyklus.",
+          "description": "Fügt deinem aktuellen Tarif 1 GB Daten hinzu. Ideal, wenn du kurz vor dem Limit bist, bevor der Zyklus neu startet."
+        },
+        "drei-addon-eu-1gb": {
+          "tagline": "Gut für Nachschub auf Reisen in der EU.",
+          "description": "Fügt 1 GB EU-Roaming-Daten hinzu, damit du auf Reisen verbunden bleibst, ohne deinen Tarif zu ändern."
+        },
+        "dreigo-stream-pass": {
+          "tagline": "Gut für Streaming, ohne deine Daten zu verbrauchen.",
+          "description": "Streame Musik und Videos von Partner-Apps, ohne dass es auf dein Datenvolumen zählt.* Verlängert sich mit deinem Tarif."
+        }
+      }
     },
     "account": {
       "title": "Mein Konto",

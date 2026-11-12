@@ -25,6 +25,9 @@ export function createCatalogHttp(): CatalogDriver {
     listOffers(): Promise<SeamResult<Offer[]>> {
       return Promise.resolve(notConfigured<Offer[]>());
     },
+    listAddOns(): Promise<SeamResult<Offer[]>> {
+      return Promise.resolve(notConfigured<Offer[]>());
+    },
     qualifyOffer() {
       return Promise.resolve(notConfigured());
     },

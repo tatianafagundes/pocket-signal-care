@@ -51,6 +51,7 @@ export const api = {
 
   // Catalog seam (ECM, mock)
   listOffers: (tenantId: string) => unwrap(catalog.listOffers(tenantId)),
+  listAddOns: (tenantId: string) => unwrap(catalog.listAddOns(tenantId)),
   qualifyOffer: (offerId: string, ctx: unknown) => unwrap(catalog.qualifyOffer(offerId, ctx)),
 
   // Order seam (EOC, mock)

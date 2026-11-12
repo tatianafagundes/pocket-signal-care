@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { listOffers, qualifyOffer } from "@/services/catalog.functions";
+import { listAddOns, listOffers, qualifyOffer } from "@/services/catalog.functions";
 import { clearForcedError, forceError } from "@/services/mock-support";
 
 afterEach(() => clearForcedError());
@@ -44,6 +44,28 @@ describe("catalog seam (mock)", () => {
     const r = await qualifyOffer("dreigo-stream-pass", { tenantId: "dreigo" });
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.result).toBe("qualified");
+  });
+
+  it("listAddOns returns ONLY add-ons (the complement of the plan grid)", async () => {
+    const drei = await listAddOns("drei");
+    expect(drei.ok).toBe(true);
+    if (drei.ok) {
+      expect(drei.data.length).toBeGreaterThan(0);
+      expect(drei.data.every((o) => o.kind === "addon")).toBe(true);
+      expect(drei.data.every((o) => o.tenantId === "drei")).toBe(true);
+    }
+    const dreigo = await listAddOns("dreigo");
+    if (dreigo.ok) {
+      expect(dreigo.data.some((o) => o.offerId === "dreigo-stream-pass")).toBe(true);
+      // No plan leaks into the add-ons list.
+      expect(dreigo.data.some((o) => o.offerId === "dreigo-go-8")).toBe(false);
+    }
+  });
+
+  it("listAddOns rejects an invalid tenant (validation, never throws)", async () => {
+    const r = await listAddOns("acme");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("validation");
   });
 
   it("rejects an invalid tenant (validation, never throws)", async () => {

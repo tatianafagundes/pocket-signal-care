@@ -181,6 +181,17 @@ export function createCatalogMock(): CatalogDriver {
       );
     },
 
+    listAddOns(tenantId: TenantId) {
+      // The add-ons route: the complement of listOffers — only kind "addon". Copies, not the seed.
+      return withMock("catalog.listAddOns", () =>
+        ok(
+          allOffers(tenantId)
+            .filter((o) => o.kind === "addon")
+            .map((o) => ({ ...o })),
+        ),
+      );
+    },
+
     qualifyOffer(offerId, ctx, balanceMinor) {
       return withMock("catalog.qualifyOffer", () => {
         const offer = allOffers(ctx.tenantId).find((o) => o.offerId === offerId);

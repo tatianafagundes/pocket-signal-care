@@ -31,6 +31,19 @@ export function listOffers(tenantIdRaw: string): Promise<SeamResult<Offer[]>> {
   );
 }
 
+export function listAddOns(tenantIdRaw: string): Promise<SeamResult<Offer[]>> {
+  const parsed = tenantIdSchema.safeParse(tenantIdRaw);
+  if (!parsed.success) {
+    return Promise.resolve<SeamResult<Offer[]>>({
+      ok: false,
+      error: seamError("catalog.tenant.invalid", "validation", "fixInput"),
+    });
+  }
+  return runRead({ tenantId: parsed.data }, "catalog.listAddOns", () =>
+    driver.listAddOns(parsed.data),
+  );
+}
+
 export function qualifyOffer(
   offerIdRaw: string,
   ctxRaw: unknown,
