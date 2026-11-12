@@ -89,3 +89,4 @@ backend; every other system is mocked behind a seam). The design system is
 - Onboarding Continue targets come from `continueTarget` in `src/lib/onboarding-guard.ts`: it skips ahead to the first unfinished step (usually Review) when later steps are still complete — so editing from Review never forces a replay.
 - Once `registeredEmail` is set, the account step edits name/email in place (`api.changeEmail`) and never calls `register` again — avoids the "email already in use" dead end.
 - Onboarding progress persists in localStorage with a 24-hour expiry (non-secret fields only) — so a closed tab or new browser session can resume.
+- "Help me choose" suggestions come only from the pure `recommend()` in `src/services/recommendation-rules.ts` (usage answers → estimated GB → cheapest covering plan, read from offer fields, never offer ids) — keeps suggestions deterministic, testable and tenant-agnostic.

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
@@ -15,6 +16,7 @@ import { AssistPanel } from "@/components/onboarding/assist-panel";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
+import type { Recommendation } from "@/services/recommendation-rules";
 
 export const Route = createFileRoute("/onboarding/plan")({
   head: () => ({
@@ -53,6 +55,21 @@ function PlanPage() {
     patch(
       simStillAllowed ? { selectedOfferId: offerId } : { selectedOfferId: offerId, simType: null },
     );
+  }
+
+  const [suggestion, setSuggestion] = useState<Recommendation | null>(null);
+
+  function chooseSuggested(offerId: string) {
+    selectOffer(offerId);
+    // Bring the chosen plan into view and focus its radio, so the choice is visible and the
+    // keyboard / screen-reader position follows it. Wait a frame for the collapsed panel.
+    requestAnimationFrame(() => {
+      const radio = document.getElementById(`offer-${offerId}`);
+      if (!radio) return;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      radio.focus({ preventScroll: true });
+      radio.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    });
   }
 
   const next = continueTarget("plan", state, TENANT_OFFERS_ESIM);
@@ -95,7 +112,11 @@ function PlanPage() {
             )}
           </p>
           <div className="mb-4">
-            <AssistPanel offers={offersQuery.data} onSuggest={selectOffer} />
+            <AssistPanel
+              offers={offersQuery.data}
+              onChoose={chooseSuggested}
+              onSuggestion={setSuggestion}
+            />
           </div>
 
           <RadioGroup
@@ -107,7 +128,10 @@ function PlanPage() {
               <OfferOption
                 key={offer.offerId}
                 offer={offer}
-                recommendedLabel={t("onboarding.plan.recommended", "Recommended")}
+                recommendedLabel={t("onboarding.plan.recommended", "Most popular")}
+                {...(suggestion?.offerId === offer.offerId
+                  ? { suggestedLabel: t("onboarding.plan.assist.resultLabel", "Suggested for you") }
+                  : {})}
               />
             ))}
           </RadioGroup>

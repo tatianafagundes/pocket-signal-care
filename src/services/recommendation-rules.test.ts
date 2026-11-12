@@ -1,129 +1,117 @@
 import { describe, expect, it } from "vitest";
 
-import { recommend, type AssistAnswers } from "@/services/recommendation-rules";
+import {
+  allowanceGb,
+  estimateMonthlyGb,
+  recommend,
+  type AssistAnswers,
+} from "@/services/recommendation-rules";
 import type { Offer } from "@/services/model";
 
-// A small plan grid mirroring the catalog mock's categories (not its exact ids — the rule reads
-// `category`, so any tenant's grid works the same).
+// A grid mirroring the Drei catalogue: the starter has no EU roaming, the rest do.
+const plan = (o: Partial<Offer> & Pick<Offer, "offerId" | "dataAmount" | "priceMinor">): Offer => ({
+  tenantId: "drei",
+  name: o.offerId,
+  currency: "EUR",
+  ...o,
+});
 const plans: Offer[] = [
-  {
-    offerId: "p-starter",
-    tenantId: "drei",
-    name: "Start",
-    dataAmount: "5 GB",
-    priceMinor: 990,
-    currency: "EUR",
-    category: "starter",
-    recommended: false,
-  },
-  {
-    offerId: "p-standard",
-    tenantId: "drei",
-    name: "Mid",
+  plan({ offerId: "start", dataAmount: "5 GB", priceMinor: 990 }),
+  plan({
+    offerId: "up",
     dataAmount: "15 GB",
     priceMinor: 1490,
-    currency: "EUR",
-    category: "standard",
+    euRoaming: true,
     recommended: true,
-  },
-  {
-    offerId: "p-unlimited",
-    tenantId: "drei",
-    name: "Unlimited",
+  }),
+  plan({ offerId: "max", dataAmount: "40 GB", priceMinor: 1990, euRoaming: true }),
+  plan({
+    offerId: "unl",
     dataAmount: "Unlimited",
     priceMinor: 2990,
-    currency: "EUR",
-    category: "unlimited",
-    recommended: false,
-  },
-  // An add-on that must NEVER be recommended.
-  {
-    offerId: "p-addon",
-    tenantId: "drei",
-    name: "+1 GB",
-    dataAmount: "1 GB",
-    priceMinor: 350,
-    currency: "EUR",
-    kind: "addon",
-    category: "data-addon",
-  },
+    euRoaming: true,
+    unlimitedData: true,
+  }),
+  plan({ offerId: "addon", dataAmount: "1 GB", priceMinor: 350, kind: "addon" }),
 ];
 
-const ans = (o: Partial<AssistAnswers>): AssistAnswers => ({
-  watchesVideo: null,
-  travelsEu: null,
-  heavyApps: null,
+const ans = (o: Partial<AssistAnswers> = {}): AssistAnswers => ({
+  video: "rarely",
+  social: "messages",
+  hotspot: "never",
+  travelsEu: false,
   ...o,
 });
 
-describe("recommendation-rules.recommend", () => {
-  it("suggests unlimited for video + EU travel", () => {
-    const r = recommend(ans({ watchesVideo: true, travelsEu: true }), plans);
-    expect(r).toEqual({
-      offerId: "p-unlimited",
-      reason: "assist.reason.videoAndTravel",
-      confidence: "suggested",
-    });
+describe("recommendation-rules", () => {
+  it("should estimate 2 GB a month for a light user", () => {
+    expect(estimateMonthlyGb(ans())).toBe(2);
   });
 
-  it("suggests standard for video without travel", () => {
-    const r = recommend(ans({ watchesVideo: true, travelsEu: false }), plans);
-    expect(r?.offerId).toBe("p-standard");
-    expect(r?.reason).toBe("assist.reason.video");
+  it("should estimate 13 GB for daily video plus some social", () => {
+    expect(estimateMonthlyGb(ans({ video: "daily", social: "some" }))).toBe(13);
   });
 
-  it("suggests standard for a heavy-apps user who doesn't watch video", () => {
-    const r = recommend(ans({ watchesVideo: false, heavyApps: true }), plans);
-    expect(r?.offerId).toBe("p-standard");
-    expect(r?.reason).toBe("assist.reason.heavyApps");
+  it("should read allowances from the data label and treat unlimited as infinite", () => {
+    expect(allowanceGb(plans[0]!)).toBe(5);
+    expect(allowanceGb(plans[3]!)).toBe(Number.POSITIVE_INFINITY);
+    expect(allowanceGb(plan({ offerId: "x", dataAmount: "Lots", priceMinor: 1 }))).toBeNull();
   });
 
-  it("suggests starter for a light user (all no)", () => {
-    const r = recommend(ans({ watchesVideo: false, travelsEu: false, heavyApps: false }), plans);
-    expect(r?.offerId).toBe("p-starter");
-    expect(r?.reason).toBe("assist.reason.light");
-  });
-
-  it("always labels the output as a suggestion, never a decision", () => {
-    const r = recommend(ans({ watchesVideo: true, travelsEu: true }), plans);
+  it("should suggest the cheapest plan for a light user at home", () => {
+    const r = recommend(ans(), plans);
+    expect(r?.offerId).toBe("start");
+    expect(r?.reason).toBe("assist.reason.fits");
     expect(r?.confidence).toBe("suggested");
   });
 
-  it("falls back to the recommended plan when no plan has the target tier", () => {
-    const noUnlimited = plans.filter((o) => o.category !== "unlimited");
-    const r = recommend(ans({ watchesVideo: true, travelsEu: true }), noUnlimited);
-    expect(r?.offerId).toBe("p-standard"); // the recommended:true plan
+  it("should suggest a roaming plan when the light user travels in the EU", () => {
+    const r = recommend(ans({ travelsEu: true }), plans);
+    expect(r?.offerId).toBe("up");
+    expect(r?.includesEuRoaming).toBe(true);
+  });
+
+  it("should flag a close fit when 13 GB lands on the 15 GB plan", () => {
+    const r = recommend(ans({ video: "daily", social: "some" }), plans);
+    expect(r?.offerId).toBe("up");
+    expect(r?.reason).toBe("assist.reason.closeFit");
+    expect(r?.cheaperAlternative).toBeUndefined();
+  });
+
+  it("should suggest 40 GB for 19 GB and mention the 15 GB plan saves 5 euros", () => {
+    const r = recommend(ans({ video: "daily", social: "lots" }), plans);
+    expect(r?.offerId).toBe("max");
+    expect(r?.cheaperAlternative).toEqual({ offerId: "up", savingMinor: 500 });
+  });
+
+  it("should suggest unlimited for hours of video, lots of social and frequent hotspot", () => {
+    const r = recommend(ans({ video: "hours", social: "lots", hotspot: "often" }), plans);
+    expect(r?.offerId).toBe("unl");
+    expect(r?.reason).toBe("assist.reason.unlimited");
+  });
+
+  it("should suggest the largest plan when usage exceeds every allowance", () => {
+    const finite = plans.filter((o) => o.offerId !== "unl");
+    const r = recommend(ans({ video: "hours", social: "lots", hotspot: "often" }), finite);
+    expect(r?.offerId).toBe("max");
+    expect(r?.reason).toBe("assist.reason.biggest");
+  });
+
+  it("should fall back to the recommended plan when no allowance can be read", () => {
+    const unreadable = plans.map((o) => ({ ...o, dataAmount: "?", unlimitedData: false }));
+    const r = recommend(ans(), unreadable);
+    expect(r?.offerId).toBe("up");
     expect(r?.reason).toBe("assist.reason.default");
   });
 
-  it("falls back to the first plan when no tier matches and none is recommended", () => {
-    // starter + unlimited only, none recommended; a video-only answer targets "standard" → miss.
-    const noStandard = plans
-      .filter((o) => o.category === "starter" || o.category === "unlimited")
-      .map((o) => ({ ...o, recommended: false }));
-    const r = recommend(ans({ watchesVideo: true, travelsEu: false }), noStandard);
-    expect(r?.offerId).toBe(noStandard[0]!.offerId); // plans[0] fallback
-    expect(r?.reason).toBe("assist.reason.default");
-  });
-
-  it("never suggests an add-on, even when the grid is add-ons plus one plan", () => {
-    // Every behavioural branch must land on the single plan, never the add-ons.
-    const grid = [plans[3]!, { ...plans[3]!, offerId: "p-addon-2" }, plans[0]!];
-    for (const a of [
-      ans({ watchesVideo: true, travelsEu: true }),
-      ans({ watchesVideo: true }),
-      ans({ heavyApps: true }),
-      ans({ watchesVideo: false, travelsEu: false, heavyApps: false }),
-    ]) {
-      const r = recommend(a, grid);
-      expect(r?.offerId).toBe("p-starter");
+  it("should never suggest an add-on", () => {
+    const grid = [plans[4]!, plans[0]!];
+    for (const a of [ans(), ans({ video: "hours", social: "lots", hotspot: "often" })]) {
+      expect(recommend(a, grid)?.offerId).toBe("start");
     }
   });
 
-  it("returns null when the grid has no plans (only add-ons)", () => {
-    expect(recommend(ans({}), [])).toBeNull();
-    expect(recommend(ans({ watchesVideo: true, travelsEu: true }), [plans[3]!])).toBeNull();
-    // two add-ons, still null — the positive plan filter excludes every add-on.
-    expect(recommend(ans({}), [plans[3]!, { ...plans[3]!, offerId: "p-addon-2" }])).toBeNull();
+  it("should return null when the grid has no plans", () => {
+    expect(recommend(ans(), [plans[4]!])).toBeNull();
   });
 });

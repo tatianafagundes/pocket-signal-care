@@ -134,32 +134,93 @@
       "title": "Choose a plan",
       "subtitle": "Pick the plan that fits how you use your phone.",
       "empty": "No plans are available right now.",
-      "recommended": "Recommended",
+      "recommended": "Most popular",
       "priceRecurring": "{{price}} every {{days}} days · renews, cancel anytime",
       "priceOnce": "{{price}} every {{days}} days",
       "priceNoValidity": "{{price}}",
       "assist": {
         "open": "Help me choose",
-        "heading": "A few quick questions",
-        "intro": "Answer what applies — we'll suggest a plan. You can still pick any plan yourself.",
+        "teaserTitle": "Not sure which plan?",
+        "teaserBody": "Answer 4 quick questions and we'll suggest one. It takes under a minute.",
+        "progress": "Question {{current}} of {{total}}",
+        "back": "Back",
+        "close": "Not now",
         "q": {
-          "watchesVideo": "Do you watch video on your phone?",
-          "travelsEu": "Do you travel in the EU?",
-          "heavyApps": "Do you use a lot of apps and social media?"
+          "video": {
+            "title": "On mobile data, how much video do you watch?",
+            "hint": "Count only the time you're away from Wi-Fi.",
+            "rarely": {
+              "label": "Rarely",
+              "hint": "A short clip now and then"
+            },
+            "daily": {
+              "label": "About 30 minutes a day",
+              "hint": "Short videos and the odd episode on the go"
+            },
+            "hours": {
+              "label": "An hour or more a day",
+              "hint": "Streaming, live sport or video calls on the go"
+            }
+          },
+          "social": {
+            "title": "How much social media and music, away from Wi-Fi?",
+            "messages": {
+              "label": "Mostly messages and calls",
+              "hint": "WhatsApp, email and maps"
+            },
+            "some": {
+              "label": "Some social and music",
+              "hint": "Scrolling and playlists on the commute"
+            },
+            "lots": {
+              "label": "Lots, most of the day",
+              "hint": "Feeds, stories and music for hours"
+            }
+          },
+          "hotspot": {
+            "title": "Do you share your phone's internet with a laptop or tablet?",
+            "never": {
+              "label": "Never",
+              "hint": "Only my phone uses data"
+            },
+            "sometimes": {
+              "label": "Sometimes",
+              "hint": "A laptop on the train now and then"
+            },
+            "often": {
+              "label": "Often",
+              "hint": "I regularly work from my phone's connection"
+            }
+          },
+          "travel": {
+            "title": "Will you use your phone in other EU countries?",
+            "no": {
+              "label": "No, mostly in Austria",
+              "hint": "Trips abroad are rare"
+            },
+            "yes": {
+              "label": "Yes, I travel in the EU",
+              "hint": "Use your plan just like at home"
+            }
+          }
         },
-        "yes": "Yes",
-        "no": "No",
-        "suggest": "Suggest a plan",
-        "skip": "Skip",
         "resultLabel": "Suggested for you",
-        "change": "Choose a different plan",
+        "pricePer": "{{price}} / {{days}} days",
+        "estimate": "We estimate you use about {{gb}} GB a month.",
         "reason": {
-          "videoAndTravel": "For video and EU travel, an unlimited plan fits best.",
-          "video": "For watching video, a mid plan gives you room.",
-          "heavyApps": "For heavy app use, a mid plan gives you room.",
-          "light": "For lighter use, a starter plan is plenty.",
-          "default": "Based on your answers, this is a good fit."
-        }
+          "fits": "{{plan}} includes {{data}}, so you have room to spare.",
+          "closeFit": "{{plan}} includes {{data}}, a close fit. You can add data anytime if you need more.",
+          "unlimited": "With unlimited data, you never need to keep an eye on your usage.",
+          "biggest": "That's more than any plan includes, so {{plan}} gives you the most. You can add data anytime.",
+          "default": "Based on your answers, {{plan}} is a good fit."
+        },
+        "euRoaming": "Includes EU roaming, so you can use it like at home.",
+        "alternative": "Often on Wi-Fi? {{plan}} with {{data}} could be enough and costs {{saving}} less.",
+        "chooseAlternative": "Choose {{plan}} instead",
+        "reassurance": "Prepaid, so there's no risk: change your plan or add data anytime.",
+        "choose": "Choose {{plan}}",
+        "restart": "Change answers",
+        "summary": "Suggested for you: {{plan}}, based on about {{gb}} GB a month."
       },
       "disabledHint": "Choose a plan to continue.",
       "paymentNote": "Prepaid, no contract: you only pay when you top up, and you can cancel anytime.",

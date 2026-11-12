@@ -28,9 +28,11 @@ import type { Offer } from "@/services/model";
 interface OfferOptionProps {
   offer: Offer;
   recommendedLabel: string;
+  /** Set when "help me choose" suggested this plan; shown as its own badge. */
+  suggestedLabel?: string;
 }
 
-export function OfferOption({ offer, recommendedLabel }: OfferOptionProps) {
+export function OfferOption({ offer, recommendedLabel, suggestedLabel }: OfferOptionProps) {
   const { t } = useLocalizedTranslation();
   const { locale } = useTenant();
   const [open, setOpen] = useState(false);
@@ -87,11 +89,18 @@ export function OfferOption({ offer, recommendedLabel }: OfferOptionProps) {
         <span id={descId} className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
             <span className="type-body font-medium text-text-primary">{offer.name}</span>
-            {offer.recommended === true ? (
-              <span className="rounded-pill bg-accent-tint px-2 py-0.5 type-caption text-accent-ink">
-                {recommendedLabel}
-              </span>
-            ) : null}
+            <span className="flex flex-wrap justify-end gap-1">
+              {suggestedLabel ? (
+                <span className="rounded-pill bg-accent-tint px-2 py-0.5 type-caption text-accent-ink">
+                  {suggestedLabel}
+                </span>
+              ) : null}
+              {offer.recommended === true ? (
+                <span className="rounded-pill border border-hairline px-2 py-0.5 type-caption text-text-secondary">
+                  {recommendedLabel}
+                </span>
+              ) : null}
+            </span>
           </span>
           {tagline ? (
             <span className="mt-0.5 block type-caption text-text-secondary">{tagline}</span>

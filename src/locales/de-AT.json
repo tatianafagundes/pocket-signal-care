@@ -134,32 +134,93 @@
       "title": "Tarif wählen",
       "subtitle": "Wähl den Tarif, der zu deiner Handynutzung passt.",
       "empty": "Zurzeit sind keine Tarife verfügbar.",
-      "recommended": "Empfohlen",
+      "recommended": "Am beliebtesten",
       "priceRecurring": "{{price}} alle {{days}} Tage · verlängert sich, jederzeit kündbar",
       "priceOnce": "{{price}} alle {{days}} Tage",
       "priceNoValidity": "{{price}}",
       "assist": {
         "open": "Hilf mir bei der Wahl",
-        "heading": "Ein paar kurze Fragen",
-        "intro": "Beantworte, was zutrifft — wir schlagen einen Tarif vor. Du kannst trotzdem jeden Tarif selbst wählen.",
+        "teaserTitle": "Nicht sicher, welcher Tarif passt?",
+        "teaserBody": "Beantworte 4 kurze Fragen und wir schlagen dir einen vor. Das dauert keine Minute.",
+        "progress": "Frage {{current}} von {{total}}",
+        "back": "Zurück",
+        "close": "Jetzt nicht",
         "q": {
-          "watchesVideo": "Schaust du Videos am Handy?",
-          "travelsEu": "Reist du in der EU?",
-          "heavyApps": "Nutzt du viele Apps und soziale Medien?"
+          "video": {
+            "title": "Wie viel Video schaust du über mobile Daten?",
+            "hint": "Zähl nur die Zeit ohne WLAN.",
+            "rarely": {
+              "label": "Selten",
+              "hint": "Ab und zu ein kurzer Clip"
+            },
+            "daily": {
+              "label": "Etwa 30 Minuten am Tag",
+              "hint": "Kurze Videos und mal eine Folge unterwegs"
+            },
+            "hours": {
+              "label": "Eine Stunde oder mehr am Tag",
+              "hint": "Streaming, Live-Sport oder Videoanrufe unterwegs"
+            }
+          },
+          "social": {
+            "title": "Wie viel Social Media und Musik nutzt du ohne WLAN?",
+            "messages": {
+              "label": "Vor allem Nachrichten und Anrufe",
+              "hint": "WhatsApp, E-Mail und Karten"
+            },
+            "some": {
+              "label": "Etwas Social Media und Musik",
+              "hint": "Scrollen und Playlists am Arbeitsweg"
+            },
+            "lots": {
+              "label": "Viel, fast den ganzen Tag",
+              "hint": "Feeds, Storys und stundenlang Musik"
+            }
+          },
+          "hotspot": {
+            "title": "Teilst du das Internet deines Handys mit Laptop oder Tablet?",
+            "never": {
+              "label": "Nie",
+              "hint": "Nur mein Handy braucht Daten"
+            },
+            "sometimes": {
+              "label": "Manchmal",
+              "hint": "Ab und zu der Laptop im Zug"
+            },
+            "often": {
+              "label": "Oft",
+              "hint": "Ich arbeite regelmäßig über mein Handy"
+            }
+          },
+          "travel": {
+            "title": "Nutzt du dein Handy auch in anderen EU-Ländern?",
+            "no": {
+              "label": "Nein, meistens in Österreich",
+              "hint": "Reisen ins Ausland sind selten"
+            },
+            "yes": {
+              "label": "Ja, ich reise in der EU",
+              "hint": "Nutze deinen Tarif wie daheim"
+            }
+          }
         },
-        "yes": "Ja",
-        "no": "Nein",
-        "suggest": "Tarif vorschlagen",
-        "skip": "Überspringen",
         "resultLabel": "Für dich vorgeschlagen",
-        "change": "Anderen Tarif wählen",
+        "pricePer": "{{price}} / {{days}} Tage",
+        "estimate": "Wir schätzen, du brauchst etwa {{gb}} GB im Monat.",
         "reason": {
-          "videoAndTravel": "Für Video und EU-Reisen passt ein unbegrenzter Tarif am besten.",
-          "video": "Zum Videoschauen gibt dir ein mittlerer Tarif Spielraum.",
-          "heavyApps": "Bei intensiver App-Nutzung gibt dir ein mittlerer Tarif Spielraum.",
-          "light": "Für leichtere Nutzung reicht ein Starter-Tarif locker.",
-          "default": "Basierend auf deinen Antworten passt dieser gut."
-        }
+          "fits": "{{plan}} enthält {{data}}, da hast du genug Spielraum.",
+          "closeFit": "{{plan}} enthält {{data}}, das passt knapp. Du kannst jederzeit Daten dazubuchen.",
+          "unlimited": "Mit unbegrenzten Daten musst du nie auf deinen Verbrauch achten.",
+          "biggest": "Das ist mehr, als ein Tarif enthält, deshalb bietet dir {{plan}} am meisten. Du kannst jederzeit Daten dazubuchen.",
+          "default": "Nach deinen Antworten passt {{plan}} gut zu dir."
+        },
+        "euRoaming": "Mit EU-Roaming, du nutzt ihn also wie daheim.",
+        "alternative": "Oft im WLAN? {{plan}} mit {{data}} könnte reichen und kostet {{saving}} weniger.",
+        "chooseAlternative": "Lieber {{plan}} wählen",
+        "reassurance": "Wertkarte ohne Risiko: Du kannst den Tarif jederzeit wechseln oder Daten dazubuchen.",
+        "choose": "{{plan}} wählen",
+        "restart": "Antworten ändern",
+        "summary": "Für dich vorgeschlagen: {{plan}}, bei etwa {{gb}} GB im Monat."
       },
       "disabledHint": "Wähl einen Tarif, um fortzufahren.",
       "paymentNote": "Wertkarte ohne Vertrag: Du zahlst nur, wenn du aufladest, und kannst jederzeit kündigen.",
