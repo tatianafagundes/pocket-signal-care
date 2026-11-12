@@ -78,11 +78,45 @@ was negative (`kind !== "addon"`) → positive (`kind == null || kind === "plan"
 stronger tests (add-ons never recommended on any branch, `plans[0]` fallback, named
 listOffers-excludes-add-ons).
 
+## Fase C — Wizard skeleton (routes + provider + i18n) — shipped
+
+Commit `8886e63`. 100 tests (9 new).
+
+Shipped:
+- `lib/onboarding-context.ts`: the 7-step model (`ONBOARDING_STEPS`), `OnboardingState`
+  (non-secret only), and the context identity.
+- `lib/onboarding-persistence.ts` (+ test): load / save / clear non-secret wizard state in
+  sessionStorage, scoped to the tenant, with a 60-minute TTL and a strict revive (malformed,
+  expired, or other-tenant state → start clean). SSR-safe, never throws.
+- `components/onboarding-provider.tsx` + `hooks/use-onboarding.ts`: provider pins the tenant for
+  the life of the flow, persists on every patch; guard hook.
+- `components/onboarding/wizard-page.tsx`: the wizard page frame. Moves focus to the step heading
+  on each step change (WCAG 2.4.3) and announces "Step N of M, <title>" via an aria-live region
+  (4.1.3). Deliberately separate from the shared `PageShell` so other routes are untouched.
+- `components/onboarding/onboarding-stepper.tsx`: progress dots with `aria-current="step"` and
+  visually-hidden state labels — progress is never conveyed by colour alone.
+- `routes/onboarding.tsx` (layout mounting the provider) + 7 step routes
+  `routes/onboarding/{welcome,plan,account,details,number,review,success}.tsx`. Each syncs its
+  step into the persisted state via `hooks/use-sync-onboarding-step.ts`.
+- `locales/en.json` + `locales/de-AT.json`: full-parity `onboarding` key block (de-AT informal
+  "du"). `lib/format.ts`: `formatPrice` via `Intl.NumberFormat`.
+
+Locked decisions:
+- **Non-secret state only in the provider/sessionStorage** — the password and token never enter
+  the wizard state (a test asserts the serialized blob matches no `password`/`token`).
+- **The tenant is pinned when the flow starts** — a mid-flow brand change does not split a
+  half-finished flow, and persistence refuses to resume another tenant's state.
+- **sessionStorage, not localStorage** — resume is scoped to the session, matching "resume within
+  the same session"; a 60-minute TTL stops a stale flow from confirming a long-released MSISDN.
+
+Note: the i18next locale codes are `"en"` and `"de-AT"` (not `"en-US"`); `"en-US"` is the
+conceptual product default.
+
 ---
 
-## Next: Fase C — wizard skeleton
+## Next: Fase D — screens wired to seams
 
-`OnboardingProvider` + routes `src/routes/onboarding/{welcome,plan,account,details,number,review,success}`,
-i18n en-US / de-AT, non-secret state persisted to sessionStorage with expiry (never password or
-token), and focus/announcement a11y (focus to step title + "Step N of M"). See the Kiro-workspace
-`tasks.md` Fase C for the full task breakdown and verify criteria.
+The step pages are placeholders. Fase D wires each to the api seam: plan grid + tri-state
+qualify, the recommendation assist, the account form (password never leaves the component), the
+number picker + reserve, and the review → submit orchestration. See the Kiro-workspace `tasks.md`
+Fase D for the full breakdown.
