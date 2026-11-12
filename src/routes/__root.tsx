@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -151,7 +152,8 @@ function RootComponent() {
       <TenantProvider>
         {/* SessionProvider: the signed-in customer, per-tenant, under Tenant + inside QueryClient. */}
         <SessionProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          {/* Required: nested routes render here. Removing <Outlet />
+      <Toaster /> breaks all child routes. */}
           <div className="min-h-screen bg-background">
             <AppHeader />
             <TenantNotFoundBanner />

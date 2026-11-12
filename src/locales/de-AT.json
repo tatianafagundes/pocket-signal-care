@@ -66,6 +66,19 @@
       },
       "addOns": {
         "subtitle": "Mehr Daten, Roaming oder Anrufe — vom Guthaben bezahlt."
+      },
+      "renewal": {
+        "title": "Lade {{amount}} auf, um {{plan}} zu verlängern",
+        "titleDated": "Lade {{amount}} auf, um {{plan}} am {{date}} zu verlängern",
+        "body": "Dein Guthaben reicht noch nicht für die nächste Verlängerung.",
+        "cta": "{{amount}} aufladen"
+      },
+      "line": {
+        "copy": "Nummer kopieren",
+        "copied": "Nummer kopiert",
+        "active": "Aktiv",
+        "esim": "eSIM",
+        "physical": "SIM"
       }
     },
     "myPlan": {

@@ -7,6 +7,7 @@ import {
   LOW_REMAINING_RATIO,
   primaryDataBucket,
   primaryPlan,
+  renewalShortfall,
 } from "@/services/customer360-rules";
 import type { Balance, Customer, Offer, Party, Product, UsageBucket } from "@/services/model";
 
@@ -402,5 +403,26 @@ describe("customer360-rules", () => {
         ),
       ).toBe("ok");
     });
+  });
+});
+
+describe("renewalShortfall", () => {
+  const offer = { offerId: "o-plan", priceMinor: 1490 } as unknown as Offer;
+  const make = (amountMinor: number) =>
+    composeCustomer360({
+      customer,
+      party,
+      installedBase: [plan],
+      balance: { amountMinor, currency: "EUR" },
+      offers: [offer],
+    });
+  it("should return the missing amount when balance is below the plan price", () => {
+    expect(renewalShortfall(make(500))).toBe(990);
+  });
+  it("should return 0 when balance equals the plan price", () => {
+    expect(renewalShortfall(make(1490))).toBe(0);
+  });
+  it("should return 0 when balance exceeds the plan price", () => {
+    expect(renewalShortfall(make(3000))).toBe(0);
   });
 });

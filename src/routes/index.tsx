@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, PackagePlus } from "lucide-react";
+import { AlertTriangle, Copy, PackagePlus } from "lucide-react";
+import { toast } from "sonner";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
@@ -13,15 +14,14 @@ import { Button } from "@/components/ui/button";
 import { UsageSummaryCard } from "@/components/home/usage-summary-card";
 import { PlanSummaryCard } from "@/components/home/plan-summary-card";
 import { api, SeamFailure } from "@/services/api";
-import { primaryDataBucket, primaryPlan } from "@/services/customer360-rules";
-import { formatPrice } from "@/lib/format";
+import {
+  lineSimType,
+  primaryDataBucket,
+  primaryPlan,
+  renewalShortfall,
+} from "@/services/customer360-rules";
+import { formatMsisdn, formatPrice } from "@/lib/format";
 
-/**
- * Display threshold for the "balance below" notice (Figma P1 banner "Balance below $15"). This is a
- * presentation nudge, not a domain rule — the real threshold would come from config / CBEV. In
- * euro cents to match the money axis.
- */
-const LOW_BALANCE_MINOR = 1500;
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -81,24 +81,41 @@ function HomeDashboard() {
         />
       ) : (
         <div className="grid gap-4">
-          {/* Low-balance notice — only below the threshold (Figma P1 banner). Warning tint,
-              icon + word + colour (never colour alone), one action. */}
-          {query.data.balance && query.data.balance.amountMinor < LOW_BALANCE_MINOR ? (
+          <LineHeader
+            msisdn={query.data.party.msisdn}
+            simType={lineSimType(query.data)}
+            active={query.data.customer.status === "active"}
+          />
+
+          {/* Renewal notice — only when the balance does not cover the next plan renewal.
+              Warning tint, icon + words (never colour alone), one action with the exact amount. */}
+          {renewalShortfall(query.data) > 0 ? (
             <div className="flex items-start gap-3 rounded-control bg-warning-tint px-4 py-3">
               <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p className="type-body-sm-strong text-text-primary">
-                  {t("pages.home.lowBalance.title", "Balance is low")}
+                  {query.data.balance?.validUntil
+                    ? t("pages.home.renewal.titleDated", "Recarregue {{amount}} para renovar {{plan}} em {{date}}", {
+                        amount: formatPrice(renewalShortfall(query.data), "EUR", locale),
+                        plan: primaryPlan(query.data)?.offer?.name ?? "",
+                        date: formatDate(query.data.balance.validUntil, locale),
+                      })
+                    : t("pages.home.renewal.title", "Recarregue {{amount}} para renovar {{plan}}", {
+                        amount: formatPrice(renewalShortfall(query.data), "EUR", locale),
+                        plan: primaryPlan(query.data)?.offer?.name ?? "",
+                      })}
                 </p>
                 <p className="mt-0.5 type-body-sm text-text-secondary">
-                  {t("pages.home.lowBalance.body", "Top up to keep your plan and add-ons running.")}
+                  {t("pages.home.renewal.body", "Seu saldo ainda não cobre a próxima renovação.")}
                 </p>
               </div>
               <Link
                 to="/top-up"
                 className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
               >
-                {t("nav.topUp", "Top up")}
+                {t("pages.home.renewal.cta", "Recarregar {{amount}}", {
+                  amount: formatPrice(renewalShortfall(query.data), "EUR", locale),
+                })}
               </Link>
             </div>
           ) : null}
@@ -160,6 +177,53 @@ function HomeDashboard() {
         </div>
       )}
     </PageShell>
+  );
+}
+
+/** Line identity: formatted number (tap to copy) + status and SIM form, as words. */
+function LineHeader({
+  msisdn,
+  simType,
+  active,
+}: {
+  msisdn: string | undefined;
+  simType: "esim" | "physical" | null | undefined;
+  active: boolean;
+}) {
+  const { t } = useLocalizedTranslation();
+  if (!msisdn) return null;
+  const pretty = formatMsisdn(msisdn);
+  const status = [
+    active ? t("pages.home.line.active", "Ativa") : null,
+    simType === "esim"
+      ? t("pages.home.line.esim", "eSIM")
+      : simType === "physical"
+        ? t("pages.home.line.physical", "SIM")
+        : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <button
+        type="button"
+        className="focus-ring flex min-h-11 items-center gap-2 rounded-pill type-body-strong tabular-nums text-text-primary"
+        aria-label={`${t("pages.home.line.copy", "Copiar número")}: ${pretty}`}
+        onClick={() => {
+          void navigator.clipboard?.writeText(msisdn).then(() =>
+            toast.success(t("pages.home.line.copied", "Número copiado")),
+          );
+        }}
+      >
+        {pretty}
+        <Copy className="size-4 text-text-tertiary" aria-hidden="true" />
+      </button>
+      {status ? (
+        <span className="rounded-pill bg-success-tint px-3 py-1 type-caption text-success">
+          {status}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

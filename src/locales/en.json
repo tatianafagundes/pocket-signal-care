@@ -66,6 +66,19 @@
       },
       "addOns": {
         "subtitle": "Extra data, roaming or calls — paid from your balance."
+      },
+      "renewal": {
+        "title": "Top up {{amount}} to renew {{plan}}",
+        "titleDated": "Top up {{amount}} to renew {{plan}} on {{date}}",
+        "body": "Your balance doesn't cover the next renewal yet.",
+        "cta": "Top up {{amount}}"
+      },
+      "line": {
+        "copy": "Copy number",
+        "copied": "Number copied",
+        "active": "Active",
+        "esim": "eSIM",
+        "physical": "SIM"
       }
     },
     "myPlan": {

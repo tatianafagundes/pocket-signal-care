@@ -177,3 +177,19 @@ function parseIso(iso: string | undefined): number | null {
   const ms = Date.parse(iso);
   return Number.isNaN(ms) ? null : ms;
 }
+
+/**
+ * How much the customer must top up so the balance covers the next plan renewal, in minor units.
+ * 0 when the balance already covers it (or there is no priced plan). Pure; never negative.
+ */
+export function renewalShortfall(c360: Customer360): number {
+  const price = primaryPlan(c360)?.offer?.priceMinor;
+  if (price === undefined) return 0;
+  const balance = c360.balance?.amountMinor ?? 0;
+  return Math.max(0, price - balance);
+}
+
+/** The line's SIM form ("esim" | "physical"), when a SIM product is installed. */
+export function lineSimType(c360: Customer360): Product["simType"] | null {
+  return c360.installedBase.find((p) => p.kind === "sim")?.simType ?? null;
+}
