@@ -8,7 +8,7 @@
  */
 
 export type SeamDriver = "mock" | "http";
-export type SeamName = "cpr" | "ecm" | "eoc" | "ecev" | "resource" | "auth";
+export type SeamName = "cpr" | "ecm" | "eoc" | "ecev" | "resource" | "auth" | "payment";
 
 const ENV_KEY: Record<SeamName, string> = {
   cpr: "VITE_CPR_DRIVER",
@@ -17,6 +17,7 @@ const ENV_KEY: Record<SeamName, string> = {
   ecev: "VITE_ECEV_DRIVER",
   resource: "VITE_RESOURCE_DRIVER",
   auth: "VITE_AUTH_DRIVER",
+  payment: "VITE_PAYMENT_DRIVER",
 };
 
 /** The driver for a seam. "mock" unless its env flag is explicitly "http". */

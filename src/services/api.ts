@@ -5,6 +5,7 @@ import * as order from "@/services/order.functions";
 import * as charging from "@/services/charging.functions";
 import * as resource from "@/services/resource.functions";
 import * as auth from "@/services/auth.functions";
+import * as payment from "@/services/payment.functions";
 
 /*
  * api — the single port the UI uses. (Spec Fase 0.3 / 3.4)
@@ -73,4 +74,10 @@ export const api = {
   // Auth seam (mock + Keycloak stub) — register/login. Password never leaves the seam.
   register: (input: unknown) => unwrap(auth.registerAccount(input)),
   login: (input: unknown) => unwrap(auth.loginAccount(input)),
+
+  // Payment seam (extensão paymentAuthorization, mock) — authorize/capture/void. No PAN here.
+  authorizePayment: (input: unknown) => unwrap(payment.authorize(input)),
+  capturePayment: (input: unknown) => unwrap(payment.capturePayment(input)),
+  voidPayment: (input: unknown) => unwrap(payment.voidAuthorization(input)),
+  getPayment: (authorizationRef: string) => unwrap(payment.getPayment(authorizationRef)),
 };
