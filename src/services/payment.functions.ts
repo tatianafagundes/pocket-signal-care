@@ -2,7 +2,12 @@ import { seamError, type SeamResult } from "@/services/seam-result";
 import { runRead, runWrite } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
 import type { PaymentResult } from "@/services/model";
-import { authorizeSchema, captureSchema, voidSchema } from "@/schemas/payment";
+import {
+  authorizationRefSchema,
+  authorizeSchema,
+  captureSchema,
+  voidSchema,
+} from "@/schemas/payment";
 import type { PaymentDriver } from "@/services/payment/payment-driver";
 import { createPaymentMock } from "@/services/payment/payment-mock";
 import { createPaymentHttp } from "@/services/payment/payment-http";
@@ -53,10 +58,10 @@ export function voidAuthorization(input: unknown): Promise<SeamResult<PaymentRes
 }
 
 /** Read the current state of an authorization. */
-export function getPayment(authorizationRefRaw: string): Promise<SeamResult<PaymentResult>> {
-  const parsed = voidSchema.safeParse({ authorizationRef: authorizationRefRaw });
+export function getPayment(authorizationRefRaw: unknown): Promise<SeamResult<PaymentResult>> {
+  const parsed = authorizationRefSchema.safeParse(authorizationRefRaw);
   if (!parsed.success) return invalid<PaymentResult>("payment.getPayment.invalid");
   return runRead({ tenantId: "payment" }, "payment.getPayment", () =>
-    driver.getPayment(parsed.data.authorizationRef),
+    driver.getPayment(parsed.data),
   );
 }

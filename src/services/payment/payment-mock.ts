@@ -17,6 +17,7 @@ import type { PaymentDriver } from "@/services/payment/payment-driver";
 
 interface AuthRecord {
   authorizationRef: string;
+  customerId: string;
   amountMinor: number;
   methodToken: string;
   state: PaymentResult["status"];
@@ -67,6 +68,10 @@ export function createPaymentMock(): PaymentDriver {
         const authorizationRef = `auth-${cryptoId()}`;
         const rec: AuthRecord = {
           authorizationRef,
+          // Stored so a real driver could enforce that capture/void belong to the authorizing
+          // customer. The mock does NOT check ownership — a ref is a bearer token here; the
+          // real ownership/authorization check is Fase 8 debt (http driver + RLS).
+          customerId,
           amountMinor,
           methodToken,
           state: "authorized",
@@ -103,15 +108,13 @@ export function createPaymentMock(): PaymentDriver {
     voidAuthorization(authorizationRef) {
       return withMock("payment.voidAuthorization", () => {
         const rec = authorizations.get(authorizationRef);
-        // Voiding something unknown or already void is a no-op success (idempotent compensation).
+        // An unknown ref is notFound, same as capture/getPayment — voiding a ref that was never
+        // issued is a caller bug (a saga should hold the ref it authorized), not a silent no-op.
         if (!rec) {
-          return ok({
-            authorizationRef,
-            amountMinor: 0,
-            currency: "EUR",
-            status: "voided",
-          });
+          return err(seamError("payment.authorization.notFound", "notFound", "contactSupport"));
         }
+        // Idempotent: voiding an already-voided ref returns the same result, no error.
+        if (rec.state === "voided") return ok(toResult(rec));
         if (rec.state === "captured") {
           return err(
             seamError(

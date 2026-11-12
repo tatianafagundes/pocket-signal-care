@@ -96,6 +96,27 @@ describe("payment seam (mock)", () => {
     if (r.ok) expect(r.data.status).toBe("voided");
   });
 
+  it("is idempotent on void — voiding twice returns the same voided result", async () => {
+    const ref = await freshAuthRef();
+    const first = await voidAuthorization({ authorizationRef: ref });
+    const second = await voidAuthorization({ authorizationRef: ref });
+    expect(first.ok).toBe(true);
+    expect(second.ok).toBe(true);
+    if (first.ok && second.ok) {
+      expect(second.data.status).toBe("voided");
+      expect(second.data).toEqual(first.data);
+    }
+  });
+
+  it("voiding an unknown ref is notFound (not a silent no-op)", async () => {
+    const r = await voidAuthorization({ authorizationRef: "auth-never-issued" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error.code).toBe("payment.authorization.notFound");
+      expect(r.error.category).toBe("notFound");
+    }
+  });
+
   it("refuses to void an already-captured authorization (conflict)", async () => {
     const ref = await freshAuthRef();
     await capturePayment({ authorizationRef: ref });
