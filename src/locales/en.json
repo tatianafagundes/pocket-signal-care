@@ -77,12 +77,53 @@
       "network4g": "4G",
       "ineligible": {
         "offer.ineligible.insufficientBalance": "Top up first — this plan costs more than your balance."
+      },
+      "assist": {
+        "open": "Help me choose",
+        "heading": "A few quick questions",
+        "intro": "Answer what applies — we'll suggest a plan. You can still pick any plan yourself.",
+        "q": {
+          "watchesVideo": "Do you watch video on your phone?",
+          "travelsEu": "Do you travel in the EU?",
+          "heavyApps": "Do you use a lot of apps and social media?"
+        },
+        "yes": "Yes",
+        "no": "No",
+        "suggest": "Suggest a plan",
+        "skip": "Skip",
+        "resultLabel": "Suggested for you",
+        "change": "Choose a different plan",
+        "reason": {
+          "assist.reason.videoAndTravel": "For video and EU travel, an unlimited plan fits best.",
+          "assist.reason.video": "For watching video, a mid plan gives you room.",
+          "assist.reason.heavyApps": "For heavy app use, a mid plan gives you room.",
+          "assist.reason.light": "For lighter use, a starter plan is plenty.",
+          "assist.reason.default": "Based on your answers, this is a good fit."
+        }
       }
     },
     "account": {
       "title": "Create your account",
       "subtitle": "Your email and a password keep your service safe.",
-      "placeholder": "The account form will appear here."
+      "placeholder": "The account form will appear here.",
+      "email": "Email",
+      "password": "Password",
+      "confirm": "Confirm password",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordWeak": "Your password doesn't meet the requirements yet.",
+      "confirmMismatch": "The passwords don't match.",
+      "strength": {
+        "label": "Password must have",
+        "minLength": "At least 8 characters",
+        "hasUpper": "An uppercase letter",
+        "hasLower": "A lowercase letter",
+        "hasNumber": "A number",
+        "met": "met",
+        "unmet": "not yet"
+      }
+    },
+    "seamError": {
+      "auth": { "register": { "emailInUse": "That email already has an account. Try signing in instead." } }
     },
     "details": {
       "title": "Your details",

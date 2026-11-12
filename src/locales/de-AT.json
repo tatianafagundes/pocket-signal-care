@@ -77,12 +77,53 @@
       "network4g": "4G",
       "ineligible": {
         "offer.ineligible.insufficientBalance": "Lad zuerst auf — dieser Tarif kostet mehr als dein Guthaben."
+      },
+      "assist": {
+        "open": "Hilf mir bei der Wahl",
+        "heading": "Ein paar kurze Fragen",
+        "intro": "Beantworte, was zutrifft — wir schlagen einen Tarif vor. Du kannst trotzdem jeden Tarif selbst wählen.",
+        "q": {
+          "watchesVideo": "Schaust du Videos am Handy?",
+          "travelsEu": "Reist du in der EU?",
+          "heavyApps": "Nutzt du viele Apps und soziale Medien?"
+        },
+        "yes": "Ja",
+        "no": "Nein",
+        "suggest": "Tarif vorschlagen",
+        "skip": "Überspringen",
+        "resultLabel": "Für dich vorgeschlagen",
+        "change": "Anderen Tarif wählen",
+        "reason": {
+          "assist.reason.videoAndTravel": "Für Video und EU-Reisen passt ein unbegrenzter Tarif am besten.",
+          "assist.reason.video": "Zum Videoschauen gibt dir ein mittlerer Tarif Spielraum.",
+          "assist.reason.heavyApps": "Bei intensiver App-Nutzung gibt dir ein mittlerer Tarif Spielraum.",
+          "assist.reason.light": "Für leichtere Nutzung reicht ein Starter-Tarif locker.",
+          "assist.reason.default": "Basierend auf deinen Antworten passt dieser gut."
+        }
       }
     },
     "account": {
       "title": "Konto erstellen",
       "subtitle": "Deine E-Mail und ein Passwort schützen deinen Dienst.",
-      "placeholder": "Das Konto-Formular erscheint hier."
+      "placeholder": "Das Konto-Formular erscheint hier.",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "confirm": "Passwort bestätigen",
+      "emailInvalid": "Gib eine gültige E-Mail-Adresse ein.",
+      "passwordWeak": "Dein Passwort erfüllt die Anforderungen noch nicht.",
+      "confirmMismatch": "Die Passwörter stimmen nicht überein.",
+      "strength": {
+        "label": "Das Passwort braucht",
+        "minLength": "Mindestens 8 Zeichen",
+        "hasUpper": "Einen Großbuchstaben",
+        "hasLower": "Einen Kleinbuchstaben",
+        "hasNumber": "Eine Zahl",
+        "met": "erfüllt",
+        "unmet": "noch nicht"
+      }
+    },
+    "seamError": {
+      "auth": { "register": { "emailInUse": "Für diese E-Mail gibt es schon ein Konto. Versuch dich stattdessen anzumelden." } }
     },
     "details": {
       "title": "Deine Daten",

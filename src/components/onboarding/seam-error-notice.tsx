@@ -26,11 +26,13 @@ interface SeamErrorNoticeProps {
 export function SeamErrorNotice({ error, onRetry, className }: SeamErrorNoticeProps) {
   const { t } = useLocalizedTranslation();
 
-  // customerKey is an i18n key when available; fall back to a generic message otherwise.
-  const message = t(
-    error.customerKey,
-    t("onboarding.error.generic", "Something went wrong. Please try again."),
-  );
+  // Resolve copy for this error. Seam error codes (e.g. "auth.register.emailInUse") are looked up
+  // under the onboarding.seamError.* tree; i18next nests on the dots. If the seam marked the error
+  // customer-facing with its own key, that key is tried as-is. Anything unmapped falls back to a
+  // generic message, so a raw code is never shown to the user.
+  const generic = t("onboarding.error.generic", "Something went wrong. Please try again.");
+  const mapped = t(`onboarding.seamError.${error.customerKey}`, "");
+  const message = mapped !== "" ? mapped : t(error.customerKey, generic);
 
   return (
     <Alert variant="destructive" className={className}>

@@ -9,6 +9,7 @@ import { WizardPage } from "@/components/onboarding/wizard-page";
 import { WizardNav } from "@/components/onboarding/wizard-nav";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { OfferOption } from "@/components/onboarding/offer-option";
+import { AssistPanel } from "@/components/onboarding/assist-panel";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
@@ -76,6 +77,10 @@ function PlanPage() {
         </p>
       ) : (
         <>
+          <div className="mb-4">
+            <AssistPanel offers={offersQuery.data} onSuggest={selectOffer} />
+          </div>
+
           <RadioGroup
             value={state.selectedOfferId ?? undefined}
             onValueChange={selectOffer}
