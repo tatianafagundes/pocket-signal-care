@@ -35,7 +35,9 @@ describe("buildAccountFormSchema", () => {
     expect(errorsFor({ ...valid, email: "lena@" })).toContain("email");
   });
   it("should reject a password without a number", () => {
-    expect(errorsFor({ ...valid, password: "Sommerzeit", confirm: "Sommerzeit" })).toContain("weak");
+    expect(errorsFor({ ...valid, password: "Sommerzeit", confirm: "Sommerzeit" })).toContain(
+      "weak",
+    );
   });
   it("should reject a confirmation that does not match", () => {
     expect(errorsFor({ ...valid, confirm: "Sommer2027" })).toContain("mismatch");

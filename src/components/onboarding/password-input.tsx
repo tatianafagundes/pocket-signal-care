@@ -28,7 +28,11 @@ export const PasswordInput = forwardRef<HTMLInputElement, Omit<ComponentProps<"i
           }
           className="focus-ring absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-control text-text-secondary hover:text-text-primary"
         >
-          {visible ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+          {visible ? (
+            <EyeOff className="size-4" aria-hidden="true" />
+          ) : (
+            <Eye className="size-4" aria-hidden="true" />
+          )}
         </button>
       </div>
     );
