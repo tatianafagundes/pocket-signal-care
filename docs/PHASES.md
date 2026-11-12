@@ -330,3 +330,28 @@ Debt raised this phase:
 - **"Added" is local route state:** `boughtOfferId` lives in the route component; after a hard
   refresh the bought add-on re-qualifies and shows "Add to my plan" again (buyable twice). A
   durable "already owned" state should come from `getInstalledBase` once the real backend exists.
+
+## Fase 7 — planejada: SIM/eSIM + endereço (TMF673) + payment gateway mock (3 tempos)
+
+Levantamento de impacto a partir do dossiê HLD/LLD interno da jornada `newLine` (SPM/DXP),
+encontrado no Glean. O dossiê é a planta de um produto full Journey Mesh; o nosso é um PWA com
+seams/mocks client-side, então a Fase 7 é **fiel aos contratos TMF e aos estados, não à
+infraestrutura**, e fica no **caso-base EUA (sem identidade)**.
+
+Fonte de verdade destilada: `docs/contracts/onboarding-prepago-dossie.md`. Mapa de impacto por
+arquivo: `docs/design/2025-02-16-fase7-impacto-sim-endereco-pagamento.md`. Plano de tarefas 7.1–7.6
+na spec (`.kiro/specs/onboarding-journey/tasks.md`).
+
+O que entra: escolha SIM físico vs eSIM (passo `/sim` condicional); endereço de entrega via
+`logistics.createAddress` (TMF673 mock) quando físico (passo `/delivery`); provisionamento eSIM
+mock (código `LPA:…`/QR, estados do perfil); e um **payment gateway mock** com os três tempos do
+pré-pago — **autoriza** no pedido (`payment.authorize`, reserva) → **captura** no marco
+(`payment.capture`, mock: pós-submit) → **credita** na ativação (`charging.topUp`). Cartão
+tokenizado mock (`4242` autoriza / `4000` recusa), nunca PAN/CVV no código. Isto resolve a
+pergunta "falta pagamento no onboarding": falta, e o modelo correto é autorização no pedido —
+não cobrança imediata.
+
+Dívidas conscientes registradas na spec: Journey Mesh/BFF/Composite API reais, 3-D Secure/PSP
+reais, identidade (Catar/México), marco de captura assíncrono, valor livre + voucher, crédito
+pelo fulfilment. Nenhum código de produto escrito ainda — aguardando validação do recorte e da
+ordem com a dona do produto.
