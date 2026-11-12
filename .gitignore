@@ -38,3 +38,4 @@ dist-ssr
 
 # ui-capture output — regenerable review evidence (keep the roteiro + review docs, not the PNGs)
 docs/design/capturas/
+docs/captures/

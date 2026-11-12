@@ -314,8 +314,10 @@ function EsimSection({ esimProfileId }: { esimProfileId: string | null }) {
         <p className="type-caption text-text-secondary">
           {t("onboarding.success.esim.codeLabel", "Activation code")}
         </p>
-        {/* Selectable text IS the manual install path; accent-ink on accent-tint passes AA. */}
-        <code className="mt-1 block break-all rounded-card bg-accent-tint px-3 py-2 type-caption text-accent-ink">
+        {/* The code is critical text the user transcribes char-by-char, so it must be the most
+            legible thing here: text-primary on the tint, NOT accent on accent-tint (DESIGN.md:
+            "text on accent-tint is text-primary, never accent"). */}
+        <code className="mt-1 block break-all rounded-card bg-accent-tint px-3 py-2 type-caption text-text-primary">
           {profile.activationCode}
         </code>
       </div>
