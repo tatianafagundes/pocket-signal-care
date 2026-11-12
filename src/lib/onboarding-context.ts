@@ -21,6 +21,7 @@ import type { TenantId } from "@/lib/tenant-rules";
 export const ONBOARDING_STEPS = [
   "welcome",
   "plan",
+  "addons",
   "number",
   "account",
   "review",
@@ -31,7 +32,7 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 /**
  * The steps the user actively works through, excluding the terminal "success" screen. This is the
- * "M" in "Step N of M" (currently 5: welcome, plan, number, account, review): success is an
+ * "M" in "Step N of M" (currently 6: welcome, plan, addons, number, account, review): success is an
  * outcome, not a step to complete, so it is not counted — and the progress stepper shows exactly
  * these. Keeping the count here means the announcement and the stepper can't drift apart.
  */
@@ -52,6 +53,8 @@ export interface OnboardingState {
   step: OnboardingStep;
   /** Chosen plan offer id (catalog). */
   selectedOfferId: string | null;
+  /** Chosen add-on offer ids (optional; empty when none). Added to the activation cart at submit. */
+  selectedAddOnIds: string[];
   /** Reserved MSISDN (resource seam) — the conceptual resume pivot. */
   reservedMsisdn: string | null;
   /** Account email (not a secret; the password is never stored). */

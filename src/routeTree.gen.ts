@@ -18,6 +18,7 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as TopUpRouteImport } from './routes/top-up'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding/account'
+import { Route as OnboardingAddonsRouteImport } from './routes/onboarding/addons'
 import { Route as OnboardingNumberRouteImport } from './routes/onboarding/number'
 import { Route as OnboardingPlanRouteImport } from './routes/onboarding/plan'
 import { Route as OnboardingReviewRouteImport } from './routes/onboarding/review'
@@ -69,6 +70,11 @@ const OnboardingAccountRoute = OnboardingAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => OnboardingRoute,
 } as any)
+const OnboardingAddonsRoute = OnboardingAddonsRouteImport.update({
+  id: '/addons',
+  path: '/addons',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 const OnboardingNumberRoute = OnboardingNumberRouteImport.update({
   id: '/number',
   path: '/number',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
+  '/onboarding/addons': typeof OnboardingAddonsRoute
   '/onboarding/number': typeof OnboardingNumberRoute
   '/onboarding/plan': typeof OnboardingPlanRoute
   '/onboarding/review': typeof OnboardingReviewRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
+  '/onboarding/addons': typeof OnboardingAddonsRoute
   '/onboarding/number': typeof OnboardingNumberRoute
   '/onboarding/plan': typeof OnboardingPlanRoute
   '/onboarding/review': typeof OnboardingReviewRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
+  '/onboarding/addons': typeof OnboardingAddonsRoute
   '/onboarding/number': typeof OnboardingNumberRoute
   '/onboarding/plan': typeof OnboardingPlanRoute
   '/onboarding/review': typeof OnboardingReviewRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/top-up'
     | '/onboarding/account'
+    | '/onboarding/addons'
     | '/onboarding/number'
     | '/onboarding/plan'
     | '/onboarding/review'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/top-up'
     | '/onboarding/account'
+    | '/onboarding/addons'
     | '/onboarding/number'
     | '/onboarding/plan'
     | '/onboarding/review'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/top-up'
     | '/onboarding/account'
+    | '/onboarding/addons'
     | '/onboarding/number'
     | '/onboarding/plan'
     | '/onboarding/review'
@@ -268,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingAccountRouteImport
       parentRoute: typeof OnboardingRoute
     }
+    '/onboarding/addons': {
+      id: '/onboarding/addons'
+      path: '/addons'
+      fullPath: '/onboarding/addons'
+      preLoaderRoute: typeof OnboardingAddonsRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/onboarding/number': {
       id: '/onboarding/number'
       path: '/number'
@@ -308,6 +327,7 @@ declare module '@tanstack/react-router' {
 
 interface OnboardingRouteChildren {
   OnboardingAccountRoute: typeof OnboardingAccountRoute
+  OnboardingAddonsRoute: typeof OnboardingAddonsRoute
   OnboardingNumberRoute: typeof OnboardingNumberRoute
   OnboardingPlanRoute: typeof OnboardingPlanRoute
   OnboardingReviewRoute: typeof OnboardingReviewRoute
@@ -318,6 +338,7 @@ interface OnboardingRouteChildren {
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
   OnboardingAccountRoute: OnboardingAccountRoute,
+  OnboardingAddonsRoute: OnboardingAddonsRoute,
   OnboardingNumberRoute: OnboardingNumberRoute,
   OnboardingPlanRoute: OnboardingPlanRoute,
   OnboardingReviewRoute: OnboardingReviewRoute,

@@ -170,6 +170,13 @@
         }
       }
     },
+    "addons": {
+      "title": "Extras hinzufügen",
+      "subtitle": "Optional — erweitere deinen Tarif jetzt oder überspring und füg sie später hinzu.",
+      "empty": "Zurzeit sind keine Zusatzpakete für deinen Tarif verfügbar.",
+      "listLabel": "Verfügbare Zusatzpakete",
+      "skip": "Überspringen"
+    },
     "account": {
       "title": "Konto erstellen",
       "subtitle": "Name, E-Mail und Passwort richten dein Profil ein und schützen deinen Anschluss.",
@@ -222,6 +229,8 @@
       "title": "Prüfen und aktivieren",
       "subtitle": "Prüf alles, bevor du bestätigst — du kannst noch zurück und ändern.",
       "plan": "Tarif",
+      "addOns": "Zusatzpakete",
+      "noAddOns": "Keine",
       "number": "Nummer",
       "account": "Konto",
       "name": "Name",
@@ -235,6 +244,7 @@
         "createCart": "Deine Bestellung wird vorbereitet…",
         "addPlan": "Dein Tarif wird hinzugefügt…",
         "addSim": "Deine SIM wird hinzugefügt…",
+        "addAddOns": "Deine Extras werden hinzugefügt…",
         "submitOrder": "Wird aktiviert…",
         "finalizing": "Wird abgeschlossen…"
       },

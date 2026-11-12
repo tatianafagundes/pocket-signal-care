@@ -64,6 +64,38 @@ describe("runOnboardingSubmit", () => {
     });
   });
 
+  it("adds each selected add-on to the cart after the plan and SIM", async () => {
+    const steps: SubmitStep[] = [];
+    await runOnboardingSubmit({
+      state: completeState({ selectedAddOnIds: ["drei-addon-1gb", "drei-addon-eu-1gb"] }),
+      patch: () => {},
+      onStep: (s) => steps.push(s),
+    });
+
+    // addAddOns step announced; add-ons added after plan (1) + SIM (2).
+    expect(steps).toContain("addAddOns");
+    expect(mockApi.addItem).toHaveBeenNthCalledWith(3, {
+      cartId: "cart-1",
+      offerId: "drei-addon-1gb",
+    });
+    expect(mockApi.addItem).toHaveBeenNthCalledWith(4, {
+      cartId: "cart-1",
+      offerId: "drei-addon-eu-1gb",
+    });
+    expect(mockApi.addItem).toHaveBeenCalledTimes(4);
+  });
+
+  it("skips the addAddOns step when none are selected", async () => {
+    const steps: SubmitStep[] = [];
+    await runOnboardingSubmit({
+      state: completeState({ selectedAddOnIds: [] }),
+      patch: () => {},
+      onStep: (s) => steps.push(s),
+    });
+    expect(steps).not.toContain("addAddOns");
+    expect(mockApi.addItem).toHaveBeenCalledTimes(2); // plan + SIM only
+  });
+
   it("reuses an existing party and customer on retry (never recreates durable resources)", async () => {
     const steps: SubmitStep[] = [];
     await runOnboardingSubmit({

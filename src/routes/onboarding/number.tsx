@@ -127,7 +127,7 @@ function NumberPage() {
           </p>
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/plan" })}
+            onBack={() => navigate({ to: "/onboarding/addons" })}
             onContinue={() => selected && reserve.mutate(selected)}
             continueLabel={t("onboarding.number.reserve", "Reserve this number")}
             continueDisabled={selected == null}

@@ -40,6 +40,7 @@ export function initialOnboardingState(tenant: TenantId): OnboardingState {
     tenant,
     step: "welcome",
     selectedOfferId: null,
+    selectedAddOnIds: [],
     reservedMsisdn: null,
     email: null,
     givenName: null,
@@ -74,10 +75,13 @@ function reviveForTenant(raw: unknown, tenant: TenantId, now: number): Onboardin
 
   // Rebuild field-by-field so unknown/missing fields get safe defaults and no extra keys leak in.
   const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
+  const strArray = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
   return {
     tenant,
     step: state.step,
     selectedOfferId: str(state.selectedOfferId),
+    selectedAddOnIds: strArray(state.selectedAddOnIds),
     reservedMsisdn: str(state.reservedMsisdn),
     email: str(state.email),
     givenName: str(state.givenName),

@@ -12,7 +12,7 @@ import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
-import { formatMsisdn, offerPriceLabel } from "@/lib/format";
+import { formatMsisdn, formatPrice, offerPriceLabel } from "@/lib/format";
 import { runOnboardingSubmit, type SubmitStep } from "@/lib/onboarding-submit";
 
 export const Route = createFileRoute("/onboarding/review")({
@@ -54,6 +54,15 @@ function ReviewPage() {
   // change between calls, mix a key from one locale with args from another.
   const priceLabel = offer ? offerPriceLabel(offer, locale) : null;
   const planPrice = priceLabel ? t(priceLabel.key, priceLabel.args) : "";
+
+  // Chosen add-ons, rebuilt from state at render (B1): looked up fresh against the add-on list.
+  const addOnsQuery = useQuery({
+    queryKey: ["add-ons", tenant],
+    queryFn: () => api.listAddOns(tenant),
+  });
+  const selectedAddOns = (addOnsQuery.data ?? []).filter((o) =>
+    state.selectedAddOnIds.includes(o.offerId),
+  );
 
   const complete =
     state.selectedOfferId != null &&
@@ -129,6 +138,19 @@ function ReviewPage() {
               label={t("onboarding.review.plan", "Plan")}
               value={offer ? `${offer.name} · ${planPrice}` : "—"}
               onChange={() => navigate({ to: "/onboarding/plan" })}
+              changeLabel={t("onboarding.review.change", "Change")}
+              busy={busy}
+            />
+            <SummaryRow
+              label={t("onboarding.review.addOns", "Add-ons")}
+              value={
+                selectedAddOns.length > 0
+                  ? selectedAddOns
+                      .map((a) => `${a.name} · ${formatPrice(a.priceMinor, a.currency, locale)}`)
+                      .join(", ")
+                  : t("onboarding.review.noAddOns", "None")
+              }
+              onChange={() => navigate({ to: "/onboarding/addons" })}
               changeLabel={t("onboarding.review.change", "Change")}
               busy={busy}
             />

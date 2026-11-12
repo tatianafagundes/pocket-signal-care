@@ -1,11 +1,18 @@
-import type { OnboardingState, OnboardingStep } from "@/lib/onboarding-context";
+import {
+  ONBOARDING_STEPS,
+  type OnboardingState,
+  type OnboardingStep,
+} from "@/lib/onboarding-context";
 
 /*
- * Onboarding step guard. A step is reachable only when every earlier step is complete, so a
- * deep link can't skip ahead (e.g. open "success" without activating). Pure + testable.
+ * Onboarding step guard. A step is reachable only when every earlier REQUIRED step is complete,
+ * so a deep link can't skip ahead (e.g. open "success" without activating). Pure + testable.
+ *
+ * The "addons" step is OPTIONAL: firstIncompleteStep never points at it (there is no add-on
+ * requirement), so a user can always reach it and can always move past it without choosing one.
  */
 
-/** The first step whose requirements are not yet met. */
+/** The first step whose requirements are not yet met. Note: "addons" is optional, never a gate. */
 export function firstIncompleteStep(state: OnboardingState): OnboardingStep {
   if (state.selectedOfferId == null) return "plan";
   if (state.reservedMsisdn == null) return "number";
@@ -16,14 +23,8 @@ export function firstIncompleteStep(state: OnboardingState): OnboardingStep {
   return "success";
 }
 
-const ORDER: readonly OnboardingStep[] = [
-  "welcome",
-  "plan",
-  "number",
-  "account",
-  "review",
-  "success",
-];
+// Derived from ONBOARDING_STEPS so the order can never drift out of sync when a step is added.
+const ORDER: readonly OnboardingStep[] = ONBOARDING_STEPS;
 
 /** Where to send the user for `target`: `target` itself if reachable, else the first gap. */
 export function resolveOnboardingStep(

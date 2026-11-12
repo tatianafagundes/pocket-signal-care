@@ -170,6 +170,13 @@
         }
       }
     },
+    "addons": {
+      "title": "Add extras",
+      "subtitle": "Optional — boost your plan now, or skip and add them later.",
+      "empty": "No add-ons are available for your plan right now.",
+      "listLabel": "Available add-ons",
+      "skip": "Skip"
+    },
     "account": {
       "title": "Create your account",
       "subtitle": "Your name, email and a password set up your profile and keep your service safe.",
@@ -222,6 +229,8 @@
       "title": "Review and activate",
       "subtitle": "Check everything before you confirm — you can still go back and change it.",
       "plan": "Plan",
+      "addOns": "Add-ons",
+      "noAddOns": "None",
       "number": "Number",
       "account": "Account",
       "name": "Name",
@@ -235,6 +244,7 @@
         "createCart": "Preparing your order…",
         "addPlan": "Adding your plan…",
         "addSim": "Adding your SIM…",
+        "addAddOns": "Adding your extras…",
         "submitOrder": "Activating…",
         "finalizing": "Finishing up…"
       },

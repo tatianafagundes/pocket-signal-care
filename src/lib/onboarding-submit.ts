@@ -23,7 +23,13 @@ import type { TenantId } from "@/lib/tenant-rules";
 
 /** The orchestration steps, in order, for the progress announcement. */
 export type SubmitStep =
-  "createParty" | "createCustomer" | "createCart" | "addPlan" | "addSim" | "submitOrder";
+  | "createParty"
+  | "createCustomer"
+  | "createCart"
+  | "addPlan"
+  | "addSim"
+  | "addAddOns"
+  | "submitOrder";
 
 function simOfferId(tenant: TenantId): string {
   return `${tenant}-sim-po`;
@@ -40,7 +46,7 @@ interface SubmitDeps {
  * step failure, with partial ids already persisted via `patch` for an idempotent retry.
  */
 export async function runOnboardingSubmit({ state, patch, onStep }: SubmitDeps): Promise<string> {
-  const { tenant, selectedOfferId, email, givenName, familyName } = state;
+  const { tenant, selectedOfferId, selectedAddOnIds, email, givenName, familyName } = state;
   if (!selectedOfferId || !email || !givenName || !familyName) {
     throw new Error("onboarding-submit: called with incomplete state");
   }
@@ -79,6 +85,15 @@ export async function runOnboardingSubmit({ state, patch, onStep }: SubmitDeps):
 
   onStep("addSim");
   await api.addItem({ cartId, offerId: simOfferId(tenant) });
+
+  // 5b. Add each optional add-on the user chose. The cart is fresh this attempt (see step 3), so
+  //     this doesn't double on retry. Sequential (not parallel) to keep order deterministic.
+  if (selectedAddOnIds.length > 0) {
+    onStep("addAddOns");
+    for (const offerId of selectedAddOnIds) {
+      await api.addItem({ cartId, offerId });
+    }
+  }
 
   // 6. Submit — synchronous in the mock (status "completed").
   onStep("submitOrder");
