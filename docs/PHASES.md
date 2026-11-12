@@ -78,9 +78,9 @@ was negative (`kind !== "addon"`) → positive (`kind == null || kind === "plan"
 stronger tests (add-ons never recommended on any branch, `plans[0]` fallback, named
 listOffers-excludes-add-ons).
 
-## Fase C — Wizard skeleton (routes + provider + i18n) — shipped
+## Fase C — Wizard skeleton (routes + provider + i18n) — shipped, reviewed
 
-Commit `8886e63`. 100 tests (9 new).
+Commits `8886e63` (feat) → `d86312e` (review). 106 tests.
 
 Shipped:
 - `lib/onboarding-context.ts`: the 7-step model (`ONBOARDING_STEPS`), `OnboardingState`
@@ -111,6 +111,13 @@ Locked decisions:
 
 Note: the i18next locale codes are `"en"` and `"de-AT"` (not `"en-US"`); `"en-US"` is the
 conceptual product default.
+
+Review outcome (revisor APPROVED, code-reviewer CHANGES REQUESTED, 0 blockers): restored the
+focus ring on the heading (it was `outline-none` — WCAG 2.4.11); aligned the announced total with
+the stepper by counting the WORKING steps (M = 6, shared `ONBOARDING_WORKING_STEPS`), so success
+announces its title only, not "Step 7 of 7"; dropped a redundant `aria-live`; corrected the de-AT
+price doc example and added `format.test.ts` pinning the real ICU output; added an exact-TTL and
+an extra-key-leak persistence test.
 
 ---
 
