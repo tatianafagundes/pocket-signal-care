@@ -5,6 +5,7 @@ import {
   composeCustomer360,
   hasBalance,
   LOW_REMAINING_RATIO,
+  primaryDataBucket,
   primaryPlan,
 } from "@/services/customer360-rules";
 import type { Balance, Customer, Offer, Party, Product, UsageBucket } from "@/services/model";
@@ -217,6 +218,62 @@ describe("customer360-rules", () => {
       const input = [mk({ bucketId: "s", type: "sms" }), mk({ bucketId: "d", type: "data" })];
       composeCustomer360({ customer, party, installedBase: [], balance: null, usage: input });
       expect(input.map((b) => b.type)).toEqual(["sms", "data"]);
+    });
+  });
+
+  describe("primaryDataBucket", () => {
+    const dataBucket = (over: Partial<UsageBucket>): UsageBucket => ({
+      bucketId: "b",
+      type: "data",
+      unlimited: false,
+      total: { value: 10, unit: "GB" },
+      remaining: { value: 6, unit: "GB" },
+      ...over,
+    });
+
+    it("prefers the data bucket granted by the plan (offerId match)", () => {
+      const c360 = composeCustomer360({
+        customer,
+        party,
+        installedBase: [plan], // plan.offerId === "o-plan"
+        balance: null,
+        offers: [planOffer],
+        usage: [
+          dataBucket({ bucketId: "addon", offerId: "o-addon" }),
+          dataBucket({ bucketId: "planbkt", offerId: "o-plan" }),
+        ],
+      });
+      expect(primaryDataBucket(c360)?.bucketId).toBe("planbkt");
+    });
+
+    it("falls back to the first data bucket when none matches the plan", () => {
+      const c360 = composeCustomer360({
+        customer,
+        party,
+        installedBase: [plan],
+        balance: null,
+        usage: [dataBucket({ bucketId: "first", offerId: "o-other" })],
+      });
+      expect(primaryDataBucket(c360)?.bucketId).toBe("first");
+    });
+
+    it("returns null when there is no data bucket", () => {
+      const c360 = composeCustomer360({
+        customer,
+        party,
+        installedBase: [plan],
+        balance: null,
+        usage: [
+          {
+            bucketId: "v",
+            type: "voice",
+            unlimited: false,
+            total: { value: 100, unit: "min" },
+            remaining: { value: 50, unit: "min" },
+          },
+        ],
+      });
+      expect(primaryDataBucket(c360)).toBeNull();
     });
   });
 

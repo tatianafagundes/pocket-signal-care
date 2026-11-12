@@ -41,6 +41,31 @@
         "title": "New to {{brand}}? Get started",
         "body": "Pick your prepaid plan, choose your number and get connected in minutes.",
         "cta": "Start onboarding"
+      },
+      "greeting": "Hi {{name}}",
+      "greetingPlain": "Hi there",
+      "loading": "Loading your home…",
+      "validUntil": "Valid until {{date}}",
+      "lowBalance": {
+        "title": "Balance is low",
+        "body": "Top up to keep your plan and add-ons running."
+      },
+      "data": {
+        "title": "Data",
+        "used": "used",
+        "left": "{{amount}} left",
+        "none": "No data left",
+        "unlimited": "Unlimited",
+        "empty": "No data allowance yet.",
+        "cardAria": "Data allowance — open My plan"
+      },
+      "plan": {
+        "title": "Plan",
+        "empty": "No plan yet.",
+        "cardAria": "Your plan — open My plan"
+      },
+      "addOns": {
+        "subtitle": "Extra data, roaming or calls — paid from your balance."
       }
     },
     "myPlan": {
@@ -434,6 +459,24 @@
         "failed": "We couldn't load your eSIM yet. Check My plan in a moment, or contact support.",
         "expired": "This eSIM install window expired. Contact support to re-issue your eSIM."
       }
+    }
+  },
+  "usage": {
+    "unit": {
+      "gb": "GB",
+      "min": "min",
+      "sms": "SMS"
+    },
+    "state": {
+      "expired": "Expired",
+      "pending": "Not started yet"
+    },
+    "ring": {
+      "aria": "{{consumed}} of {{total}} {{unit}} used"
+    },
+    "live": {
+      "low": "Data running low: {{amount}} left",
+      "depleted": "No data left"
     }
   }
 }

@@ -9,16 +9,28 @@ import type { ReactNode } from "react";
  */
 interface PageShellProps {
   title: string;
-  subtitle: string;
+  /** Optional supporting line under the title. Omit on screens that have only a heading (Home). */
+  subtitle?: string;
+  /**
+   * When true, render children directly on the canvas instead of inside a single surface card.
+   * Use for multi-card screens (the Home dashboard: balance card + grid + rows are each their own
+   * surface) — a card-inside-a-card would fight the flat model. Default false keeps every existing
+   * single-card screen unchanged.
+   */
+  flush?: boolean;
   children?: ReactNode;
 }
 
-export function PageShell({ title, subtitle, children }: PageShellProps) {
+export function PageShell({ title, subtitle, flush = false, children }: PageShellProps) {
   return (
     <main className="mx-auto w-full max-w-[390px] px-5 pt-6 pb-28">
       <h1 className="type-title text-text-primary">{title}</h1>
-      <p className="type-body mt-1 text-text-secondary">{subtitle}</p>
-      <div className="mt-6 rounded-card border border-hairline bg-surface p-5">{children}</div>
+      {subtitle ? <p className="type-body mt-1 text-text-secondary">{subtitle}</p> : null}
+      {flush ? (
+        <div className="mt-6">{children}</div>
+      ) : (
+        <div className="mt-6 rounded-card border border-hairline bg-surface p-5">{children}</div>
+      )}
     </main>
   );
 }

@@ -110,6 +110,20 @@ export function primaryPlan(c360: Customer360): EnrichedProduct | null {
 }
 
 /**
+ * The data bucket the Home shows as its ring — a PURE rule. The Home surfaces ONE data allowance
+ * (the prototype's P1 "Data" card); the full set (voice/SMS/roaming, add-on data) lives on My plan.
+ *
+ * Preference: the data bucket granted by the plan (its offerId matches the primary plan's offerId),
+ * so a bought data add-on doesn't displace the plan's own allowance on the Home. Falls back to the
+ * first data bucket, then null (Data card → empty state). No I/O.
+ */
+export function primaryDataBucket(c360: Customer360): UsageBucket | null {
+  const planOfferId = primaryPlan(c360)?.offerId;
+  const data = c360.usage.filter((b) => b.type === "data");
+  return data.find((b) => b.offerId === planOfferId) ?? data[0] ?? null;
+}
+
+/**
  * Fraction of the granted total at or below which a metered bucket is "low" — 0.2 means the warning
  * fires once 80% is consumed (20% remaining). No GSMA/ITU normative threshold exists; 0.2 is the
  * common default (Google Mobile Data Plan API's LOW_QUOTA, operator practice). A second, earlier

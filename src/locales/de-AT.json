@@ -41,6 +41,31 @@
         "title": "Neu bei {{brand}}? Jetzt starten",
         "body": "Wähle deinen Wertkartentarif, deine Nummer und leg in wenigen Minuten los.",
         "cta": "Onboarding starten"
+      },
+      "greeting": "Hallo {{name}}",
+      "greetingPlain": "Hallo",
+      "loading": "Startseite wird geladen…",
+      "validUntil": "Gültig bis {{date}}",
+      "lowBalance": {
+        "title": "Guthaben ist niedrig",
+        "body": "Laden Sie auf, damit Tarif und Zusatzpakete weiterlaufen."
+      },
+      "data": {
+        "title": "Daten",
+        "used": "verbraucht",
+        "left": "{{amount}} übrig",
+        "none": "Keine Daten übrig",
+        "unlimited": "Unbegrenzt",
+        "empty": "Noch kein Datenvolumen.",
+        "cardAria": "Datenvolumen — Mein Tarif öffnen"
+      },
+      "plan": {
+        "title": "Tarif",
+        "empty": "Noch kein Tarif.",
+        "cardAria": "Ihr Tarif — Mein Tarif öffnen"
+      },
+      "addOns": {
+        "subtitle": "Mehr Daten, Roaming oder Anrufe — vom Guthaben bezahlt."
       }
     },
     "myPlan": {
@@ -434,6 +459,24 @@
         "failed": "Wir konnten deine eSIM noch nicht laden. Schau gleich unter „Mein Tarif“ nach oder kontaktier den Support.",
         "expired": "Das Installationsfenster dieser eSIM ist abgelaufen. Kontaktier den Support, um deine eSIM neu auszustellen."
       }
+    }
+  },
+  "usage": {
+    "unit": {
+      "gb": "GB",
+      "min": "Min",
+      "sms": "SMS"
+    },
+    "state": {
+      "expired": "Abgelaufen",
+      "pending": "Noch nicht aktiv"
+    },
+    "ring": {
+      "aria": "{{consumed}} von {{total}} {{unit}} verbraucht"
+    },
+    "live": {
+      "low": "Datenvolumen wird knapp: {{amount}} übrig",
+      "depleted": "Keine Daten übrig"
     }
   }
 }
