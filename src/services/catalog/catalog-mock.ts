@@ -145,6 +145,19 @@ const OFFERS: Record<TenantId, Offer[]> = {
       category: "unlimited",
       recommended: false,
     },
+    // Streaming add-on (DreiGo, fictional MVNO) — NOT a plan, so excluded from the onboarding grid
+    // by listOffers; it belongs to the add-ons route. No validityDays: it recurs with the plan.
+    {
+      offerId: "dreigo-stream-pass",
+      tenantId: "dreigo",
+      name: "Streaming pass",
+      dataAmount: "Streaming data free*",
+      priceMinor: 500,
+      currency: "EUR",
+      autoRenew: true,
+      kind: "addon",
+      category: "streaming-addon",
+    },
   ],
 };
 

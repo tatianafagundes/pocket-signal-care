@@ -105,6 +105,18 @@ export interface Offer {
   /** True for an unlimited-data plan (dataAmount is then a label like "Unlimited"). */
   unlimitedData?: boolean;
   /*
+   * Marketing copy. Optional and contract-faithful: in TMF620 the long `description` is a native
+   * ProductOffering field, while a short tagline has no dedicated field and is modelled as a
+   * `productOfferingChar` (see docs/contracts/tmf620-product-catalog.md §4). The real catalog-http
+   * maps `description` from the PO and `tagline` from the agreed characteristic. The MOCK leaves
+   * both undefined — the UI falls back to localized copy keyed by offerId, so the demo text is
+   * translatable (per-locale) rather than a single hardcoded English string on the seed.
+   */
+  /** Short one-line "good for…" tagline. */
+  tagline?: string;
+  /** Longer plan description shown in the "more info" detail. */
+  description?: string;
+  /*
    * What kind of catalogue item this is. Absent = a normal plan.
    * NOTE: this is the CATALOGUE kind ("addon", no hyphen) and is a different domain from
    * `Product.kind` ("add-on", with a hyphen), which is the INSTALLED-BASE kind (TMF637).
@@ -113,7 +125,7 @@ export interface Offer {
    */
   kind?: "plan" | "addon";
   /** Tier, used by the recommendation rule (not hardcoded offer ids). One plan per tier per tenant. */
-  category?: "starter" | "standard" | "premium" | "unlimited" | "data-addon";
+  category?: "starter" | "standard" | "premium" | "unlimited" | "data-addon" | "streaming-addon";
 }
 
 /*

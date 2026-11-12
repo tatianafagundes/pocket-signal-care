@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+
 import { RadioGroupItem } from "@/components/ui/radio-group";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
@@ -8,13 +11,18 @@ import type { Offer } from "@/services/model";
  * OfferOption (Fuon "option-row"). One selectable plan in the grid. (Spec Fase 5 / Req 2, 8)
  *
  * It is a radio option wrapped as a card: the native radio drives selection (keyboard + screen
- * reader), the whole row is the label. The price states its nature (B4) via offerPriceLabel —
- * "€14.90 every 30 days · auto-renews", never a bare "€14.90" that reads as a one-off. The
- * "recommended" plan carries a visible badge (not colour-only).
+ * reader), the whole row is the label. The price states its nature — "Renews every 30 days" —
+ * never a bare amount that reads as one-off. The "recommended" plan carries a visible badge.
  *
- * Onboarding offers are always selectable (no customer yet → always qualified). The TMF679
- * tri-state "unqualified" rendering belongs to the future add-ons route (an existing customer
- * whose balance can't cover an offer); it will be added here when that route needs it.
+ * TAGLINE + MORE INFO. Each plan shows a one-line "good for…" tagline, and a "More info" toggle
+ * expands an in-place panel with the long description and the plan's characteristics. The tagline
+ * and description come from the Offer when a real catalogue provides them (TMF620: description is
+ * native, the tagline is a characteristic), and otherwise fall back to localized copy keyed by
+ * offerId — so the mock demo text is translatable.
+ *
+ * The toggle sits OUTSIDE the radio's <label> on purpose: a button inside the label would also
+ * toggle the radio selection. Here the label wraps only the radio + summary; the toggle and the
+ * detail panel are siblings, so "More info" never changes the selection.
  */
 
 interface OfferOptionProps {
@@ -25,52 +33,120 @@ interface OfferOptionProps {
 export function OfferOption({ offer, recommendedLabel }: OfferOptionProps) {
   const { t } = useLocalizedTranslation();
   const { locale } = useTenant();
+  const [open, setOpen] = useState(false);
 
   const price = formatPrice(offer.priceMinor, offer.currency, locale);
   const radioId = `offer-${offer.offerId}`;
   const descId = `${radioId}-desc`;
+  const detailId = `${radioId}-detail`;
+
+  // Prefer catalogue-provided copy; fall back to localized copy keyed by offerId.
+  const tagline = offer.tagline ?? t(`onboarding.plan.offers.${offer.offerId}.tagline`, "");
+  const description =
+    offer.description ?? t(`onboarding.plan.offers.${offer.offerId}.description`, "");
+
+  // Characteristics shown in the detail panel (icon-free list; each is a plain fact, not colour).
+  const features: string[] = [];
+  if (offer.unlimitedData === true) {
+    features.push(t("onboarding.plan.feature.unlimited", "Unlimited data"));
+  } else {
+    features.push(
+      t("onboarding.plan.feature.data", "{{data}} of data", { data: offer.dataAmount }),
+    );
+  }
+  if (offer.network) {
+    features.push(
+      t("onboarding.plan.feature.network", "{{network}} network", { network: offer.network }),
+    );
+  }
+  if (offer.euRoaming === true) {
+    features.push(t("onboarding.plan.feature.euRoaming", "EU roaming included"));
+  }
+  if (offer.validityDays != null) {
+    features.push(
+      t("onboarding.plan.feature.validity", "{{days}}-day cycle", { days: offer.validityDays }),
+    );
+  }
+  if (offer.autoRenew === true) {
+    features.push(t("onboarding.plan.feature.autoRenew", "Renews automatically"));
+  }
 
   return (
-    <label
-      htmlFor={radioId}
-      className="flex items-start gap-3 rounded-card border border-hairline bg-surface p-4 transition-colors hover:border-accent-ink cursor-pointer"
-    >
-      <RadioGroupItem
-        id={radioId}
-        value={offer.offerId}
-        aria-describedby={descId}
-        className="mt-1"
-      />
-      <span id={descId} className="min-w-0 flex-1">
-        <span className="flex items-center justify-between gap-2">
-          <span className="type-body font-medium text-text-primary">{offer.name}</span>
-          {offer.recommended === true ? (
-            <span className="rounded-pill bg-accent-tint px-2 py-0.5 type-caption text-accent-ink">
-              {recommendedLabel}
+    <div className="rounded-card border border-hairline bg-surface transition-colors">
+      <label
+        htmlFor={radioId}
+        className="flex items-start gap-3 p-4 hover:border-accent-ink cursor-pointer"
+      >
+        <RadioGroupItem
+          id={radioId}
+          value={offer.offerId}
+          aria-describedby={descId}
+          className="mt-1"
+        />
+        <span id={descId} className="min-w-0 flex-1">
+          <span className="flex items-center justify-between gap-2">
+            <span className="type-body font-medium text-text-primary">{offer.name}</span>
+            {offer.recommended === true ? (
+              <span className="rounded-pill bg-accent-tint px-2 py-0.5 type-caption text-accent-ink">
+                {recommendedLabel}
+              </span>
+            ) : null}
+          </span>
+          {tagline ? (
+            <span className="mt-0.5 block type-caption text-text-secondary">{tagline}</span>
+          ) : null}
+          <span className="mt-1 flex items-baseline justify-between gap-2">
+            <span className="type-body text-text-secondary">{offer.dataAmount}</span>
+            <span className="type-title text-text-primary tabular-nums">{price}</span>
+          </span>
+          {offer.validityDays != null ? (
+            <span className="mt-1 block type-caption text-text-primary">
+              {offer.autoRenew === true
+                ? t("onboarding.plan.renewNote", "Renews every {{days}} days · cancel anytime", {
+                    days: offer.validityDays,
+                  })
+                : t("onboarding.plan.validNote", "Valid for {{days}} days", {
+                    days: offer.validityDays,
+                  })}
             </span>
           ) : null}
         </span>
-        <span className="mt-1 flex items-baseline justify-between gap-2">
-          <span className="type-body text-text-secondary">{offer.dataAmount}</span>
-          <span className="type-title text-text-primary tabular-nums">{price}</span>
-        </span>
-        {offer.validityDays != null ? (
-          <span className="mt-1 block type-caption text-text-primary">
-            {offer.autoRenew === true
-              ? t("onboarding.plan.renewNote", "Renews every {{days}} days · cancel anytime", {
-                  days: offer.validityDays,
-                })
-              : t("onboarding.plan.validNote", "Valid for {{days}} days", {
-                  days: offer.validityDays,
-                })}
-          </span>
-        ) : null}
-        {offer.euRoaming === true ? (
-          <span className="mt-1 block type-caption text-text-secondary">
-            {t("onboarding.plan.euRoaming", "EU roaming included")}
-          </span>
-        ) : null}
-      </span>
-    </label>
+      </label>
+
+      {/* "More info" toggle — sibling of the label so it never toggles the radio. */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={detailId}
+        className="focus-ring flex min-h-11 w-full items-center gap-1 rounded-b-card px-4 py-2 type-caption text-accent-ink"
+      >
+        <ChevronDown
+          className={"h-4 w-4 transition-transform " + (open ? "rotate-180" : "")}
+          aria-hidden="true"
+        />
+        {open
+          ? t("onboarding.plan.lessInfo", "Less info")
+          : t("onboarding.plan.moreInfo", "More info")}
+      </button>
+
+      {open ? (
+        <div id={detailId} className="border-t border-hairline px-4 pb-4 pt-3">
+          <h3 className="type-caption font-medium text-text-primary">
+            {t("onboarding.plan.detailHeading", "What's included")}
+          </h3>
+          {description ? (
+            <p className="mt-1 type-caption text-text-secondary">{description}</p>
+          ) : null}
+          <ul className="mt-2 grid gap-1">
+            {features.map((f) => (
+              <li key={f} className="type-caption text-text-secondary">
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }

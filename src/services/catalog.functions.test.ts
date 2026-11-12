@@ -29,6 +29,23 @@ describe("catalog seam (mock)", () => {
     }
   });
 
+  it("keeps the DreiGo streaming add-on out of the plan grid", async () => {
+    // dreigo-stream-pass is kind:"addon" — it belongs to the add-ons route, not onboarding.
+    const dreigo = await listOffers("dreigo");
+    expect(dreigo.ok).toBe(true);
+    if (dreigo.ok) {
+      expect(dreigo.data.some((o) => o.offerId === "dreigo-stream-pass")).toBe(false);
+      expect(dreigo.data.every((o) => o.kind !== "addon")).toBe(true);
+    }
+  });
+
+  it("still knows the streaming add-on as a qualifiable offer (it exists in the catalogue)", async () => {
+    // Excluded from the grid, but it's a real offer: qualify resolves it (onboarding ctx → qualified).
+    const r = await qualifyOffer("dreigo-stream-pass", { tenantId: "dreigo" });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.result).toBe("qualified");
+  });
+
   it("rejects an invalid tenant (validation, never throws)", async () => {
     const r = await listOffers("acme");
     expect(r.ok).toBe(false);

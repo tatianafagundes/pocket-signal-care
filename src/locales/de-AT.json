@@ -105,7 +105,48 @@
       "disabledHint": "Wähl einen Tarif, um fortzufahren.",
       "paymentNote": "Wertkarte ohne Vertrag: Du zahlst nur, wenn du aufladest, und kannst jederzeit kündigen.",
       "renewNote": "Verlängert sich alle {{days}} Tage · jederzeit kündbar",
-      "validNote": "{{days}} Tage gültig"
+      "validNote": "{{days}} Tage gültig",
+      "moreInfo": "Mehr Infos",
+      "lessInfo": "Weniger Infos",
+      "detailHeading": "Das ist dabei",
+      "feature": {
+        "network": "{{network}}-Netz",
+        "euRoaming": "EU-Roaming inklusive",
+        "unlimited": "Unbegrenzte Daten",
+        "data": "{{data}} Daten",
+        "autoRenew": "Verlängert sich automatisch",
+        "validity": "{{days}}-Tage-Zyklus"
+      },
+      "offers": {
+        "drei-up-start": {
+          "tagline": "Gut für Anrufe, Chat und leichtes Surfen.",
+          "description": "Ein leichter Einsteigertarif für alltägliches Nachrichten, Anrufe und ab und zu Karte oder Suche. Ideal, wenn du meist im WLAN bist."
+        },
+        "drei-up": {
+          "tagline": "Gut für Social Media, Karten und Musik im Alltag.",
+          "description": "Unser beliebtester Tarif: genug 5G-Daten für tägliches Social Media, Navigation und Musikstreaming, mit EU-Roaming für Reisen."
+        },
+        "drei-up-max": {
+          "tagline": "Gut für viel Streaming und Hotspot-Nutzung.",
+          "description": "Ein großes 5G-Datenvolumen für alle, die täglich Video streamen oder einen Laptop tethern, mit EU-Roaming inklusive."
+        },
+        "drei-up-unlimited": {
+          "tagline": "Gut für Streaming den ganzen Tag, ohne Datensorgen.",
+          "description": "Unbegrenzte 5G-Daten — streamen, tethern und surfen, ohne auf den Zähler zu schauen. Ideal für Vielnutzer."
+        },
+        "dreigo-go-8": {
+          "tagline": "Gut, um günstig verbunden zu bleiben.",
+          "description": "Ein einfacher, günstiger Tarif für Anrufe, Chat und leichte Daten. Ein guter erster Wertkartentarif."
+        },
+        "dreigo-go-20": {
+          "tagline": "Gut für tägliches Streaming und Reisen in der EU.",
+          "description": "Ein ausgewogener 5G-Tarif für alltägliches Streaming und Surfen, mit EU-Roaming für Reisen."
+        },
+        "dreigo-go-unlimited": {
+          "tagline": "Gut für unbegrenztes Streaming und Tethering.",
+          "description": "Unbegrenzte 5G-Daten mit EU-Roaming — streame und tethere frei, zu Hause und in der ganzen EU."
+        }
+      }
     },
     "account": {
       "title": "Konto erstellen",
