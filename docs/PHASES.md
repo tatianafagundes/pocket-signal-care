@@ -431,3 +431,41 @@ entra na 7.5. **i18n:** 5 chaves de progresso novas. 188 testes, build + lint ve
 
 Dívida consciente: captura é síncrona no mock (marco real assíncrono = Fase 8); o token de pagamento
 é placeholder até a tela da 7.5; sem 3-D Secure/PSP real.
+
+### Fase 7.5 — entregue: telas (SIM/entrega), bloco de pagamento, linha do tempo de dinheiro, guard
+
+Commit `8d22282`. As peças de modelo/seam/orquestração das 7.1–7.4 viram telas reais.
+
+**`/onboarding/sim`** — cartões de rádio físico vs eSIM, limitados ao `offer.simTypes` (ausente =
+ambos). A escolha decide se `/delivery` entra no fluxo. Continue do `plan` passou a ir para `/sim`.
+Ordem do fluxo: welcome → plan → sim → addons → number → account → [delivery se físico] → review →
+success.
+
+**`/onboarding/delivery`** — formulário de endereço TMF673 (só SIM físico), RHF+zod. No Continue
+valida e persiste via `logistics.createAddress`, então `addressOutsideDeliveryArea` é **recuperável
+aqui** (corrige e reenvia), não falha terminal na ativação. Grava `addressId` → o passo
+`createAddress` do submit é pulado idempotentemente. O Continue do `account` agora ramifica: físico →
+`/delivery`, senão → `/review`.
+
+**Guard** — `firstIncompleteStep`/`resolveOnboardingStep` ganharam parâmetro `offersEsim` (default
+true) e passaram a gatear `/sim` (eSIM oferecido e sem escolha) e `/delivery` (físico sem endereço),
+para deep-link não pular esses passos.
+
+**Bloco de pagamento no `/review`** — campo de cartão mock tokenizado para um token opaco (PAN nunca
+persistido), consentimento de autorização, linhas de dinheiro que **declaram a natureza** (Plan ·
+first top-up / Authorized today) e **nunca somam**, cópia B3 ("What you authorize today becomes your
+first balance"). **"Place order"** substitui "Confirm and activate". Recusa de cartão = erro **no
+campo** (recuperável), não o aviso terminal.
+
+**`/success`** — dinheiro como **linha do tempo de marcos** (B1): Authorized ✓ (feito) · Charged when
+SIM ships / eSIM is ready (futuro) · Added when your line is active — **nunca** três carimbos de
+"hoje". Seção de eSIM com **4 estados** (B4): ready (código + 3 caminhos de instalação) · requested ·
+failed · expired. Estado snapshotado antes do efeito `reset()`.
+
+**My plan** — produto SIM mostra a forma (eSIM vs Physical SIM). **i18n** — novas chaves
+`onboarding.sim/delivery`, `review.payment`, `success.money/esim`, `pages.myPlan.simType`,
+`seamError.logistics/payment` em en + de-AT (paridade 246/246).
+
+197 testes (guard atualizado para os novos gates), build + lint verdes; telas de dinheiro sem
+hold/free/soon e sem "Charged today". Dívida conscente: token de cartão é mock (PSP/3-D Secure reais
+= Fase 8); captura ainda síncrona; "current customer" = demo até o login real.
