@@ -7,6 +7,7 @@ import {
   LOW_REMAINING_RATIO,
   primaryDataBucket,
   primaryPlan,
+  planRenewsAt,
   renewalShortfall,
 } from "@/services/customer360-rules";
 import type { Balance, Customer, Offer, Party, Product, UsageBucket } from "@/services/model";
@@ -424,5 +425,24 @@ describe("renewalShortfall", () => {
   });
   it("should return 0 when balance exceeds the plan price", () => {
     expect(renewalShortfall(make(3000))).toBe(0);
+  });
+});
+
+describe("planRenewsAt", () => {
+  const base = { customer, party, installedBase: [plan] };
+  it("should use the plan data cycle end when known", () => {
+    const c = composeCustomer360({
+      ...base,
+      balance: { amountMinor: 0, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" },
+      usage: [{ bucketId: "b", type: "data", unlimited: false, offerId: "o-plan", validFor: { end: "2026-12-01T00:00:00Z" } }],
+    });
+    expect(planRenewsAt(c)).toBe("2026-12-01T00:00:00Z");
+  });
+  it("should fall back to balance validity when there is no cycle", () => {
+    const c = composeCustomer360({ ...base, balance: { amountMinor: 0, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" } });
+    expect(planRenewsAt(c)).toBe("2026-12-31T00:00:00Z");
+  });
+  it("should return null when nothing is known", () => {
+    expect(planRenewsAt(composeCustomer360({ ...base, balance: null }))).toBeNull();
   });
 });

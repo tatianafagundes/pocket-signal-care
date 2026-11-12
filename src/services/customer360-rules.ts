@@ -193,3 +193,15 @@ export function renewalShortfall(c360: Customer360): number {
 export function lineSimType(c360: Customer360): Product["simType"] | null {
   return c360.installedBase.find((p) => p.kind === "sim")?.simType ?? null;
 }
+
+/**
+ * When the plan next renews: the end of the plan's current data cycle (the bucket the plan granted),
+ * else the balance validity. Null when neither is known. Pure.
+ */
+export function planRenewsAt(c360: Customer360): string | null {
+  const plan = primaryPlan(c360);
+  const cycle = c360.usage.find(
+    (b) => b.type === "data" && (!plan || !b.offerId || b.offerId === plan.offerId),
+  )?.validFor?.end;
+  return cycle ?? c360.balance?.validUntil ?? null;
+}

@@ -96,7 +96,20 @@
       "simType": {
         "esim": "eSIM",
         "physical": "Physische SIM"
-      }
+      },
+      "allowancesLabel": "Inklusivleistungen",
+      "renewsOn": "Verlängert sich am {{date}}",
+      "number": "Deine Nummer",
+      "fairUse": "EU-Roaming gemäß Fair-Use-Regelung.",
+      "unlimited": "Unbegrenzt",
+      "left": "{{remaining}} von {{total}} übrig",
+      "type": {
+        "data": "Daten",
+        "voice": "Telefonie",
+        "sms": "SMS",
+        "roaming": "EU-Roaming-Daten"
+      },
+      "noAllowances": "Noch keine Inklusivleistungen."
     },
     "topUp": {
       "title": "Aufladen",

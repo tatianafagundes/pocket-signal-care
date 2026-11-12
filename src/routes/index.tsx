@@ -16,6 +16,7 @@ import { PlanSummaryCard } from "@/components/home/plan-summary-card";
 import { api, SeamFailure } from "@/services/api";
 import {
   lineSimType,
+  planRenewsAt,
   primaryDataBucket,
   primaryPlan,
   renewalShortfall,
@@ -94,11 +95,11 @@ function HomeDashboard() {
               <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p className="type-body-sm-strong text-text-primary">
-                  {query.data.balance?.validUntil
+                  {planRenewsAt(query.data)
                     ? t("pages.home.renewal.titleDated", "Recarregue {{amount}} para renovar {{plan}} em {{date}}", {
                         amount: formatPrice(renewalShortfall(query.data), "EUR", locale),
                         plan: primaryPlan(query.data)?.offer?.name ?? "",
-                        date: formatDate(query.data.balance.validUntil, locale),
+                        date: formatDate(planRenewsAt(query.data) ?? "", locale),
                       })
                     : t("pages.home.renewal.title", "Recarregue {{amount}} para renovar {{plan}}", {
                         amount: formatPrice(renewalShortfall(query.data), "EUR", locale),

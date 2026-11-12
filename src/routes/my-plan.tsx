@@ -9,7 +9,9 @@ import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { api, SeamFailure } from "@/services/api";
-import { formatPrice } from "@/lib/format";
+import { formatMsisdn, formatPrice } from "@/lib/format";
+import { planRenewsAt } from "@/services/customer360-rules";
+import type { UsageBucket } from "@/services/model";
 
 export const Route = createFileRoute("/my-plan")({
   head: () => ({
@@ -81,6 +83,61 @@ function Page() {
             )}
           </section>
 
+          {query.data.party.msisdn ? (
+            <section>
+              <h2 className="type-caption text-text-secondary">
+                {t("pages.myPlan.number", "Seu número")}
+              </h2>
+              <p className="type-body-strong text-text-primary tabular-nums">
+                {formatMsisdn(query.data.party.msisdn)}
+              </p>
+            </section>
+          ) : null}
+
+          {/* Allowances — every bucket (data, calls, texts, EU roaming), words not colour. */}
+          <section>
+            <h2 className="type-caption text-text-secondary">
+              {t("pages.myPlan.allowancesLabel", "Franquias")}
+            </h2>
+            {planRenewsAt(query.data) ? (
+              <p className="mt-0.5 type-body-sm text-text-secondary">
+                {t("pages.myPlan.renewsOn", "Renova em {{date}}", {
+                  date: new Date(planRenewsAt(query.data) ?? "").toLocaleDateString(locale, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  }),
+                })}
+              </p>
+            ) : null}
+            {query.data.usage.length === 0 ? (
+              <p className="mt-1 type-body text-text-secondary">
+                {t("pages.myPlan.noAllowances", "Ainda não há franquias na sua linha.")}
+              </p>
+            ) : (
+              <ul className="mt-2 grid gap-2">
+                {query.data.usage.map((b) => (
+                  <li
+                    key={b.bucketId}
+                    className="flex items-center justify-between gap-2 rounded-card border border-hairline bg-surface p-3"
+                  >
+                    <span className="type-body text-text-primary">
+                      {t(`pages.myPlan.type.${b.type}`, b.type)}
+                    </span>
+                    <span className="type-body-sm text-text-secondary tabular-nums">
+                      {allowanceText(b, (k, f, o) => t(k, f, o ?? {}))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {query.data.usage.some((b) => b.type === "roaming") ? (
+              <p className="mt-2 type-caption text-text-secondary">
+                {t("pages.myPlan.fairUse", "Roaming na UE conforme política de uso justo.")}
+              </p>
+            ) : null}
+          </section>
+
           {/* Installed base — the plan + SIM + any add-ons provisioned on the customer. */}
           <section>
             <h2 className="type-caption text-text-secondary">
@@ -136,4 +193,18 @@ function Page() {
       )}
     </PageShell>
   );
+}
+
+function allowanceText(
+  b: UsageBucket,
+  t: (key: string, fallback: string, opts?: Record<string, string>) => string,
+): string {
+  if (b.unlimited) return t("pages.myPlan.unlimited", "Ilimitado");
+  if (!b.remaining || !b.total) return "";
+  const fmt = (q: { value: number; unit: string }) =>
+    q.unit === "GB" ? `${q.value} GB` : q.unit === "min" ? `${q.value} min` : `${q.value} SMS`;
+  return t("pages.myPlan.left", "{{remaining}} de {{total}} restantes", {
+    remaining: fmt(b.remaining),
+    total: fmt(b.total),
+  });
 }
