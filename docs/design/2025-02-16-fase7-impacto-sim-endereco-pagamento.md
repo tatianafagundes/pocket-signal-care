@@ -10,6 +10,19 @@
 
 Legenda de arquivos: todos relativos a `~/pocket-signal-care`.
 
+> **Revisão multi-perspectiva (2025-02-16) aplicada.** Duas perspectivas independentes revisaram
+> este plano (`docs/design/2025-02-16-fase7-plan-review.md`, design/UX; e uma verificação do
+> impacto contra o código real). As correções abaixo foram incorporadas. Decisões de produto
+> confirmadas pela dona:
+> 1. **first top-up = preço do plano é o MESMO dinheiro** — você autoriza €X, esse €X vira o seu
+>    primeiro saldo, e o saldo paga o plano. Um valor, um propósito. A cópia DEVE dizer isso.
+> 2. **A tela nunca soma** — `/review` lê o `priceMinor` do plano via helper, rotulado
+>    "Plan · first top-up"; não existe cotação no mock e a UI não soma nada.
+> 3. **Sem oferta eSIM-only no catálogo** por ora → `/sim` fica após `/plan` (razão: condiciona
+>    `/delivery` e pode restringir por `Offer.simTypes` no futuro). Registrado, não é gosto.
+> 4. **Ativação por ICCID é pós-entrega, FORA da Fase 7.** O `/success` do SIM físico mostra
+>    "SIM a caminho", não pede ICCID. A ativação por ICCID é jornada futura.
+
 ---
 
 ## 0. Decisão central — como o dinheiro entra (resolve a pergunta de "falta pagamento")
@@ -25,7 +38,10 @@ No nosso mock mapeamos os três tempos assim:
 |---|---|---|
 | **Autoriza** | confirmar o pedido em `/review` | `payment.authorize` → reserva (nada debita) |
 | **Captura** | marco: SIM físico "despachado" / eSIM "pronto" | `payment.capture` → estado `captured` |
-| **Credita** | ativação da linha (success) | `charging.topUp(customerId, amountMinor)` credita o saldo |
+| **Credita** | ativação da linha (success) | `api.topUp({ customerId, amountMinor })` credita o saldo |
+
+> ⚠️ **Assinatura corrigida**: a api/seam é `api.topUp({ customerId, amountMinor })` (objeto,
+> validado por `topUpSchema`); a forma de dois argumentos posicionais é só do *driver*.
 
 > **[mock]** No dossiê o fulfilment credita e a jornada só confere; no nosso mock **a orquestração
 > credita via `charging.topUp`** (o `charging-mock` já credita saldo). É a simulação honesta de
@@ -104,11 +120,21 @@ physical) → firstTopUp → review → success`.
 > plano É pago pela 1ª recarga, HLD §1). Então **não** criamos passo de valor separado agora; o
 > valor é o `priceMinor` do plano. O passo de valor livre fica como dívida.
 
-**Impacto no stepper** (`ONBOARDING_WORKING_STEPS`): o "Step N of M" passa a recalcular M conforme
-simType e oferta de eSIM (dossiê R-2). Hoje M é fixo (6). Precisa virar derivado do estado.
+**Impacto no stepper** (`ONBOARDING_WORKING_STEPS` / `ONBOARDING_WORKING_STEP_COUNT`): ⚠️ **CORRIGIDO
+pela revisão** — M **já é derivado** (`ONBOARDING_WORKING_STEP_COUNT = ONBOARDING_WORKING_STEPS.length`,
+hoje = 6). O trabalho real **não** é "tornar derivado", é tornar a **lista de passos condicional**
+ao `simType` e à oferta de eSIM (dossiê R-2). Hoje `ONBOARDING_WORKING_STEPS` é um `const` de módulo
+consumido como constante estática por **`src/components/onboarding/wizard-page.tsx`** e
+**`src/components/onboarding/onboarding-stepper.tsx`** — os dois **precisam** passar a receber a lista
+de passos como valor de runtime (prop), não importar a constante. **Isso é um refactor de dois
+componentes, não uma linha** (os dois faltavam na tabela §8 — corrigido). Cuidado de UX (ver S5 do
+plan-review): escolher eSIM **remove** `/delivery` e faz M cair no meio do fluxo; decidir se M só
+conta passos já garantidos ou se o stepper só mostra M após o SIM escolhido.
 
-**Impacto no guard** (`src/lib/onboarding-guard.ts`): `firstIncompleteStep` ganha os gates novos:
-- após `number`: se `simType == null` → `sim` (quando eSIM é oferecido).
+**Impacto no guard** (`src/lib/onboarding-guard.ts`): `firstIncompleteStep` ganha os gates novos.
+⚠️ **Posição do `/sim` resolvida** (havia inconsistência interna): `/sim` fica **após `plan`**
+(coerente com a ordem de passos, não "após number"). Gates:
+- após `plan`: se eSIM é oferecido e `simType == null` → `sim`.
 - antes de `review`: se `physical` e `deliveryAddress == null` → `delivery`.
 - `/sim` e `/delivery` são **gates reais** (ao contrário de addons que é opcional).
 - `ORDER` continua derivado de `ONBOARDING_STEPS` (sem drift).
@@ -163,17 +189,38 @@ submitOrder`. A sequência nova (caso-base EUA), fiel ao dossiê:
 
 `SubmitStep` ganha: `"authorize"`, `"createAddress"` (se physical), `"capture"`, `"credit"`.
 
+> ⚠️ **REGRA CRÍTICA DE IDEMPOTÊNCIA (achado da revisão — o ponto mais importante do dinheiro).**
+> `authorizationRef` e `orderId` **DEVEM** ser persistidos via `patch` e **reusados no retry**,
+> exatamente como `partyId`/`customerId` hoje. Senão um retry **autoriza o cartão duas vezes**
+> (dupla reserva) — viola a regra de ouro do dossiê ("Don't pay again"). E os passos pós-submit
+> (`capture`, `credit`) precisam de **regra de resume explícita**: `capture` só se há
+> `authorizationRef` e ainda não capturado; `credit` só se ainda não creditou (senão o saldo
+> dobra). `submitOrder` em si já é idempotente no mock? NÃO — o cart é consumido; o retry tem de
+> pular `submitOrder` se `orderId` já existe no estado.
+
+> ⚠️ **`submitOrder` já devolve `{ orderId, status }`** mas o código atual **descarta** o retorno
+> (`await api.submitOrder(cartId);`). A Fase 7 captura: `const order = await api.submitOrder(...)`
+> → `patch({ orderId: order.orderId })`. É esse o mecanismo do campo de estado `orderId` novo.
+
 > **[mock]** A ordem exata de party-antes-de-autorizar diverge do dossiê (lá autoriza antes de
 > criar o cliente). Reusar party/customer idempotentes é a nossa simplificação já existente;
 > documentar como dívida, não bloquear.
+
+> ⚠️ **TESTES QUE QUEBRAM (faltavam no plano)**: `src/lib/onboarding-submit.test.ts` afirma a
+> sequência exata `[createParty, createCustomer, createCart, addPlan, addSim, submitOrder]` e
+> `addItem` chamado 2×; `src/lib/onboarding-guard.test.ts` (novos gates sim/delivery mudam as
+> saídas); `src/services/charging.functions.test.ts` (saldo pós-onboarding). Atualizar junto.
 
 ---
 
 ## 6. Customer 360 / My plan — `src/services/customer360-rules.ts`
 
 **[fiel]** O add-on/plano/SIM já aparecem como `Product` no installed base (Fase 6). O eSIM vs
-físico vira um detalhe do `Product kind:"sim"` — **[mock]** opcional: um campo `simType` no
-Product para My plan mostrar "eSIM" vs "SIM". Baixa prioridade.
+físico vira um detalhe do `Product kind:"sim"` — campo `simType` no Product para My plan mostrar
+"eSIM" vs "Physical SIM". ⚠️ **Subido para should-fix** (era "baixa prioridade"): é o único lugar
+que **prova** que a bifurcação do `/sim` teve efeito; para uma demo telecom, é barato e vale.
+(Cuidado: `Offer.kind` = `"plan"|"addon"` e `Product.kind` = `"plan"|"add-on"|"sim"` são uniões
+DIFERENTES e o `model.ts` avisa para não unificar — o `simType` no Product é campo à parte.)
 
 **[fiel]** O saldo após onboarding deixa de ser `null`: agora há crédito da 1ª recarga (via
 `topUp`), então My plan mostra o saldo real. Isso muda o teste de "saldo null → no balance yet"
@@ -194,8 +241,38 @@ caminhos) quando `simType === "esim"`.
 {total} today. We charge it when your SIM ships / your eSIM is ready.", "added when your line is
 active". Proibido "hold"/"free"/"soon". Botão "Place order".
 
-**i18n**: chaves novas en + de-AT (`onboarding.sim.*`, `onboarding.delivery.*`,
-`onboarding.payment.*`, `onboarding.esim.*`), paridade obrigatória.
+⚠️ **B1 — o dinheiro no `/success` é uma LINHA DO TEMPO DE MARCOS, não três carimbos de "hoje".**
+Mesmo que o mock capture logo após o submit, o rótulo é o do marco: "Authorized ✓" ·
+"Charged when your SIM ships" (físico) / "Charged when your eSIM is ready" (eSIM) ·
+"Added when your line is active". Carimbar "Charged today" no mesmo instante que "Authorized today"
+ensinaria que são sinônimos e quebra o modelo pré-pago para uma plateia telecom. O estado
+`captured` do mock é representado como **pendente de marco**, não cobrança consumada.
+
+⚠️ **B3 — cópia que impede a leitura dupla**: `/review` e `/success` dizem explicitamente
+*"What you authorize today becomes your first balance."* (um valor, um propósito).
+
+⚠️ **B2 — toda linha de dinheiro declara sua natureza**: "Plan · first top-up", "Authorized today
+· {total}". A tela **não soma** — lê o `priceMinor` do plano via helper.
+
+**i18n**: chaves **novas** en + de-AT (`onboarding.sim.*`, `onboarding.delivery.*`,
+`onboarding.payment.*`, `onboarding.esim.*`), paridade obrigatória. ⚠️ **E chaves EDITADAS** (o
+plano só listava novas): `onboarding.review.confirm` ("Confirm and activate" → **"Place order"**);
+`balanceEmpty` (×2 — há duas, em namespaces diferentes) e `balanceNote` ("You start with no
+balance") passam a ser **condicionais ao saldo** (após o `topUp`, o saldo deixa de ser null).
+
+**[fiel] eSIM no `/success` — QUATRO estados** (achado B4; o plano só cobria o feliz): `ready`
+(instalar: código/QR/3 caminhos) · `requested` ("preparando, volte em instantes") · `failed`
+(reenviar perfil) · `expired` (novo perfil). Usar `result-head` + `state-block` do DESIGN.md.
+
+**[should-fix] Recusa de cartão** é **erro no campo do cartão** em `/review` ("That card was
+declined. Try another card."), **distinto** do erro terminal de ativação do rodapé — senão a
+pessoa reaperta "Place order" com o mesmo `4000` e recusa de novo (S3).
+
+**[should-fix] `addressOutsideDeliveryArea`** é estado recuperável em `/delivery` ("We don't
+deliver to this address yet. Try another address."), não erro terminal.
+
+**[should-fix] Um só botão primário** por tela: "Place order" **substitui** o "Confirm and
+activate" do `WizardNav` em `/review` — não cria um segundo primário.
 
 ---
 
@@ -216,7 +293,12 @@ active". Proibido "hold"/"free"/"soon". Botão "Place order".
 | `src/lib/onboarding-submit.ts` | authorize→(createAddress)→cart→submit→capture→credit; SubmitStep+ | fiel/mock |
 | `src/routes/onboarding/{sim,delivery}.tsx` (novo) + review.tsx + success.tsx | telas | fiel |
 | `src/routes/onboarding.tsx` | StepGuard reconhece sim/delivery | fiel |
-| `src/locales/{en,de-AT}.json` | chaves novas | fiel |
+| `src/components/onboarding/wizard-page.tsx` | ⚠️ passos como prop runtime (não const) | fiel |
+| `src/components/onboarding/onboarding-stepper.tsx` | ⚠️ passos como prop runtime (não const) | fiel |
+| `src/locales/{en,de-AT}.json` | chaves novas **+ editadas** (review.confirm, balanceEmpty ×2, balanceNote) | fiel |
+| `src/lib/onboarding-submit.test.ts` | ⚠️ sequência de passos + addItem count mudam | fiel |
+| `src/lib/onboarding-guard.test.ts` | ⚠️ gates sim/delivery mudam saídas | fiel |
+| `src/services/charging.functions.test.ts` | ⚠️ saldo pós-onboarding | fiel |
 
 ---
 
