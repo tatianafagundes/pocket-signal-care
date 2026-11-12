@@ -55,7 +55,7 @@ export type AuthValidationError =
  * Validate a full credentials payload. Returns the set of failing criteria as i18n keys so the
  * caller (seam) can turn them into a SeamError and the UI can show them inline. Pure.
  */
-export function validateCredentials(c: Credentials): {
+export function validateCredentials(c: Pick<Credentials, "email" | "password">): {
   ok: boolean;
   errors: AuthValidationError[];
 } {

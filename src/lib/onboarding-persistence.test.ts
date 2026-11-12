@@ -88,8 +88,8 @@ describe("onboarding-persistence", () => {
       state: { ...initialOnboardingState("drei"), step: "plan", injected: "evil" },
     };
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(env));
-    const loaded = loadOnboardingState("drei") as Record<string, unknown>;
-    expect(loaded.injected).toBeUndefined();
+    const loaded = loadOnboardingState("drei") as unknown as Record<string, unknown>;
+    expect(loaded["injected"]).toBeUndefined();
     expect(Object.keys(loaded).sort()).toEqual(Object.keys(initialOnboardingState("drei")).sort());
   });
 

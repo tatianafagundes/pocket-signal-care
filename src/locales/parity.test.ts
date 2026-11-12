@@ -15,7 +15,7 @@ type Json = string | { [k: string]: Json };
 
 function leafKeys(obj: Json, prefix = ""): string[] {
   if (typeof obj === "string") return [prefix];
-  return Object.keys(obj).flatMap((k) => leafKeys(obj[k], prefix ? `${prefix}.${k}` : k));
+  return Object.keys(obj).flatMap((k) => leafKeys(obj[k] ?? "", prefix ? `${prefix}.${k}` : k));
 }
 
 function get(obj: Json, path: string): Json | undefined {

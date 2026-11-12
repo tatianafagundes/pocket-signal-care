@@ -100,7 +100,7 @@ function NumberPage() {
           {reserveError ? <SeamErrorNotice error={reserveError} className="mb-4" /> : null}
 
           <RadioGroup
-            value={selected ?? undefined}
+            value={selected ?? null}
             onValueChange={setSelected}
             aria-label={t("onboarding.number.listLabel", "Available numbers")}
           >

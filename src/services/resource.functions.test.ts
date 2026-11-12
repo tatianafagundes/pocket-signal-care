@@ -18,7 +18,7 @@ describe("resource seam (DSIMA mock)", () => {
   it("reserves a number and removes it from the available pool (concurrency)", async () => {
     const list = await listAvailableMsisdn("dreigo");
     if (!list.ok || list.data.length === 0) throw new Error("no numbers to reserve");
-    const target = list.data[0].msisdn;
+    const target = list.data[0]!.msisdn;
 
     const first = await reserveMsisdn({ tenantId: "dreigo", msisdn: target });
     expect(first.ok).toBe(true);

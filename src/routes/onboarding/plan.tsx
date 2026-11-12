@@ -82,7 +82,7 @@ function PlanPage() {
           </div>
 
           <RadioGroup
-            value={state.selectedOfferId ?? undefined}
+            value={state.selectedOfferId ?? null}
             onValueChange={selectOffer}
             aria-label={t("onboarding.plan.title", "Choose a plan")}
           >

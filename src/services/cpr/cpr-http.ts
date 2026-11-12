@@ -31,8 +31,8 @@ interface CprHttpConfig {
 }
 
 function readConfig(): CprHttpConfig | null {
-  const baseUrl = import.meta.env.VITE_CPR_BASE_URL as string | undefined;
-  const token = import.meta.env.VITE_CPR_TOKEN as string | undefined;
+  const baseUrl = import.meta.env["VITE_CPR_BASE_URL"] as string | undefined;
+  const token = import.meta.env["VITE_CPR_TOKEN"] as string | undefined;
   if (!baseUrl || !token) return null;
   return { baseUrl, token, timeoutMs: 10_000 };
 }

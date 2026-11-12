@@ -168,8 +168,8 @@ export interface Credentials {
   tenantId: TenantId;
   email: string;
   password: string;
-  givenName?: string;
-  familyName?: string;
+  givenName?: string | undefined;
+  familyName?: string | undefined;
 }
 
 /** Per-criterion password result the UI renders as a checklist (icon + word). */

@@ -102,13 +102,13 @@ describe("recommendation-rules.recommend", () => {
       .filter((o) => o.category === "starter" || o.category === "unlimited")
       .map((o) => ({ ...o, recommended: false }));
     const r = recommend(ans({ watchesVideo: true, travelsEu: false }), noStandard);
-    expect(r?.offerId).toBe(noStandard[0].offerId); // plans[0] fallback
+    expect(r?.offerId).toBe(noStandard[0]!.offerId); // plans[0] fallback
     expect(r?.reason).toBe("assist.reason.default");
   });
 
   it("never suggests an add-on, even when the grid is add-ons plus one plan", () => {
     // Every behavioural branch must land on the single plan, never the add-ons.
-    const grid = [plans[3], { ...plans[3], offerId: "p-addon-2" }, plans[0]];
+    const grid = [plans[3]!, { ...plans[3]!, offerId: "p-addon-2" }, plans[0]!];
     for (const a of [
       ans({ watchesVideo: true, travelsEu: true }),
       ans({ watchesVideo: true }),
@@ -122,8 +122,8 @@ describe("recommendation-rules.recommend", () => {
 
   it("returns null when the grid has no plans (only add-ons)", () => {
     expect(recommend(ans({}), [])).toBeNull();
-    expect(recommend(ans({ watchesVideo: true, travelsEu: true }), [plans[3]])).toBeNull();
+    expect(recommend(ans({ watchesVideo: true, travelsEu: true }), [plans[3]!])).toBeNull();
     // two add-ons, still null — the positive plan filter excludes every add-on.
-    expect(recommend(ans({}), [plans[3], { ...plans[3], offerId: "p-addon-2" }])).toBeNull();
+    expect(recommend(ans({}), [plans[3]!, { ...plans[3]!, offerId: "p-addon-2" }])).toBeNull();
   });
 });
