@@ -1,6 +1,7 @@
 import { createContext } from "react";
 
 import type { TenantId } from "@/lib/tenant-rules";
+import type { DeliveryAddress, SimChoice } from "@/services/model";
 
 /*
  * Onboarding wizard context. (Spec Fase 5 / onboarding-journey Req 1, 6.3, 9.1)
@@ -21,9 +22,11 @@ import type { TenantId } from "@/lib/tenant-rules";
 export const ONBOARDING_STEPS = [
   "welcome",
   "plan",
+  "sim",
   "addons",
   "number",
   "account",
+  "delivery",
   "review",
   "success",
 ] as const;
@@ -31,16 +34,37 @@ export const ONBOARDING_STEPS = [
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 /**
- * The steps the user actively works through, excluding the terminal "success" screen. This is the
- * "M" in "Step N of M" (currently 6: welcome, plan, addons, number, account, review): success is an
- * outcome, not a step to complete, so it is not counted — and the progress stepper shows exactly
- * these. Keeping the count here means the announcement and the stepper can't drift apart.
+ * All possible working steps, excluding the terminal "success" screen — the SUPERSET. Since Fase 7,
+ * two of these are CONDITIONAL: `sim` shows only when the tenant offers eSIM, and `delivery` shows
+ * only for a physical SIM. So this flat list is NOT the per-flow "Step N of M" any more — the
+ * actual working steps depend on state. Use `workingStepsFor(state)` for the real sequence, and
+ * `ONBOARDING_WORKING_STEPS` only as the exhaustive catalogue (order + membership).
  */
 export const ONBOARDING_WORKING_STEPS = ONBOARDING_STEPS.filter(
   (s) => s !== "success",
 ) as readonly Exclude<OnboardingStep, "success">[];
 
-export const ONBOARDING_WORKING_STEP_COUNT = ONBOARDING_WORKING_STEPS.length;
+/**
+ * The working steps for a given flow, in order — the real "Step N of M". `sim` drops when the
+ * flow has no eSIM choice to make; `delivery` drops for eSIM (no shipping). Pure, so the stepper
+ * and the "N of M" announcement read the exact same sequence and can't drift.
+ *
+ * `offersEsim`: does the tenant/catalogue offer eSIM at all? When false, `/sim` never appears.
+ * `simType`: once chosen, an eSIM flow has no `/delivery`. Before a physical/eSIM choice is known,
+ * `delivery` is kept in the count (optimistic) so the number doesn't jump UP later; choosing eSIM
+ * only ever removes a step, and the stepper hides the total until the choice is made (see
+ * wizard-page) so the user never sees the count shrink on screen.
+ */
+export function workingStepsFor(opts: {
+  offersEsim: boolean;
+  simType: SimChoice | null;
+}): readonly Exclude<OnboardingStep, "success">[] {
+  return ONBOARDING_WORKING_STEPS.filter((s) => {
+    if (s === "sim") return opts.offersEsim;
+    if (s === "delivery") return opts.simType !== "esim";
+    return true;
+  });
+}
 
 /**
  * The persisted, non-secret wizard state. Everything here is safe to write to sessionStorage:
@@ -55,6 +79,11 @@ export interface OnboardingState {
   selectedOfferId: string | null;
   /** Chosen add-on offer ids (optional; empty when none). Added to the activation cart at submit. */
   selectedAddOnIds: string[];
+  /*
+   * SIM form the user picked (`/sim` step, Fase 7). `null` until chosen. Drives whether
+   * `/delivery` is required (physical) or skipped (eSIM).
+   */
+  simType: SimChoice | null;
   /** Reserved MSISDN (resource seam) — the conceptual resume pivot. */
   reservedMsisdn: string | null;
   /** Account email (not a secret; the password is never stored). */
@@ -62,10 +91,23 @@ export interface OnboardingState {
   /** Personal details. */
   givenName: string | null;
   familyName: string | null;
+  /*
+   * Delivery address (`/delivery` step, Fase 7) — only for a PHYSICAL SIM; stays `null` for eSIM.
+   * Personal data, but non-secret: it's the same class as name/email already here.
+   */
+  deliveryAddress: DeliveryAddress | null;
   /** Orchestration ids the submit step populates (CPR/order). */
   partyId: string | null;
   customerId: string | null;
   cartId: string | null;
+  /*
+   * Fase 7 money/order orchestration ids the submit fills in. BOTH must be persisted and REUSED
+   * on retry (like partyId/customerId) so a retry never authorizes the card twice nor re-submits
+   * the order — the dossiê's "Don't pay again" rule. No PAN/CVV/token is ever stored here.
+   */
+  addressId: string | null;
+  authorizationRef: string | null;
+  orderId: string | null;
 }
 
 /** The fields a caller may patch. `tenant` is set once at init and not patched here. */

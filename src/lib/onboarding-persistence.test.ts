@@ -113,4 +113,75 @@ describe("onboarding-persistence", () => {
     expect(window.sessionStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(loadOnboardingState("drei")).toEqual(initialOnboardingState("drei"));
   });
+
+  // --- Fase 7: SIM type + delivery address ---
+
+  it("round-trips simType and a delivery address (physical flow)", () => {
+    const saved: OnboardingState = {
+      ...initialOnboardingState("drei"),
+      step: "delivery",
+      selectedOfferId: "drei-up",
+      simType: "physical",
+      deliveryAddress: {
+        line1: "Hauptstrasse 1",
+        line2: "Top 4",
+        city: "Wien",
+        region: "Wien",
+        postalCode: "1010",
+        country: "AT",
+      },
+      addressId: "addr-123",
+    };
+    saveOnboardingState(saved);
+    expect(loadOnboardingState("drei")).toEqual(saved);
+  });
+
+  it("round-trips an eSIM flow (no delivery address)", () => {
+    const saved: OnboardingState = {
+      ...initialOnboardingState("drei"),
+      step: "review",
+      selectedOfferId: "drei-up",
+      simType: "esim",
+      authorizationRef: "auth-7f3a",
+      orderId: "order-9b2",
+    };
+    saveOnboardingState(saved);
+    expect(loadOnboardingState("drei")).toEqual(saved);
+  });
+
+  it("drops a malformed simType and address rather than resuming a half-filled object", () => {
+    const env = {
+      savedAt: Date.now(),
+      state: {
+        ...initialOnboardingState("drei"),
+        step: "delivery",
+        selectedOfferId: "drei-up",
+        reservedMsisdn: "+4369912345678",
+        email: "a@b.at",
+        givenName: "Mia",
+        familyName: "Berg",
+        simType: "satellite", // not a valid SimChoice
+        deliveryAddress: { line1: "x", city: "Wien" }, // missing required fields
+      },
+    };
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(env));
+    const loaded = loadOnboardingState("drei");
+    expect(loaded.simType).toBeNull();
+    expect(loaded.deliveryAddress).toBeNull();
+  });
+
+  it("never persists a card number, cvv, or payment token", () => {
+    saveOnboardingState({
+      ...initialOnboardingState("drei"),
+      simType: "physical",
+      authorizationRef: "auth-7f3a",
+    });
+    const env = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) ?? "{}");
+    // The persisted shape carries no card data at all — not a field name, not a value. (A broad
+    // digit-run check would false-positive on the savedAt timestamp, so assert on the keys/values
+    // of the state that actually gets stored.)
+    const stateJson = JSON.stringify(env.state ?? {});
+    expect(stateJson).not.toMatch(/cvv|cvc|paymentMethodToken|cardNumber|\bpan\b/i);
+    expect(Object.keys(env.state ?? {})).not.toContain("paymentMethodToken");
+  });
 });

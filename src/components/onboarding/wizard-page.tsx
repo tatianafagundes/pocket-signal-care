@@ -1,12 +1,9 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
+import { useOnboarding } from "@/hooks/use-onboarding";
 import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
-import {
-  ONBOARDING_WORKING_STEPS,
-  ONBOARDING_WORKING_STEP_COUNT,
-  type OnboardingStep,
-} from "@/lib/onboarding-context";
+import { workingStepsFor, type OnboardingStep } from "@/lib/onboarding-context";
 
 /*
  * WizardPage (Fuon). The frame every onboarding step renders into. It mirrors PageShell's 390px
@@ -28,31 +25,58 @@ interface WizardPageProps {
   step: OnboardingStep;
   title: string;
   subtitle: string;
+  /*
+   * Does this tenant offer eSIM? Controls whether `/sim` is a step (dossiê R-2). Default true
+   * (both demo brands offer eSIM). A route that knows the catalogue can pass false to drop `/sim`.
+   */
+  offersEsim?: boolean;
   children?: ReactNode;
 }
 
-export function WizardPage({ step, title, subtitle, children }: WizardPageProps) {
+export function WizardPage({
+  step,
+  title,
+  subtitle,
+  offersEsim = true,
+  children,
+}: WizardPageProps) {
   const { t } = useLocalizedTranslation();
+  const { state } = useOnboarding();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
+  // The working steps for THIS flow (conditional on eSIM offer + chosen SIM type). One source for
+  // the stepper dots and the "Step N of M" number, so they can't drift.
+  const steps = workingStepsFor({ offersEsim, simType: state.simType });
+
   // 1-based position among the working steps. Success is terminal (not a numbered step).
-  const workingIndex = ONBOARDING_WORKING_STEPS.indexOf(
-    step as (typeof ONBOARDING_WORKING_STEPS)[number],
-  );
+  const workingIndex = steps.indexOf(step as (typeof steps)[number]);
   const isWorkingStep = workingIndex !== -1;
+
+  /*
+   * S5 (UX): the total must not shrink on screen. Before the user has committed to a SIM type,
+   * the flow could still branch (physical keeps `/delivery`, eSIM drops it), so we HIDE the M
+   * number until `simType` is chosen. Choosing eSIM then only ever removes a step the user hadn't
+   * seen counted. `offersEsim === false` means there's no `/sim` branch at all, so M is stable
+   * from the start and we show it immediately.
+   */
+  const simChoicePending = offersEsim && state.simType === null;
+  const showTotal = !simChoicePending;
 
   // Move focus to the heading when the step changes (client only; refs are null on the server).
   useEffect(() => {
     headingRef.current?.focus();
   }, [step]);
 
-  // Working steps announce "Step N of M, <title>"; success announces its title only.
-  const progressLabel = isWorkingStep
-    ? t("onboarding.stepProgress", "Step {{current}} of {{total}}", {
-        current: workingIndex + 1,
-        total: ONBOARDING_WORKING_STEP_COUNT,
-      })
-    : null;
+  // Working steps announce "Step N of M, <title>"; success announces its title only. While the
+  // SIM choice is pending, announce the position without the (not-yet-stable) total.
+  const progressLabel = !isWorkingStep
+    ? null
+    : showTotal
+      ? t("onboarding.stepProgress", "Step {{current}} of {{total}}", {
+          current: workingIndex + 1,
+          total: steps.length,
+        })
+      : t("onboarding.stepProgressNoTotal", "Step {{current}}", { current: workingIndex + 1 });
 
   return (
     <main className="mx-auto w-full max-w-[390px] px-5 pt-6 pb-28">
@@ -65,6 +89,7 @@ export function WizardPage({ step, title, subtitle, children }: WizardPageProps)
       <div className="mb-5">
         <OnboardingStepper
           current={step}
+          steps={steps}
           ariaLabel={t("onboarding.progressLabel", "Onboarding progress")}
           labels={{
             done: t("onboarding.step.done", "Completed step"),

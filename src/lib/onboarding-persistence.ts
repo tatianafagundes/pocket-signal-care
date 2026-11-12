@@ -4,6 +4,7 @@ import {
   type OnboardingStep,
 } from "@/lib/onboarding-context";
 import { isTenantId, type TenantId } from "@/lib/tenant-rules";
+import type { DeliveryAddress, SimChoice } from "@/services/model";
 
 /*
  * Onboarding persistence. (Spec Fase 5 / Req 6.3, 9.1)
@@ -41,13 +42,18 @@ export function initialOnboardingState(tenant: TenantId): OnboardingState {
     step: "welcome",
     selectedOfferId: null,
     selectedAddOnIds: [],
+    simType: null,
     reservedMsisdn: null,
     email: null,
     givenName: null,
     familyName: null,
+    deliveryAddress: null,
     partyId: null,
     customerId: null,
     cartId: null,
+    addressId: null,
+    authorizationRef: null,
+    orderId: null,
   };
 }
 
@@ -77,19 +83,43 @@ function reviveForTenant(raw: unknown, tenant: TenantId, now: number): Onboardin
   const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
   const strArray = (v: unknown): string[] =>
     Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  const simType = (v: unknown): SimChoice | null => (v === "physical" || v === "esim" ? v : null);
   return {
     tenant,
     step: state.step,
     selectedOfferId: str(state.selectedOfferId),
     selectedAddOnIds: strArray(state.selectedAddOnIds),
+    simType: simType(state.simType),
     reservedMsisdn: str(state.reservedMsisdn),
     email: str(state.email),
     givenName: str(state.givenName),
     familyName: str(state.familyName),
+    deliveryAddress: reviveDeliveryAddress(state.deliveryAddress),
     partyId: str(state.partyId),
     customerId: str(state.customerId),
     cartId: str(state.cartId),
+    addressId: str(state.addressId),
+    authorizationRef: str(state.authorizationRef),
+    orderId: str(state.orderId),
   };
+}
+
+/**
+ * Revive a delivery address: all required string fields present, or null. Strict — a malformed
+ * address resumes as "not entered" rather than a half-filled object the form would trust.
+ */
+function reviveDeliveryAddress(v: unknown): DeliveryAddress | null {
+  if (typeof v !== "object" || v === null) return null;
+  const a = v as Record<string, unknown>;
+  const req = (k: string): string | null => (typeof a[k] === "string" ? (a[k] as string) : null);
+  const line1 = req("line1");
+  const city = req("city");
+  const region = req("region");
+  const postalCode = req("postalCode");
+  const country = req("country");
+  if (!line1 || !city || !region || !postalCode || !country) return null;
+  const line2 = typeof a.line2 === "string" ? a.line2 : undefined;
+  return { line1, line2, city, region, postalCode, country };
 }
 
 /**

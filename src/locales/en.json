@@ -104,6 +104,7 @@
   "onboarding": {
     "progressLabel": "Onboarding progress",
     "stepProgress": "Step {{current}} of {{total}}",
+    "stepProgressNoTotal": "Step {{current}}",
     "step": {
       "done": "Completed step",
       "current": "Current step",

@@ -42,6 +42,13 @@ export interface Product {
   /** "plan" = the primary bought offer; "add-on" = an offer on top; "sim" = the SIM/MSISDN. */
   kind: "plan" | "add-on" | "sim";
   status: "active" | "pending";
+  /*
+   * For a `kind: "sim"` product, which SIM form was provisioned (Fase 7). Lets My plan show
+   * "eSIM" vs "Physical SIM" — the proof the `/sim` choice had an effect. Absent on plan/add-on.
+   * NOTE: `Product.kind` ("add-on" hyphenated) and `Offer.kind` ("addon") are DIFFERENT unions;
+   * `simType` here is a separate field, not either kind.
+   */
+  simType?: SimChoice;
 }
 
 /** Prepaid balance (TMF654). Minor units to avoid float errors. */
@@ -126,7 +133,17 @@ export interface Offer {
   kind?: "plan" | "addon";
   /** Tier, used by the recommendation rule (not hardcoded offer ids). One plan per tier per tenant. */
   category?: "starter" | "standard" | "premium" | "unlimited" | "data-addon" | "streaming-addon";
+  /*
+   * SIM forms this offer can be delivered on (Fase 7 / dossiê newLine). Optional and
+   * retrocompatible: ABSENT = both forms allowed (the current behaviour). The onboarding `/sim`
+   * step offers only the forms listed here; an eSIM-only or physical-only offer narrows it. Maps
+   * to the TMF620 characteristic the real catalog-http reads.
+   */
+  simTypes?: SimChoice[];
 }
+
+/** The SIM form the customer picks in onboarding (`/sim` step). Mirrors `SimValidation.simType`. */
+export type SimChoice = "physical" | "esim";
 
 /*
  * Resource (DSIMA). A selectable/reservable mobile number and SIM validation result —
@@ -144,7 +161,101 @@ export interface SimValidation {
   iccid: string;
   valid: boolean;
   /** SIM form when valid. */
-  simType?: "physical" | "esim";
+  simType?: SimChoice;
+}
+
+/*
+ * Fase 7 — SIM/eSIM + address (TMF673) + payment (authorize→capture→credit).
+ * Source of truth: docs/contracts/onboarding-prepago-dossie.md (dossiê newLine), mock-faithful to
+ * the TMF contracts and states. Money is always minor units + ISO currency (never float).
+ */
+
+/**
+ * Geographic address for SIM delivery (TMF673 Geographic Address Management). PERSONAL DATA —
+ * in the real flow it is mastered in the operator's address system and the connector returns an
+ * `addressId`; here the `logistics` seam mock does the same. Only captured for a PHYSICAL SIM.
+ */
+export interface DeliveryAddress {
+  line1: string;
+  line2?: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  /** ISO 3166-1 alpha-2 (e.g. "AT"). */
+  country: string;
+}
+
+/**
+ * eSIM profile (GSMA SGP.22 via the resource seam's `esimProfile` extension). The install code is
+ * the LPA string `LPA:1$<smdp>$<matchingId>`. `state` tracks the profile lifecycle the SM-DP+
+ * reports; `status` is the immediate result of `requestEsimProfile`.
+ */
+export interface EsimProfile {
+  esimProfileId: string;
+  iccid: string;
+  /** LPA activation string: `LPA:1$<smdp-fqdn>$<matchingId>`. Rendered as text + QR. */
+  activationCode: string;
+  /** Universal link to install on this device, when available. */
+  installUrl?: string;
+  /** ISO date the profile download window expires. */
+  expiresAt?: string;
+  /** Immediate result of requesting the profile. */
+  status: "requested" | "ready" | "failed";
+  /** Lifecycle state the SM-DP+ reports (read via getEsimProfile). */
+  state?: "requested" | "ready" | "downloaded" | "installed" | "deleted" | "expired" | "failed";
+  /** Reason when status/state is "failed" (catalog key for localized copy). */
+  reasonKey?: string;
+}
+
+/**
+ * Result of a payment-gateway operation (extensão `paymentAuthorization` + TMF676/TMF670). The
+ * card is tokenized BEFORE this seam sees it — the PAN/CVV never reach our code. Money in minor
+ * units. `authorize` reserves (does not charge); `capture` charges at the milestone.
+ */
+export interface PaymentResult {
+  authorizationRef: string;
+  amountMinor: number;
+  currency: "EUR";
+  status:
+    | "authorized"
+    | "requiresAction"
+    | "declined"
+    | "captured"
+    | "captureFailed"
+    | "voided"
+    | "refunded"
+    | "pending";
+  /** ISO date the authorization expires if not captured (real: ~5 days; mock: informational). */
+  authorizationExpiresAt?: string;
+  /** Display label built from the (mock) token, e.g. "Visa ending 4242". Never the PAN. */
+  methodLabel?: string;
+  /** Reason when declined/failed (catalog key for localized copy). */
+  reasonKey?: string;
+}
+
+/**
+ * The first top-up money state as shown on the order receipt (dossiê §2.4). It is the SAME money
+ * across three moments: authorized at order → captured at the milestone → credited at activation
+ * (and the credit becomes the balance the plan is paid from). The UI shows it as a MILESTONE
+ * TIMELINE, never three same-day stamps.
+ */
+export interface FirstTopUp {
+  amountMinor: number;
+  currency: "EUR";
+  state:
+    | "authorized"
+    | "captured"
+    | "credited"
+    | "voided"
+    | "authorizationFailed"
+    | "captureFailed"
+    | "creditFailed"
+    | "refunded";
+  methodLabel?: string;
+  /** ISO dates per moment, present only once that moment has occurred. */
+  authorizedAt?: string;
+  capturedAt?: string;
+  creditedAt?: string;
 }
 
 /*
