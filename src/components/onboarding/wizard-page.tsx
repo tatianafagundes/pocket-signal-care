@@ -74,7 +74,7 @@ export function WizardPage({ step, title, subtitle, children }: WizardPageProps)
         />
         {progressLabel ? (
           <p className="type-caption mt-2 text-text-secondary" aria-hidden="true">
-            {progressLabel}
+            {progressLabel} · {title}
           </p>
         ) : null}
       </div>
@@ -82,7 +82,7 @@ export function WizardPage({ step, title, subtitle, children }: WizardPageProps)
       <h1
         ref={headingRef}
         tabIndex={-1}
-        className="focus-ring type-title rounded-control text-text-primary"
+        className="type-title rounded-control text-text-primary outline-none"
       >
         {title}
       </h1>

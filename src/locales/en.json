@@ -66,8 +66,9 @@
     "welcome": {
       "title": "Welcome to {{brand}}",
       "subtitle": "Go from visitor to active prepaid customer in a few clear steps.",
-      "body": "Pick a plan, create your account, get a number, and confirm — you can go back any time.",
-      "cta": "See plans"
+      "body": "Pick a plan, get a number, create your account, and confirm — you can go back any time.",
+      "cta": "See plans",
+      "prepaidNote": "No contract and no surprises: your plan starts with your first top-up, and you can stop anytime."
     },
     "plan": {
       "title": "Choose a plan",
@@ -100,7 +101,11 @@
           "light": "For lighter use, a starter plan is plenty.",
           "default": "Based on your answers, this is a good fit."
         }
-      }
+      },
+      "disabledHint": "Choose a plan to continue.",
+      "paymentNote": "Prepaid, no contract: you only pay when you top up, and you can cancel anytime.",
+      "renewNote": "Renews every {{days}} days · cancel anytime",
+      "validNote": "Valid for {{days}} days"
     },
     "account": {
       "title": "Create your account",
@@ -146,7 +151,9 @@
       "subtitle": "Choose a new mobile number and we'll hold it for you.",
       "empty": "No numbers are available right now.",
       "reserve": "Reserve this number",
-      "listLabel": "Available numbers"
+      "listLabel": "Available numbers",
+      "disabledHint": "Pick a number to continue.",
+      "holdNote": "We'll keep your number reserved while you finish signing up."
     },
     "review": {
       "title": "Review and activate",
@@ -175,7 +182,9 @@
       "titleNoName": "You're all set",
       "subtitle": "Your plan is active.",
       "balanceEmpty": "You have no balance yet — make your first top up to start using your plan.",
-      "goToPlan": "Go to my plan"
+      "goToPlan": "Go to my plan",
+      "topUp": "Top up now",
+      "later": "Maybe later"
     }
   }
 }

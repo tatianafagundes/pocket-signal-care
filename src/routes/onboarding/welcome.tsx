@@ -44,7 +44,13 @@ function WelcomePage() {
       <p className="type-body text-text-secondary">
         {t(
           "onboarding.welcome.body",
-          "Pick a plan, create your account, get a number, and confirm — you can go back any time.",
+          "Pick a plan, get a number, create your account, and confirm — you can go back any time.",
+        )}
+      </p>
+      <p className="mt-3 type-body text-text-secondary">
+        {t(
+          "onboarding.welcome.prepaidNote",
+          "No contract and no surprises: your plan starts with your first top-up, and you can stop anytime.",
         )}
       </p>
 

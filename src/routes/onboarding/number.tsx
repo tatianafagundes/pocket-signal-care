@@ -12,6 +12,7 @@ import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
+import { formatMsisdn } from "@/lib/format";
 
 export const Route = createFileRoute("/onboarding/number")({
   head: () => ({
@@ -47,7 +48,7 @@ function NumberPage() {
     onSuccess: (_data, msisdn) => {
       setReserveError(null);
       patch({ reservedMsisdn: msisdn });
-      void navigate({ to: "/onboarding/review" });
+      void navigate({ to: "/onboarding/account" });
     },
     onError: (err) => {
       if (err instanceof SeamFailure) {
@@ -113,17 +114,24 @@ function NumberPage() {
                   className="flex items-center gap-3 rounded-card border border-hairline bg-surface p-4 type-body text-text-primary hover:border-accent-ink cursor-pointer"
                 >
                   <RadioGroupItem id={id} value={m.msisdn} />
-                  <span className="font-medium tabular-nums">{m.msisdn}</span>
+                  <span className="font-medium tabular-nums">{formatMsisdn(m.msisdn)}</span>
                 </label>
               );
             })}
           </RadioGroup>
+          <p className="mt-3 type-caption text-text-secondary">
+            {t(
+              "onboarding.number.holdNote",
+              "We'll keep your number reserved while you finish signing up.",
+            )}
+          </p>
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/details" })}
+            onBack={() => navigate({ to: "/onboarding/plan" })}
             onContinue={() => selected && reserve.mutate(selected)}
             continueLabel={t("onboarding.number.reserve", "Reserve this number")}
             continueDisabled={selected == null}
+            disabledHint={t("onboarding.number.disabledHint", "Pick a number to continue.")}
             busy={reserve.isPending}
           />
         </>

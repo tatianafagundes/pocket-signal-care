@@ -1,7 +1,7 @@
 import { RadioGroupItem } from "@/components/ui/radio-group";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
-import { offerPriceLabel } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import type { Offer } from "@/services/model";
 
 /*
@@ -26,7 +26,7 @@ export function OfferOption({ offer, recommendedLabel }: OfferOptionProps) {
   const { t } = useLocalizedTranslation();
   const { locale } = useTenant();
 
-  const price = offerPriceLabel(offer, locale);
+  const price = formatPrice(offer.priceMinor, offer.currency, locale);
   const radioId = `offer-${offer.offerId}`;
   const descId = `${radioId}-desc`;
 
@@ -50,10 +50,21 @@ export function OfferOption({ offer, recommendedLabel }: OfferOptionProps) {
             </span>
           ) : null}
         </span>
-        <span className="mt-0.5 block type-body text-text-secondary">{offer.dataAmount}</span>
-        <span className="mt-1 block type-caption text-text-secondary">
-          {t(price.key, price.args)}
+        <span className="mt-1 flex items-baseline justify-between gap-2">
+          <span className="type-body text-text-secondary">{offer.dataAmount}</span>
+          <span className="type-title text-text-primary tabular-nums">{price}</span>
         </span>
+        {offer.validityDays != null ? (
+          <span className="mt-1 block type-caption text-text-primary">
+            {offer.autoRenew === true
+              ? t("onboarding.plan.renewNote", "Renews every {{days}} days · cancel anytime", {
+                  days: offer.validityDays,
+                })
+              : t("onboarding.plan.validNote", "Valid for {{days}} days", {
+                  days: offer.validityDays,
+                })}
+          </span>
+        ) : null}
         {offer.euRoaming === true ? (
           <span className="mt-1 block type-caption text-text-secondary">
             {t("onboarding.plan.euRoaming", "EU roaming included")}

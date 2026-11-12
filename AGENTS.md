@@ -84,3 +84,4 @@ backend; every other system is mocked behind a seam). The design system is
   `{ok:false}` becomes a thrown `SeamFailure`. The UI imports only `{ api, SeamFailure }`.
 - **Driver flip by env** is confined to `driver-config.ts` (`VITE_<SEAM>_DRIVER`, default mock).
   TMF mapping lives ONLY in a seam's `*-http.ts` client — never in the seam, a rule, or the UI.
+- Onboarding step access is decided by the pure resolver in `src/lib/onboarding-guard.ts`, applied in the /onboarding layout on route change — keeps deep links from skipping steps.

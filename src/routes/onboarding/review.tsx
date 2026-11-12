@@ -12,7 +12,7 @@ import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
-import { offerPriceLabel } from "@/lib/format";
+import { formatMsisdn, offerPriceLabel } from "@/lib/format";
 import { runOnboardingSubmit, type SubmitStep } from "@/lib/onboarding-submit";
 
 export const Route = createFileRoute("/onboarding/review")({
@@ -133,7 +133,7 @@ function ReviewPage() {
             />
             <SummaryRow
               label={t("onboarding.review.number", "Number")}
-              value={state.reservedMsisdn ?? "—"}
+              value={state.reservedMsisdn ? formatMsisdn(state.reservedMsisdn) : "—"}
               onChange={() => navigate({ to: "/onboarding/number" })}
               changeLabel={t("onboarding.review.change", "Change")}
               busy={busy}
@@ -171,7 +171,7 @@ function ReviewPage() {
           ) : null}
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/number" })}
+            onBack={() => navigate({ to: "/onboarding/details" })}
             onContinue={() => void confirm()}
             continueLabel={t("onboarding.review.confirm", "Confirm and activate")}
             continueDisabled={!complete}

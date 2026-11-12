@@ -66,8 +66,9 @@
     "welcome": {
       "title": "Willkommen bei {{brand}}",
       "subtitle": "In wenigen klaren Schritten vom Besuch zum aktiven Prepaid-Kunden.",
-      "body": "Tarif wählen, Konto erstellen, Nummer sichern und bestätigen — du kannst jederzeit zurück.",
-      "cta": "Tarife ansehen"
+      "body": "Tarif wählen, Nummer aussuchen, Konto anlegen und bestätigen — du kannst jederzeit zurück.",
+      "cta": "Tarife ansehen",
+      "prepaidNote": "Kein Vertrag, keine Überraschungen: Dein Tarif startet mit der ersten Aufladung, und du kannst jederzeit aufhören."
     },
     "plan": {
       "title": "Tarif wählen",
@@ -100,7 +101,11 @@
           "light": "Für leichtere Nutzung reicht ein Starter-Tarif locker.",
           "default": "Basierend auf deinen Antworten passt dieser gut."
         }
-      }
+      },
+      "disabledHint": "Wähl einen Tarif, um fortzufahren.",
+      "paymentNote": "Wertkarte ohne Vertrag: Du zahlst nur, wenn du aufladest, und kannst jederzeit kündigen.",
+      "renewNote": "Verlängert sich alle {{days}} Tage · jederzeit kündbar",
+      "validNote": "{{days}} Tage gültig"
     },
     "account": {
       "title": "Konto erstellen",
@@ -146,7 +151,9 @@
       "subtitle": "Wähl eine neue Handynummer, wir halten sie für dich.",
       "empty": "Zurzeit sind keine Nummern verfügbar.",
       "reserve": "Diese Nummer reservieren",
-      "listLabel": "Verfügbare Nummern"
+      "listLabel": "Verfügbare Nummern",
+      "disabledHint": "Wähl eine Nummer, um fortzufahren.",
+      "holdNote": "Wir halten deine Nummer für dich reserviert, bis du fertig bist."
     },
     "review": {
       "title": "Prüfen und aktivieren",
@@ -175,7 +182,9 @@
       "titleNoName": "Alles erledigt",
       "subtitle": "Dein Tarif ist aktiv.",
       "balanceEmpty": "Du hast noch kein Guthaben — lad zum ersten Mal auf, um deinen Tarif zu nutzen.",
-      "goToPlan": "Zu meinem Tarif"
+      "goToPlan": "Zu meinem Tarif",
+      "topUp": "Jetzt aufladen",
+      "later": "Vielleicht später"
     }
   }
 }

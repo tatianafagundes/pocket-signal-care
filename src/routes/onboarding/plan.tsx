@@ -77,6 +77,12 @@ function PlanPage() {
         </p>
       ) : (
         <>
+          <p className="mb-4 rounded-card bg-accent-tint p-3 type-caption text-accent-ink">
+            {t(
+              "onboarding.plan.paymentNote",
+              "Prepaid, no contract: you only pay when you top up, and you can cancel anytime.",
+            )}
+          </p>
           <div className="mb-4">
             <AssistPanel offers={offersQuery.data} onSuggest={selectOffer} />
           </div>
@@ -97,8 +103,9 @@ function PlanPage() {
 
           <WizardNav
             onBack={() => navigate({ to: "/onboarding/welcome" })}
-            onContinue={() => navigate({ to: "/onboarding/account" })}
+            onContinue={() => navigate({ to: "/onboarding/number" })}
             continueDisabled={state.selectedOfferId == null}
+            disabledHint={t("onboarding.plan.disabledHint", "Choose a plan to continue.")}
           />
         </>
       )}

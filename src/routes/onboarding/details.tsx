@@ -59,7 +59,7 @@ function DetailsPage() {
 
   function onSubmit(values: Values) {
     patch({ givenName: values.givenName, familyName: values.familyName });
-    void navigate({ to: "/onboarding/number" });
+    void navigate({ to: "/onboarding/review" });
   }
 
   return (

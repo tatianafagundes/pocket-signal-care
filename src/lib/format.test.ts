@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatPrice, offerPriceLabel } from "@/lib/format";
+import { formatMsisdn, formatPrice, offerPriceLabel } from "@/lib/format";
 import type { Offer } from "@/services/model";
 
 /*
@@ -58,5 +58,14 @@ describe("offerPriceLabel (B4 — a price states its nature)", () => {
   it("formats the price in the active locale", () => {
     const label = offerPriceLabel({ ...baseOffer, validityDays: 30, autoRenew: true }, "de-AT");
     expect(label.args.price).toBe("€\u00A014,90");
+  });
+});
+
+describe("formatMsisdn", () => {
+  it("should group an Austrian mobile number for reading", () => {
+    expect(formatMsisdn("+4368140000001")).toBe("+43 681 4000 0001");
+  });
+  it("should leave a non-Austrian number unchanged", () => {
+    expect(formatMsisdn("+491701234567")).toBe("+491701234567");
   });
 });

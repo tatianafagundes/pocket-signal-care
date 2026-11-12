@@ -20,6 +20,8 @@ interface WizardNavProps {
   continueDisabled?: boolean;
   /** Override the Continue label (e.g. "Confirm and activate" on review). */
   continueLabel?: string;
+  /** Short reason shown under the buttons while Continue is disabled. */
+  disabledHint?: string;
   /** Busy state — labels Continue and blocks double submits. */
   busy?: boolean;
 }
@@ -31,11 +33,13 @@ export function WizardNav({
   continueDisabled = false,
   continueLabel,
   busy = false,
+  disabledHint,
 }: WizardNavProps) {
   const { t } = useLocalizedTranslation();
 
   return (
-    <div className="mt-6 flex items-center gap-3">
+    <div className="sticky bottom-0 -mx-5 -mb-5 mt-6 rounded-b-card border-t border-hairline bg-surface px-5 py-3">
+      <div className="flex items-center gap-3">
       {onBack ? (
         <Button type="button" variant="ghost" onClick={onBack} disabled={busy}>
           {t("onboarding.nav.back", "Back")}
@@ -50,6 +54,10 @@ export function WizardNav({
       >
         {continueLabel ?? t("onboarding.nav.continue", "Continue")}
       </Button>
+      </div>
+      {continueDisabled && !busy && disabledHint ? (
+        <p className="mt-2 text-right type-caption text-text-secondary">{disabledHint}</p>
+      ) : null}
     </div>
   );
 }

@@ -57,3 +57,14 @@ export function offerPriceLabel(offer: Offer, locale: Locale): PriceLabel {
   }
   return { key: "onboarding.plan.priceOnce", args: { price, days: offer.validityDays } };
 }
+
+/**
+ * Group an E.164 Austrian mobile number for reading: "+4368140000001" → "+43 681 4000 0001".
+ * Anything that is not a +43 number is returned unchanged.
+ */
+export function formatMsisdn(msisdn: string): string {
+  const m = /^\+43(\d{3})(\d+)$/.exec(msisdn);
+  if (!m) return msisdn;
+  const rest = (m[2] ?? "").replace(/(\d{4})(?=\d)/g, "$1 ");
+  return `+43 ${m[1] ?? ""} ${rest}`;
+}

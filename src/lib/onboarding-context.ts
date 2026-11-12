@@ -21,9 +21,9 @@ import type { TenantId } from "@/lib/tenant-rules";
 export const ONBOARDING_STEPS = [
   "welcome",
   "plan",
+  "number",
   "account",
   "details",
-  "number",
   "review",
   "success",
 ] as const;

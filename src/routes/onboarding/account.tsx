@@ -172,7 +172,7 @@ function AccountPage() {
           />
 
           <WizardNav
-            onBack={() => navigate({ to: "/onboarding/plan" })}
+            onBack={() => navigate({ to: "/onboarding/number" })}
             continueType="submit"
             busy={form.formState.isSubmitting}
           />

@@ -1,16 +1,15 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 
 import { OnboardingProvider } from "@/components/onboarding-provider";
+import { useOnboarding } from "@/hooks/use-onboarding";
+import { ONBOARDING_STEPS, type OnboardingStep } from "@/lib/onboarding-context";
+import { resolveOnboardingStep } from "@/lib/onboarding-guard";
 
 /*
- * Onboarding layout route (/onboarding). (Spec Fase 5 / Req 1)
- *
- * The parent of every wizard step. It mounts the OnboardingProvider once, so the shared wizard
- * state (and its sessionStorage persistence) lives for the whole flow and survives navigation
- * between steps. The individual steps render through <Outlet />.
- *
- * Visiting /onboarding with no step is not a page itself — the welcome step is /onboarding/welcome.
- * (A redirect from the bare path to /welcome can be added with the entry CTA in Fase D.)
+ * Onboarding layout route (/onboarding). Mounts the OnboardingProvider once so wizard state lives
+ * for the whole flow, and guards deep links: a step that isn't reachable yet redirects to the
+ * first unfinished step.
  */
 export const Route = createFileRoute("/onboarding")({
   component: OnboardingLayout,
@@ -19,7 +18,29 @@ export const Route = createFileRoute("/onboarding")({
 function OnboardingLayout() {
   return (
     <OnboardingProvider>
+      <StepGuard />
       <Outlet />
     </OnboardingProvider>
   );
+}
+
+function StepGuard() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { state } = useOnboarding();
+  const navigate = useNavigate();
+
+  // Evaluate on route change only: success resets the state after it mounts, which must not
+  // bounce the user away from the success screen.
+  useEffect(() => {
+    const segment = pathname.split("/")[2] ?? "";
+    if (!(ONBOARDING_STEPS as readonly string[]).includes(segment)) return;
+    const target = segment as OnboardingStep;
+    const allowed = resolveOnboardingStep(target, state);
+    if (allowed !== target) {
+      void navigate({ to: `/onboarding/${allowed}`, replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  return null;
 }
