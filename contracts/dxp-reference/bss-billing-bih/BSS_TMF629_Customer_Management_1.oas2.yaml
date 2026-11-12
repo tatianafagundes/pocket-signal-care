@@ -1,0 +1,2005 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: ericsson@example.com
+    name: API Support
+    url: http://www.ericsson.com/support
+  description: |2-
+
+    # Introduction
+
+    This document is inspired on TMF629 Customer Management API REST Specification - Release 19.0.1
+
+    The API performs the following operations on Customer:
+
+    - Create Customer
+
+    - List Customer
+
+    - Read Customer
+
+    - Update Customer
+
+    The target group:
+
+    - Solution Integrators
+
+    ## Transfer Mechanism
+
+    The transfer mechanism used is HTTPS. Both HTTP requests and HTTP responses use headers to send information about the HTTP message.
+    The access port is configurable. Clients that use this interface should support a configurable port.
+
+    ## Authentication and Authorization
+
+    Authentication is controlled by the inclusion of a Java Web Token (JWT) in the authorization header of the HTTP message.
+
+    ## HTTP Content Negotiation
+
+    HTTP content negotiation uses versioning in the URL to request a certain version of the resource representation.
+
+    ## BSS TMF629 Customer Management REST Interface
+
+    The BSS TMF629 Customer Management REST Interface provides a standardized mechanism
+    for the retrieval and management of customer information. A customer can be a person,
+    an organization, or a service provider who buys or resells products from an enterprise,
+    or receives free offers or services. This API handles the customer resource by providing
+    information and by allowing the management of identification and financial information
+    about a given customer.
+
+    ### Resources
+
+    - Customer
+
+    ## References
+
+    - RFC 7230 - HTTP Message syntax and Routing
+
+    - RFC 7231 - HTTP Semantics and Content
+
+    - RFC 2818 - HTTP Over TLS
+
+    - RFC 2616 - Hypertext Transfer Protocol - HTTP/1.1
+
+    - RFC 7807 - Problem Details for HTTP APIs
+
+    - RFC 2396 - Uniform Resource Identifiers (URI) - Generic Syntax
+
+    ## Contact
+  license:
+    name: Ericsson Internal
+    url: http://www.ericsson.com
+  title: BSS TMF629 Customer Management REST Interface 1
+  version: 1.0.0
+  x-api-id: a21c7137-d13f-41a5-8143-499c9febf7bc
+  x-audience: company-internal
+  x-doc-type: interface-description
+  x-doc-no: 1/155 19-CAF 101 631/1
+  x-doc-rev: T
+  x-doc-date-time: 2023-04-10T00:00:00Z
+servers:
+- description: The production API server
+  url: "{scheme}://{host}:{port}/{basePath}"
+  variables:
+    scheme:
+      default: https
+      description: request scheme
+      enum:
+      - http
+      - https
+    host:
+      default: host
+      description: this value is assigned by the service provider.
+    port:
+      default: "8443"
+      description: the port of the service
+    basePath:
+      default: CustomerManagement/v1
+      description: Base path options
+security:
+- bearerAuth: []
+tags:
+- description: Customer operations.
+  name: customer
+paths:
+  /customer:
+    get:
+      description: This operation list or find Customer entities
+      operationId: listCustomer
+      parameters:
+      - description: The cost center from the customer
+        example: DEFCOSTCTR
+        explode: true
+        in: query
+        name: costCenter
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: |-
+          A word, term, or phrase by which the Customer is known and
+          distinguished from other Customers.
+        example: Customer CUST0000337087
+        explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          $ref: '#/components/schemas/String128'
+        style: form
+      - description: The status from the customer
+        example: interested
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          $ref: '#/components/schemas/String32'
+        style: form
+      - description: External Id for the customer
+        example: ext334889
+        explode: true
+        in: query
+        name: externalCustomerId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: External Customer Set Id. Applied for segmentation of customer
+        example: "1"
+        explode: true
+        in: query
+        name: externalCustomerSetId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: The customer group
+        example: "2"
+        explode: true
+        in: query
+        name: customerGroup
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: |-
+          Requested number of the sub-resource Agreement to be provided in response requested by client.
+          The maximum number of the sub-resource Agreement to be provided per Customer is also limited by
+          configuration in the back end application. If not specified the limit configured in the back end
+          application applies.
+        example: 5
+        explode: true
+        in: query
+        name: agreementLimit
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: |-
+          Enable searching using case sensitive strings. The attribute applicable for case-sensitive
+          searching might depend on configuration on the underlying system.
+          Default value is 'true'.
+        example: false
+        explode: true
+        in: query
+        name: matchCase
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - description: Requested index for start of resources to be provided in response
+        example: 0
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: Requested number of resources to be provided in response
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listCustomersResponse:
+                  $ref: '#/components/examples/listCustomersResponse'
+                belEbListCustomersResponse:
+                  $ref: '#/components/examples/belEbListCustomersResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/Customer'
+                type: array
+          description: OK
+        "206":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listCustomersResponse:
+                  $ref: '#/components/examples/listCustomersResponse'
+                belEbListCustomersResponse:
+                  $ref: '#/components/examples/belEbListCustomersResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/Customer'
+                type: array
+          description: Partial Content
+          headers:
+            X-Total-Count:
+              description: Total number of items matching criteria
+              explode: false
+              schema:
+                type: integer
+              style: simple
+            X-Result-Count:
+              description: Actual number of items returned in the response body
+              explode: false
+              schema:
+                type: integer
+              style: simple
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: List or find Customer objects
+      tags:
+      - customer
+      x-swagger-router-controller: CustomerController
+    post:
+      description: This operation creates a Customer entity.
+      operationId: createCustomer
+      parameters:
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              createCustomerRequest:
+                $ref: '#/components/examples/createCustomerRequest'
+              belEbCreateCustomerRequest:
+                $ref: '#/components/examples/belEbCreateCustomerRequest'
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+        description: The Customer to be created
+        required: true
+      responses:
+        "201":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                createCustomerResponse:
+                  $ref: '#/components/examples/createCustomerResponse'
+                belEbCreateCustomerResponse:
+                  $ref: '#/components/examples/belEbCreateCustomerResponse'
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: Created
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Creates a Customer
+      tags:
+      - customer
+      x-swagger-router-controller: CustomerController
+      x-validation-groups:
+      - org.springframework.web.bind.annotation.PostMapping
+  /customer/{id}:
+    get:
+      description: This operation retrieves a Customer entity. Attribute selection
+        is enabled for all first level attributes.
+      operationId: retrieveCustomer
+      parameters:
+      - description: Identifier of the Customer
+        example: CUST0000334870
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: The business unit from the customer
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnit
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: |-
+          Requested number of the sub-resource Agreement to be provided in response requested by client.
+          The maximum number of the sub-resource Agreement to be provided per Customer is also limited by
+          configuration in the back end application. If not specified the limit configured in the back end
+          application applies.
+        example: 5
+        explode: true
+        in: query
+        name: agreementLimit
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                readCustomerResponse:
+                  $ref: '#/components/examples/readCustomerResponse'
+                belEbReadCustomerResponse:
+                  $ref: '#/components/examples/belEbReadCustomerResponse'
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Retrieves a Customer by ID
+      tags:
+      - customer
+      x-swagger-router-controller: CustomerController
+    patch:
+      description: This operation updates partially a Customer entity.
+      operationId: patchCustomer
+      parameters:
+      - description: Identifier of the Customer
+        example: CUST0000334870
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              updateCustomerRequest:
+                $ref: '#/components/examples/updateCustomerRequest'
+              updateCustomerStatusRequest:
+                $ref: '#/components/examples/updateCustomerStatusRequest'
+              belEbUpdateCustomerRequest:
+                $ref: '#/components/examples/belEbUpdateCustomerRequest'
+              belEbUpdateCustomerStatusRequest:
+                $ref: '#/components/examples/belEbUpdateCustomerStatusRequest'
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+        description: The Customer to be updated
+        required: true
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                updateCustomerResponse:
+                  $ref: '#/components/examples/updateCustomerResponse'
+                updateCustomerStatusResponse:
+                  $ref: '#/components/examples/updateCustomerStatusResponse'
+                belEbUpdateCustomerResponse:
+                  $ref: '#/components/examples/belEbUpdateCustomerResponse'
+                belEbUpdateCustomerStatusResponse:
+                  $ref: '#/components/examples/belEbUpdateCustomerStatusResponse'
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Updates partially a Customer
+      tags:
+      - customer
+      x-swagger-router-controller: CustomerController
+      x-validation-groups:
+      - org.springframework.web.bind.annotation.PatchMapping
+components:
+  examples:
+    listCustomersResponse:
+      description: (Status Code 200)
+      summary: List Customers
+      value:
+      - name: Customer CUST0000337087
+        externalCustomerId: ext334889
+        externalCustomerSetId: "1"
+        password: '***'
+        engagedParty:
+          id: CUST0000348518
+          '@referredType': Individual
+          href: /dmpPartyManagement/v1/individual/CUST0000348518
+        creditProfile:
+        - creditAmount:
+            value: 0.0
+            unit: EUR
+        areaRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /dmpReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /dmpReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000348518
+        href: /dmpCustomerManagement/v1/customer/CUST0000348518
+        status: interested
+        statusTimestamp: 2021-04-15T11:58:26-03:00
+        statusReason: "7"
+        validFor:
+          startDateTime: 2021-04-15T11:58:26-03:00
+        collectionIndicator: true
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000348518
+          href: /dmpAccountManagement/v1/partyAccount/CUST0000348518
+        statusReasonRef:
+          id: "7"
+          href: /dmpReferenceDataManagement/v1/statusReason/7
+        remark: Remark value
+        dunningMode: DM1
+        isExcludedFromDunning: false
+        characteristic:
+        - name: CustomerWord
+          valueType: A
+          value: CustomerValue
+        - name: CustomerNumber
+          valueType: "N"
+          value: "1122"
+    belEbListCustomersResponse:
+      description: (Status Code 200)
+      summary: List Customers
+      value:
+      - name: Customer CUST0000337087
+        externalCustomerId: ext334889
+        externalCustomerSetId: "1"
+        password: '***'
+        engagedParty:
+          id: CUST0000348518
+          '@referredType': Individual
+          href: /belEbPartyManagement/v1/individual/CUST0000348518
+        creditProfile:
+        - creditAmount:
+            value: 0.0
+            unit: EUR
+        areaRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /belEbReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /belEbReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000348518
+        href: /belEbCustomerManagement/v1/customer/CUST0000348518
+        status: interested
+        statusTimestamp: 2021-04-15T11:58:26-03:00
+        statusReason: "7"
+        validFor:
+          startDateTime: 2021-04-15T11:58:26-03:00
+        collectionIndicator: true
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000348518
+          href: /belEbAccountManagement/v1/partyAccount/CUST0000348518
+        statusReasonRef:
+          id: "7"
+          href: /belEbReferenceDataManagement/v1/statusReason/7
+        remark: Remark value
+        dunningMode: DM1
+        isExcludedFromDunning: false
+        characteristic:
+        - name: CustomerWord
+          valueType: A
+          value: CustomerValue
+        - name: CustomerNumber
+          valueType: "N"
+          value: "1122"
+    createCustomerRequest:
+      description: "POST {{base_url}}/dmpCustomerManagement/v1/customer"
+      summary: Create Customer
+      value:
+        engagedParty:
+          '@referredType': Individual
+          id: CUST0000356668
+        name: Customer CUST0000356668
+        password: "123456"
+        businessUnitRef:
+          id: CSGBU
+        areaRef:
+          id: "2"
+        customerGroupRef:
+          id: "2"
+        customerCategoryRef:
+          id: CUST
+        currencyRef:
+          id: EUR
+        costCenterRef:
+          id: DEFCOSTCTR
+        externalCustomerId: ext334889
+        externalCustomerSetId: "10"
+        creditProfile:
+        - creditScore: 100
+          creditAgencyType: internal
+        remark: Remark value
+        isExcludedFromDunning: false
+        characteristic:
+        - name: CustomerWord
+          value: Hello
+        isAgreementResponsible: true
+    belEbCreateCustomerRequest:
+      description: "POST {{base_url}}/belEbCustomerManagement/v1/customer"
+      summary: Create Customer
+      value:
+        engagedParty:
+          '@referredType': Individual
+          id: CUST0000356668
+        name: Customer CUST0000356668
+        password: "123456"
+        businessUnitRef:
+          id: CSGBU
+        areaRef:
+          id: "2"
+        customerGroupRef:
+          id: "2"
+        customerCategoryRef:
+          id: CUST
+        currencyRef:
+          id: EUR
+        costCenterRef:
+          id: DEFCOSTCTR
+        externalCustomerId: ext334889
+        externalCustomerSetId: "10"
+        creditProfile:
+        - creditScore: 100
+          creditAgencyType: internal
+        remark: Remark value
+        isExcludedFromDunning: false
+        characteristic:
+        - name: CustomerWord
+          value: Hello
+        isAgreementResponsible: true
+    createCustomerResponse:
+      description: (Status Code 201)
+      summary: Create Customer Associated with an Individual
+      value:
+        name: Customer CUST0000356668
+        externalCustomerId: ext334889
+        externalCustomerSetId: "10"
+        password: '***'
+        engagedParty:
+          id: CUST0000356668
+          '@referredType': Individual
+          href: /dmpPartyManagement/v1/individual/CUST0000356668
+        creditProfile:
+        - creditAgencyType: internal
+          creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 100
+        areaRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /dmpReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /dmpReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000356668
+        href: /dmpCustomerManagement/v1/customer/CUST0000356668
+        status: interested
+        statusTimestamp: 2021-05-18T14:39:31-03:00
+        statusReason: "7"
+        validFor:
+          startDateTime: 2021-05-18T14:39:31-03:00
+        collectionIndicator: false
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000356668
+          href: /dmpAccountManagement/v1/partyAccount/CUST0000356668
+        statusReasonRef:
+          id: "7"
+          href: /dmpReferenceDataManagement/v1/statusReason/7
+        remark: Remark value
+        dunningMode: DM1
+        isExcludedFromDunning: false
+        characteristic:
+        - name: CustomerWord
+          value: Hello
+          valueType: A
+    belEbCreateCustomerResponse:
+      description: (Status Code 201)
+      summary: Create Customer Associated with an Individual
+      value:
+        name: Customer CUST0000356668
+        externalCustomerId: ext334889
+        externalCustomerSetId: "10"
+        password: '***'
+        engagedParty:
+          id: CUST0000356668
+          '@referredType': Individual
+          href: /belEbPartyManagement/v1/individual/CUST0000356668
+        creditProfile:
+        - creditAgencyType: internal
+          creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 100
+        areaRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /belEbReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /belEbReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000356668
+        href: /belEbCustomerManagement/v1/customer/CUST0000356668
+        status: interested
+        statusTimestamp: 2021-05-18T14:39:31-03:00
+        statusReason: "7"
+        validFor:
+          startDateTime: 2021-05-18T14:39:31-03:00
+        collectionIndicator: false
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000356668
+          href: /belEbAccountManagement/v1/partyAccount/CUST0000356668
+        statusReasonRef:
+          id: "7"
+          href: /belEbReferenceDataManagement/v1/statusReason/7
+        remark: Remark value
+        dunningMode: DM1
+        isExcludedFromDunning: false
+        characteristic:
+        - name: CustomerWord
+          value: Hello
+          valueType: A
+    readCustomerResponse:
+      description: (Status Code 200)
+      summary: Read Customer
+      value:
+        name: Customer CUST0000003613
+        externalCustomerId: ext003613
+        externalCustomerSetId: "3"
+        engagedParty:
+          id: CUST0000003613
+          '@referredType': Individual
+          href: /dmpPartyManagement/v1/individual/CUST0000003613
+        creditProfile:
+        - creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 100
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/customerGroup/1?businessUnit=CSGBU
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /dmpReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000003613
+        href: /dmpCustomerManagement/v1/customer/CUST0000003613
+        status: active
+        statusTimestamp: 2020-05-27T10:54:44-03:00
+        statusReason: "1"
+        validFor:
+          startDateTime: 2020-05-27T10:54:44-03:00
+        agreementListComplete: true
+        collectionIndicator: false
+        isAgreementResponsible: true
+        agreement:
+        - id: CONTR0000000023
+          href: /dmpAgreementManagement/v1/agreement/CONTR0000000023
+        account:
+        - id: CUST0000003613
+          href: /dmpAccountManagement/v1/partyAccount/CUST0000003613
+        - id: BA0000175988
+          href: /dmpAccountManagement/v1/billingAccount/BA0000175988?relatedPartyId=CUST0000003613
+        - id: BA0000001496
+          href: /dmpAccountManagement/v1/billingAccount/BA0000001496?relatedPartyId=CUST0000003613
+        paymentMethod:
+        - id: "1741"
+          href: /dmpPaymentMethods/v1/paymentMethod/1741?relatedPartyId=CUST0000003613
+        statusReasonRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/statusReason/1
+        characteristic:
+        - name: CustomerWord
+          valueType: A
+          value: CustomerValue
+        - name: CustomerNumber
+          valueType: "N"
+          value: "1122"
+        dunningMode: DM1
+    belEbReadCustomerResponse:
+      description: (Status Code 200)
+      summary: Read Customer
+      value:
+        name: Customer CUST0000003613
+        externalCustomerId: ext003613
+        externalCustomerSetId: "3"
+        engagedParty:
+          id: CUST0000003613
+          '@referredType': Individual
+          href: /belEbPartyManagement/v1/individual/CUST0000003613
+        creditProfile:
+        - creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 100
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/customerGroup/1?businessUnit=CSGBU
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /belEbReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000003613
+        href: /belEbCustomerManagement/v1/customer/CUST0000003613
+        status: active
+        statusTimestamp: 2020-05-27T10:54:44-03:00
+        statusReason: "1"
+        validFor:
+          startDateTime: 2020-05-27T10:54:44-03:00
+        agreementListComplete: true
+        collectionIndicator: false
+        isAgreementResponsible: true
+        agreement:
+        - id: CONTR0000000023
+          href: /belEbAgreementManagement/v1/agreement/CONTR0000000023
+        account:
+        - id: CUST0000003613
+          href: /belEbAccountManagement/v1/partyAccount/CUST0000003613
+        - id: BA0000175988
+          href: /belEbAccountManagement/v1/billingAccount/BA0000175988?relatedPartyId=CUST0000003613
+        - id: BA0000001496
+          href: /belEbAccountManagement/v1/billingAccount/BA0000001496?relatedPartyId=CUST0000003613
+        paymentMethod:
+        - id: "1741"
+          href: /belEbPaymentMethods/v1/paymentMethod/1741?relatedPartyId=CUST0000003613
+        statusReasonRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/statusReason/1
+        characteristic:
+        - name: CustomerWord
+          valueType: A
+          value: CustomerValue
+        - name: CustomerNumber
+          valueType: "N"
+          value: "1122"
+        dunningMode: DM1
+    updateCustomerRequest:
+      description: "PATCH {{base_url}}/dmpCustomerManagement/v1/customer/CUST0000356151"
+      summary: Update Customer
+      value:
+        name: Customer Update CUST0000356151
+        businessUnitRef:
+          id: CSGBU
+        areaRef:
+          id: "2"
+        customerGroupRef:
+          id: "2"
+        customerCategoryRef:
+          id: CUST
+        currencyRef:
+          id: EUR
+        costCenterRef:
+          id: DEFCOSTCTR
+        externalCustomerId: ext334872
+        externalCustomerSetId: "6"
+        status: interested
+        statusReason: "7"
+        password: password
+        creditProfile:
+        - creditScore: 600
+          creditScoreDeterminationType: true
+          creditAgencyType: external
+        remark: New remark value
+        isExcludedFromDunning: true
+        characteristic:
+        - name: CustomerWord
+          value: NewValue
+        isAgreementResponsible: true
+    updateCustomerStatusRequest:
+      description: "PATCH {{base_url}}/dmpCustomerManagement/v1/customer/CUST0000356151"
+      summary: Update Customer Status
+      value:
+        status: active
+        statusReason: "1"
+    belEbUpdateCustomerRequest:
+      description: "PATCH {{base_url}}/belEbCustomerManagement/v1/customer/CUST0000356151"
+      summary: Update Customer
+      value:
+        name: Customer Update CUST0000356151
+        businessUnitRef:
+          id: CSGBU
+        areaRef:
+          id: "2"
+        customerGroupRef:
+          id: "2"
+        customerCategoryRef:
+          id: CUST
+        currencyRef:
+          id: EUR
+        costCenterRef:
+          id: DEFCOSTCTR
+        externalCustomerId: ext334872
+        externalCustomerSetId: "6"
+        status: interested
+        statusReason: "7"
+        password: password
+        creditProfile:
+        - creditScore: 600
+          creditScoreDeterminationType: true
+          creditAgencyType: external
+        remark: New remark value
+        isExcludedFromDunning: true
+        characteristic:
+        - name: CustomerWord
+          value: NewValue
+        isAgreementResponsible: true
+    belEbUpdateCustomerStatusRequest:
+      description: "PATCH {{base_url}}/belEbCustomerManagement/v1/customer/CUST0000356151"
+      summary: Update Customer Status
+      value:
+        status: active
+        statusReason: "1"
+    updateCustomerResponse:
+      description: (Status Code 200)
+      summary: Update Customer
+      value:
+        name: Customer Update CUST0000356151
+        externalCustomerId: ext334872
+        externalCustomerSetId: "6"
+        password: '***'
+        engagedParty:
+          id: CUST0000356151
+          '@referredType': Individual
+          href: /dmpPartyManagement/v1/individual/CUST0000356151
+        creditProfile:
+        - creditAgencyType: external
+          creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 600
+        areaRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /dmpReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /dmpReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000356151
+        href: /dmpCustomerManagement/v1/customer/CUST0000356151
+        status: interested
+        statusTimestamp: 2021-05-15T14:27:28-03:00
+        statusReason: "7"
+        validFor:
+          startDateTime: 2021-05-15T14:27:28-03:00
+        collectionIndicator: false
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000356151
+          href: /dmpAccountManagement/v1/partyAccount/CUST0000356151
+        statusReasonRef:
+          id: "7"
+          href: /dmpReferenceDataManagement/v1/statusReason/7
+        remark: New remark value
+        dunningMode: DM1
+        isExcludedFromDunning: true
+        characteristic:
+        - name: CustomerWord
+          value: NewValue
+          valueType: A
+    updateCustomerStatusResponse:
+      description: (Status Code 200)
+      summary: Update Customer Status
+      value:
+        name: Customer CUST0000356151
+        externalCustomerId: ext334872
+        externalCustomerSetId: "6"
+        password: '***'
+        engagedParty:
+          id: CUST0000356151
+          '@referredType': Individual
+          href: /dmpPartyManagement/v1/individual/CUST0000356151
+        creditProfile:
+        - creditAgencyType: external
+          creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 600
+        areaRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /dmpReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /dmpReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /dmpReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000356151
+        href: /dmpCustomerManagement/v1/customer/CUST0000356151
+        status: active
+        statusTimestamp: 2021-05-15T14:27:28-03:00
+        statusReason: "1"
+        validFor:
+          startDateTime: 2021-05-15T14:27:28-03:00
+        collectionIndicator: false
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000356151
+          href: /dmpAccountManagement/v1/partyAccount/CUST0000356151
+        statusReasonRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/statusReason/1
+        remark: Remark value
+        dunningMode: DM1
+        isExcludedFromDunning: true
+        characteristic:
+        - name: CustomerWord
+          value: Value
+          valueType: A
+    belEbUpdateCustomerResponse:
+      description: (Status Code 200)
+      summary: Update Customer
+      value:
+        name: Customer Update CUST0000356151
+        externalCustomerId: ext334872
+        externalCustomerSetId: "6"
+        password: '***'
+        engagedParty:
+          id: CUST0000356151
+          '@referredType': Individual
+          href: /belEbPartyManagement/v1/individual/CUST0000356151
+        creditProfile:
+        - creditAgencyType: external
+          creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 600
+        areaRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /belEbReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /belEbReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000356151
+        href: /belEbCustomerManagement/v1/customer/CUST0000356151
+        status: interested
+        statusTimestamp: 2021-05-15T14:27:28-03:00
+        statusReason: "7"
+        validFor:
+          startDateTime: 2021-05-15T14:27:28-03:00
+        collectionIndicator: false
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000356151
+          href: /belEbAccountManagement/v1/partyAccount/CUST0000356151
+        statusReasonRef:
+          id: "7"
+          href: /belEbReferenceDataManagement/v1/statusReason/7
+        remark: New remark value
+        dunningMode: DM1
+        isExcludedFromDunning: true
+        characteristic:
+        - name: CustomerWord
+          value: NewValue
+          valueType: A
+    belEbUpdateCustomerStatusResponse:
+      description: (Status Code 200)
+      summary: Update Customer Status
+      value:
+        name: Customer CUST0000356151
+        externalCustomerId: ext334872
+        externalCustomerSetId: "6"
+        password: '***'
+        engagedParty:
+          id: CUST0000356151
+          '@referredType': Individual
+          href: /belEbPartyManagement/v1/individual/CUST0000356151
+        creditProfile:
+        - creditAgencyType: external
+          creditAmount:
+            value: 0.0
+            unit: EUR
+          creditScore: 600
+        areaRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/area/2
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        customerGroupRef:
+          id: "2"
+          href: /belEbReferenceDataManagement/v1/customerGroup/2?businessUnit=CSGBU
+        customerCategoryRef:
+          id: CUST
+          href: /belEbReferenceDataManagement/v1/customerCategory/CUST
+        costCenterRef:
+          id: DEFCOSTCTR
+          href: /belEbReferenceDataManagement/v1/costCenter/DEFCOSTCTR?businessUnit=CSGBU
+        currencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        '@type': Customer
+        id: CUST0000356151
+        href: /belEbCustomerManagement/v1/customer/CUST0000356151
+        status: active
+        statusTimestamp: 2021-05-15T14:27:28-03:00
+        statusReason: "1"
+        validFor:
+          startDateTime: 2021-05-15T14:27:28-03:00
+        collectionIndicator: false
+        isAgreementResponsible: true
+        account:
+        - id: CUST0000356151
+          href: /belEbAccountManagement/v1/partyAccount/CUST0000356151
+        statusReasonRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/statusReason/1
+        remark: Remark value
+        dunningMode: DM1
+        isExcludedFromDunning: true
+        characteristic:
+        - name: CustomerWord
+          value: Value
+          valueType: A
+  schemas:
+    Id:
+      description: "Public Identifier, max 256 characters."
+      maxLength: 256
+      pattern: ^(?=\s*\S).*$
+      type: string
+    String128:
+      description: String type of max 128 characters
+      maxLength: 128
+      type: string
+    String32:
+      description: String type of max 32 characters
+      maxLength: 32
+      type: string
+    Customer:
+      allOf:
+      - $ref: '#/components/schemas/CustomerBase'
+      - $ref: '#/components/schemas/Customer_allOf'
+      description: Information about the Customer.
+      type: object
+    ErrorMessage:
+      description: Error message schema.
+      properties:
+        code:
+          description: "Application relevant detail, defined in the API or a common\
+            \ list."
+          example: BSS.500
+          type: string
+        reason:
+          description: Explanation of the reason for the error which can be shown
+            to a client user.
+          example: Error communicating with downstream system
+          type: string
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Internal Server Error
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 500
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        instance:
+          description: Request path for this occurrence of the problem.
+          example: /resource/123
+          type: string
+        supplementaryErrors:
+          items:
+            $ref: '#/components/schemas/SupplementaryError'
+          type: array
+      required:
+      - code
+      - reason
+      type: object
+    CustomerCreate:
+      allOf:
+      - $ref: '#/components/schemas/CustomerBase'
+      - $ref: '#/components/schemas/CustomerCreate_allOf'
+      description: Customer Create Request.
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Area", field="areaRef.id", message="Invalid Area")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="BusinessUnitExt", field="businessUnitRef.id", message="Invalid Business Unit")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CustomerCategory", field="customerCategoryRef.id", message="Invalid Customer Category")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CurrencyExt", field="currencyRef.id", message="Invalid Currency")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(
+          entity="CustomerGroup", field="customerGroupRef.id", businessUnitIdPath="businessUnitRef.id",
+          individualIdPath="engagedParty.id", individualIdPathVariableName="", message="Invalid Customer Group")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(
+          entity="CostCenter", field="costCenterRef.id", businessUnitIdPath="businessUnitRef.id",
+          individualIdPath="engagedParty.id", individualIdPathVariableName="", message="Invalid Cost Center")
+        @com.ericsson.bss.bel.dae.partycustomer.validator.ValidatePartyOrCustomerCharacteristicConstraint(message="Invalid characteristic", groups={org.springframework.web.bind.annotation.PostMapping.class})
+    CustomerUpdate:
+      allOf:
+      - $ref: '#/components/schemas/CustomerBase'
+      - $ref: '#/components/schemas/CustomerUpdate_allOf'
+      description: Customer Update Request.
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Area", field="areaRef.id", message="Invalid Area")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="BusinessUnitExt", field="businessUnitRef.id", message="Invalid Business Unit")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CustomerCategory", field="customerCategoryRef.id", message="Invalid Customer Category")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CurrencyExt", field="currencyRef.id", message="Invalid Currency")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(
+          entity="CustomerGroup", field="customerGroupRef.id", businessUnitIdPath="businessUnitRef.id",
+          individualIdPath="engagedParty.id", individualIdPathVariableName="id", message="Invalid Customer Group")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(
+          entity="CostCenter", field="costCenterRef.id", businessUnitIdPath="businessUnitRef.id",
+          individualIdPath="engagedParty.id", individualIdPathVariableName="id", message="Invalid Cost Center")
+        @com.ericsson.bss.bel.dae.partycustomer.validator.ValidatePartyOrCustomerCharacteristicConstraint(message="Invalid characteristic", groups={org.springframework.web.bind.annotation.PatchMapping.class})
+    CustomerBase:
+      description: Customer base atributes common to all customer operations messages.
+      properties:
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        externalCustomerId:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        externalCustomerSetId:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        isAgreementResponsible:
+          description: |-
+            Indicates if the Large Account member is resposible for the Agreement.
+            For flat customers and large account head the default and only possible value is 'true'.
+            For large account members the default value is 'false'.
+          type: boolean
+        password:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        engagedParty:
+          $ref: '#/components/schemas/RelatedPartyBase'
+        creditProfile:
+          items:
+            $ref: '#/components/schemas/CreditProfileBase'
+          type: array
+        areaRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        businessUnitRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        customerGroupRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        customerCategoryRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        costCenterRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        currencyRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        isExcludedFromDunning:
+          description: Indicates whether this billing account is excluded from the
+            dunning process
+          type: boolean
+        remark:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+      type: object
+    CustomerStatus:
+      description: The possible states of a Customer.
+      enum:
+      - active
+      - deactivated
+      - interested
+      - suspended
+      type: string
+    DateTime:
+      description: |-
+        The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+        Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+      format: date-time
+      type: string
+    TimePeriod:
+      description: This type defines a time period value consisting of a startDateTime
+        value and an endDateTime value. The startDateTime is inclusive and endDateTime
+        is exclusive. The startDateTime and endDateTime are not allowed to have the
+        same value. EndDateTime must not be before startDateTime
+      properties:
+        startDateTime:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        endDateTime:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+      type: object
+    RelatedParty:
+      allOf:
+      - $ref: '#/components/schemas/RelatedPartyBase'
+      - $ref: '#/components/schemas/RelatedParty_allOf'
+      description: |-
+        Related Entity Reference used in response messages.
+        A related party defines party or party role linked to a specific entity.
+      type: object
+    CreditProfile:
+      allOf:
+      - $ref: '#/components/schemas/CreditProfileBase'
+      - $ref: '#/components/schemas/CreditProfile_allOf'
+      description: The Credit Profile.
+      type: object
+    AgreementRef:
+      allOf:
+      - $ref: '#/components/schemas/AgreementBaseRef'
+      - $ref: '#/components/schemas/AgreementRef_allOf'
+      description: Reference to Agreement in response messages.
+    AccountRef:
+      description: Reference to Account used in response messages.
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    PaymentMethodRef:
+      description: Reference to PaymentMethod used in response messages.
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    ReferenceDataRef:
+      allOf:
+      - $ref: '#/components/schemas/ReferenceDataBaseRef'
+      - $ref: '#/components/schemas/ReferenceDataRef_allOf'
+      description: ReferenceData response schema.
+      required:
+      - href
+      type: object
+    Characteristic:
+      description: Characteristic attributes.
+      properties:
+        name:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        valueType:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        value:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - name
+      - value
+      - valueType
+      type: object
+    SupplementaryError:
+      description: SupplementaryError message schema.
+      properties:
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Unable to communicate with downstream system
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 404
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        detail:
+          description: |
+            A human readable explanation specific to this occurrence of the problem that is helpful to locate the problem and give advice on how to proceed. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: "HTTP response 404 : when communicating with http://localhost:8081/"
+          type: string
+        action:
+          description: The action causing the error.
+          example: AddressrolesReadService.AddressrolesReadServiceSoap11
+          type: string
+        source:
+          description: The application returning the error.
+          example: eb
+          type: string
+      type: object
+    RelatedPartyCreate:
+      allOf:
+      - $ref: '#/components/schemas/RelatedPartyBase'
+      - $ref: '#/components/schemas/RelatedPartyCreate_allOf'
+      description: |-
+        Related Entity Reference used in create messages.
+        A related party defines party or party role linked to a specific entity.
+      x-members-accessor: true
+    CharacteristicCreate:
+      description: Characteristic create attributes.
+      properties:
+        name:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        value:
+          description: String type of max 64 characters
+          maxLength: 64
+          type: string
+      required:
+      - name
+      - value
+      type: object
+    String256:
+      description: String type of max 256 characters
+      maxLength: 256
+      type: string
+    RelatedPartyUpdate:
+      allOf:
+      - $ref: '#/components/schemas/RelatedPartyBase'
+      - $ref: '#/components/schemas/RelatedPartyUpdate_allOf'
+      description: |-
+        Related Entity Reference used in update messages.
+        A related party defines party or party role linked to a specific entity.
+      x-members-accessor: true
+    CharacteristicUpdate:
+      description: Characteristic update attributes.
+      properties:
+        name:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        value:
+          description: String type of max 64 characters
+          maxLength: 64
+          type: string
+      required:
+      - name
+      - value
+      type: object
+    RelatedPartyBase:
+      description: |-
+        Related Party Base schema common to all operations.
+        A related party defines party or party role linked to a specific entity.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    CreditProfileBase:
+      description: The Credit Profile.
+      properties:
+        creditAgencyType:
+          $ref: '#/components/schemas/CreditAgencyType'
+        creditAmount:
+          $ref: '#/components/schemas/Money'
+        creditProfileDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        creditScore:
+          description: Integer type
+          format: int64
+          maximum: 9223372036854775806
+          minimum: -9223372036854775807
+          type: integer
+        creditScoreDeterminationType:
+          description: Informs if credit score was entered manually.
+          type: boolean
+        creditScoreRemark:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        creditScoreUser:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+      type: object
+    ReferenceDataBaseRef:
+      description: ReferenceData base schema.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    PartyTypes:
+      description: The possible types of party.
+      enum:
+      - Individual
+      - Organization
+      type: string
+    AgreementBaseRef:
+      description: Reference to Agreement in request messages.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+    String64:
+      description: String type of max 64 characters
+      maxLength: 64
+      type: string
+    CreditAgencyType:
+      description: CreditAgencyType Enumeration.
+      enum:
+      - external
+      - internal
+      - "null"
+      type: string
+    Money:
+      description: A base / value business entity used to represent money
+      properties:
+        unit:
+          description: Currency (ISO4217 norm uses 3 letters to define the currency)
+          type: string
+        value:
+          description: A positive floating point number
+          format: float
+          type: number
+      type: object
+    Integer:
+      description: Integer type
+      format: int64
+      maximum: 9223372036854775806
+      minimum: -9223372036854775807
+      type: integer
+    Customer_allOf:
+      properties:
+        '@type':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        status:
+          $ref: '#/components/schemas/CustomerStatus'
+        statusTimestamp:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        statusReason:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        agreementListComplete:
+          description: Indicates if the list of agreements is partial (false) or completed
+            (true).
+          type: boolean
+        collectionIndicator:
+          description: Indicates if the customer is in collection process.
+          type: boolean
+        engagedParty:
+          $ref: '#/components/schemas/RelatedParty'
+        creditProfile:
+          items:
+            $ref: '#/components/schemas/CreditProfile'
+          type: array
+        agreement:
+          items:
+            $ref: '#/components/schemas/AgreementRef'
+          type: array
+        account:
+          items:
+            $ref: '#/components/schemas/AccountRef'
+          type: array
+        paymentMethod:
+          items:
+            $ref: '#/components/schemas/PaymentMethodRef'
+          type: array
+        areaRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        businessUnitRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        customerGroupRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        customerCategoryRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        costCenterRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        currencyRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        statusReasonRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        characteristic:
+          description: Characteristics of the customer
+          items:
+            $ref: '#/components/schemas/Characteristic'
+          type: array
+        dunningMode:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+      required:
+      - '@type'
+      - engagedParty
+      - href
+      - id
+      - name
+      type: object
+      example: null
+    CustomerCreate_allOf:
+      properties:
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        engagedParty:
+          $ref: '#/components/schemas/RelatedPartyCreate'
+        characteristic:
+          description: Characteristics of the customer
+          items:
+            $ref: '#/components/schemas/CharacteristicCreate'
+          type: array
+      required:
+      - engagedParty
+      - name
+      type: object
+      example: null
+    CustomerUpdate_allOf:
+      properties:
+        status:
+          $ref: '#/components/schemas/CustomerStatus'
+        statusReason:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        engagedParty:
+          $ref: '#/components/schemas/RelatedPartyUpdate'
+        collectionIndicator:
+          description: Indicates if the customer is in collection process.
+          type: boolean
+        characteristic:
+          description: Characteristics of the customer
+          items:
+            $ref: '#/components/schemas/CharacteristicUpdate'
+          type: array
+      type: object
+      example: null
+    RelatedParty_allOf:
+      properties:
+        '@referredType':
+          $ref: '#/components/schemas/PartyTypes'
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      type: object
+      example: null
+    CreditProfile_allOf:
+      properties:
+        creditScoreUser:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+      type: object
+      example: null
+    AgreementRef_allOf:
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      type: object
+      example: null
+    ReferenceDataRef_allOf:
+      properties:
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      type: object
+      example: null
+    RelatedPartyCreate_allOf:
+      properties:
+        '@referredType':
+          $ref: '#/components/schemas/PartyTypes'
+      required:
+      - '@referredType'
+      type: object
+      example: null
+    RelatedPartyUpdate_allOf:
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      example: null
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

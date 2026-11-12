@@ -110,3 +110,50 @@ export interface SimValidation {
   /** SIM form when valid. */
   simType?: "physical" | "esim";
 }
+
+/*
+ * Auth (Fase 5 / onboarding-journey Req 4). A new seam, isolated from CPR: the PASSWORD is an
+ * authentication secret and never belongs on party/customer. The mock validates and creates a
+ * fake session; the real driver (Keycloak OIDC, or Supabase) plugs in without changing the UI.
+ */
+
+/** An account = a credential (email) known to the auth seam. NEVER stores the password. */
+export interface Account {
+  email: string;
+  /** ISO date the account was created. */
+  createdAt: string;
+}
+
+/** Where a session came from — lets a real driver refuse a mock session. */
+export type SessionOrigin = "mock" | "keycloak" | "supabase";
+
+/** Result of a successful register/login. Token is fake in the mock; a JWT in the real IdP. */
+export interface Session {
+  token: string;
+  email: string;
+  tenantId: TenantId;
+  /** Discriminant: a real driver MUST reject a session with origin "mock". */
+  origin: SessionOrigin;
+}
+
+/**
+ * Credentials travel UI → auth seam only. The password is validated then discarded — never
+ * persisted, never logged, never sent to the CPR.
+ */
+export interface Credentials {
+  tenantId: TenantId;
+  email: string;
+  password: string;
+  givenName?: string;
+  familyName?: string;
+}
+
+/** Per-criterion password result the UI renders as a checklist (icon + word). */
+export interface PasswordStrength {
+  minLength: boolean;
+  hasUpper: boolean;
+  hasLower: boolean;
+  hasNumber: boolean;
+  /** True when every criterion is met. */
+  ok: boolean;
+}

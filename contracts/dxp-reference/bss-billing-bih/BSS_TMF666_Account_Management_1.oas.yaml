@@ -1,0 +1,3399 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: ericsson@example.com
+    name: API Support
+    url: http://www.ericsson.com/support
+  description: |2-
+
+    # Introduction
+
+    This document is inspired on TMF666 Account Management API REST Specification, Release 19.0.1, November 2019, Version 4.0.1
+
+    The API performs the following operations on Account:
+
+    - Create Billing Account
+
+    - List Billing Account
+
+    - Read Billing Account
+
+    - Update Billing Account
+
+    - List Billing Account Assignment Rule
+
+    - Read Billing Account Assignment Rule
+
+    - Update Billing Cycle
+
+    - Read Party Account
+
+    - Update Party Account
+
+    The target group:
+
+    - Solution Integrators
+
+    ## Transfer Mechanism
+
+    The transfer mechanism used is HTTPS. Both HTTP requests and HTTP responses use headers to send information about the HTTP message.
+    The access port is configurable. Clients that use this interface should support a configurable port.
+
+    ## Authentication and Authorization
+
+    Authentication is controlled by the inclusion of a Java Web Token (JWT) in the authorization header of the HTTP message.
+
+    ## HTTP Content Negotiation
+
+    HTTP content negotiation uses versioning in the URL to request a certain version of the resource representation.
+
+    ## BSS TMF666 Account Management REST Interface
+
+    The BSS TMF666 Account Management REST Interface provides a standardized mechanism for
+    the retrieval and management of billing account information. This API handles the
+    billing account and billing account assignment rule resources by providing information
+    and by allowing the management of a customer billing account and billing account assignment
+    rule.
+
+    ### Resources
+
+    - Billing Account
+
+    - Billing Account Assignment Rule
+
+    - Party Account
+
+    ## References
+
+    - RFC 7230 - HTTP Message syntax and Routing
+
+    - RFC 7231 - HTTP Semantics and Content
+
+    - RFC 2818 - HTTP Over TLS
+
+    - RFC 2616 - Hypertext Transfer Protocol - HTTP/1.1
+
+    - RFC 7807 - Problem Details for HTTP APIs
+
+    - RFC 2396 - Uniform Resource Identifiers (URI) - Generic Syntax
+
+    ## Contact
+  license:
+    name: Ericsson Internal
+    url: http://www.ericsson.com
+  title: BSS TMF666 Account Management REST Interface 1
+  version: 1.0.0
+  x-api-id: 125dabfb-0b87-4838-9dc3-7f923f4299cf
+  x-audience: company-internal
+  x-doc-type: interface-description
+  x-doc-no: 1/155 19-CAF 101 629/1
+  x-doc-rev: U
+  x-doc-date-time: 2023-06-21T00:00:00Z
+servers:
+- description: Developement Server
+  url: "{scheme}://{host}:{port}/{basePath}"
+  variables:
+    scheme:
+      default: https
+      description: request scheme
+      enum:
+      - http
+      - https
+    host:
+      default: host
+      description: "this value is assigned by the service provider, in this example\
+        \ `gigantic-server.com`"
+    port:
+      default: "8443"
+      description: the port of the service
+    basePath:
+      default: AccountManagement/v1
+      description: Base path options
+security:
+- bearerAuth: []
+tags:
+- description: BillingAccount operations.
+  name: billingAccount
+- description: billingAccountAssignmentRule operations.
+  name: billingAccountAssignmentRule
+- description: partyAccount operations.
+  name: partyAccount
+paths:
+  /billingAccount:
+    get:
+      description: This operation list or find BillingAccount entities
+      operationId: listBillingAccount
+      parameters:
+      - description: The public id of the relatedParty owning the billing account.
+          RelatedParty must be specified.
+        example: CUST0000015489
+        explode: true
+        in: query
+        name: relatedPartyId
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: The business unit of the customer.
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnit
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: The indication whether the billing account is primary or secondary.
+        example: false
+        explode: true
+        in: query
+        name: primaryFlag
+        required: false
+        schema:
+          type: boolean
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listBillingAccountsResponse:
+                  $ref: '#/components/examples/listBillingAccountsResponse'
+                belEbListBillingAccountsResponse:
+                  $ref: '#/components/examples/belEbListBillingAccountsResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/BillingAccount'
+                type: array
+          description: OK
+        "206":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listBillingAccountsResponse:
+                  $ref: '#/components/examples/listBillingAccountsResponse'
+                belEbListBillingAccountsResponse:
+                  $ref: '#/components/examples/belEbListBillingAccountsResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/BillingAccount'
+                type: array
+          description: Partial Content
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: List or find BillingAccount objects
+      tags:
+      - billingAccount
+      x-swagger-router-controller: BillingAccountController
+    post:
+      description: This operation creates a BillingAccount entity.
+      operationId: createBillingAccount
+      parameters:
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              createBillingAccountRequest:
+                $ref: '#/components/examples/createBillingAccountRequest'
+              belEbCreateBillingAccountRequest:
+                $ref: '#/components/examples/belEbCreateBillingAccountRequest'
+            schema:
+              $ref: '#/components/schemas/BillingAccountCreate'
+        description: The BillingAccount to be created
+        required: true
+      responses:
+        "201":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                createBillingAccountResponse:
+                  $ref: '#/components/examples/createBillingAccountResponse'
+                belEbCreateBillingAccountResponse:
+                  $ref: '#/components/examples/belEbCreateBillingAccountResponse'
+              schema:
+                $ref: '#/components/schemas/BillingAccount'
+          description: Created
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Creates a BillingAccount
+      tags:
+      - billingAccount
+      x-swagger-router-controller: BillingAccountController
+  /billingAccount/{id}:
+    get:
+      description: This operation retrieves a BillingAccount entity.
+      operationId: retrieveBillingAccount
+      parameters:
+      - description: Identifier of the BillingAccount
+        example: BA0000001780
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: |-
+          The Public id of the relatedParty owning the billing account.
+          Either RelatedParty or BusinessUnit must be specified
+        example: CUST0000015489
+        explode: true
+        in: query
+        name: relatedPartyId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: |-
+          The business unit of the customer.
+          Either RelatedParty or BusinessUnit must be specified
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnit
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                readBillingAccountResponse:
+                  $ref: '#/components/examples/readBillingAccountResponse'
+                belEbReadBillingAccountResponse:
+                  $ref: '#/components/examples/belEbReadBillingAccountResponse'
+              schema:
+                $ref: '#/components/schemas/BillingAccount'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Retrieves a BillingAccount by ID
+      tags:
+      - billingAccount
+      x-swagger-router-controller: BillingAccountController
+    patch:
+      description: This operation updates partially a BillingAccount entity.
+      operationId: patchBillingAccount
+      parameters:
+      - description: Identifier of the BillingAccount
+        example: BA0000001780
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              updateBillingAccountRequest:
+                $ref: '#/components/examples/updateBillingAccountRequest'
+              belEbUpdateBillingAccountRequest:
+                $ref: '#/components/examples/belEbUpdateBillingAccountRequest'
+            schema:
+              $ref: '#/components/schemas/BillingAccountUpdate'
+        description: The BillingAccount to be updated
+        required: true
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                updateBillingAccountResponse:
+                  $ref: '#/components/examples/updateBillingAccountResponse'
+                belEbUpdateBillingAccountResponse:
+                  $ref: '#/components/examples/belEbUpdateBillingAccountResponse'
+              schema:
+                $ref: '#/components/schemas/BillingAccount'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Updates partially a BillingAccount
+      tags:
+      - billingAccount
+      x-swagger-router-controller: BillingAccountController
+  /billingAccountAssignmentRule:
+    get:
+      description: This operation list or find BillingAccountAssignmentRule entities
+      operationId: listBillingAccountAssignmentRule
+      parameters:
+      - description: The business unit from the customer
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnitId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listBillingAccountAssignmentRulesResponse:
+                  $ref: '#/components/examples/listBillingAccountAssignmentRulesResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/BillingAccountAssignmentRule'
+                type: array
+          description: OK
+        "206":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listBillingAccountAssignmentRulesResponse:
+                  $ref: '#/components/examples/listBillingAccountAssignmentRulesResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/BillingAccountAssignmentRule'
+                type: array
+          description: Partial Content
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: List or find BillingAccountAssignmentRule objects
+      tags:
+      - billingAccountAssignmentRule
+  /billingAccountAssignmentRule/{id}:
+    get:
+      description: This operation retrieves a BillingAccountAssignmentRule entity.
+      operationId: readBillingAccountAssignmentRule
+      parameters:
+      - description: Identifier of the billingAccountAssignmentRule
+        example: Template 3
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: The business unit from the customer
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnitId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                readBillingAccountAssignmentRuleResponse:
+                  $ref: '#/components/examples/readBillingAccountAssignmentRuleResponse'
+              schema:
+                $ref: '#/components/schemas/BillingAccountAssignmentRule'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Reads a BillingAccountAssignmentRule by ID
+      tags:
+      - billingAccountAssignmentRule
+      x-swagger-router-controller: BillingAccountController
+  /partyAccount/{id}:
+    get:
+      description: This operation retrieves a PartyAccount entity.
+      operationId: retrievePartyAccount
+      parameters:
+      - description: Identifier of the PartyAccount
+        example: PA0000001520
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                readPartyAccountResponse:
+                  $ref: '#/components/examples/readPartyAccountResponse'
+                belEbReadPartyAccountResponse:
+                  $ref: '#/components/examples/belEbReadPartyAccountResponse'
+              schema:
+                $ref: '#/components/schemas/PartyAccount'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Retrieves a PartyAccount by ID
+      tags:
+      - partyAccount
+    patch:
+      description: This operation updates partially a PartyAccount entity.
+      operationId: patchPartyAccount
+      parameters:
+      - description: Identifier of the PartyAccount
+        example: PA0000001520
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              updatePartyAccountRequest:
+                $ref: '#/components/examples/updatePartyAccountRequest'
+              belEbUpdatePartyAccountRequest:
+                $ref: '#/components/examples/belEbUpdatePartyAccountRequest'
+            schema:
+              $ref: '#/components/schemas/PartyAccountUpdate'
+        description: The PartyAccount to be updated
+        required: true
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                updatePartyAccountResponse:
+                  $ref: '#/components/examples/updatePartyAccountResponse'
+                belEbUpdatePartyAccountResponse:
+                  $ref: '#/components/examples/belEbUpdatePartyAccountResponse'
+              schema:
+                $ref: '#/components/schemas/PartyAccount'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Updates partially a Party Account
+      tags:
+      - partyAccount
+components:
+  examples:
+    listBillingAccountsResponse:
+      description: (Status Code 200)
+      summary: List Billing Accounts
+      value:
+      - id: BA0000000090
+        name: Account BA0000000090
+        state: inactive
+        href: /dmpAccountManagement/v1/billingAccount/BA0000000090?relatedPartyId=CUST0000000196
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: false
+        taxExemptionSource: customer
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-05-21T20:16:04Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000000196
+            href: /dmpPartyManagement/v1/individual/CUST0000000196
+        billStructure:
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000000196
+          href: /dmpPartyManagement/v1/individual/CUST0000000196
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /dmpReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/conversionRateType/1
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+      - id: BA0000000088
+        name: Account BA0000000088
+        state: inactive
+        href: /dmpAccountManagement/v1/billingAccount/BA0000000088?relatedPartyId=CUST0000000196
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: false
+        taxExemptionSource: customer
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-06-02T07:37:01Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000000196
+            href: /dmpPartyManagement/v1/individual/CUST0000000196
+        billStructure:
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000000196
+          href: /dmpPartyManagement/v1/individual/CUST0000000196
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/conversionRateType/1
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+      - id: BA0000000089
+        name: Account BA0000000089
+        state: inactive
+        href: /dmpAccountManagement/v1/billingAccount/BA0000000089?relatedPartyId=CUST0000000196
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        taxExemptionSource: customer
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-05-21T20:16:03Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000000196
+            href: /dmpPartyManagement/v1/individual/CUST0000000196
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "01"
+              href: /dmpReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            id: "01"
+            href: /dmpReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            name: Customer Billcycle
+            validFor:
+              endDateTime: 2015-09-01T00:00:00Z
+            defaultBillingInterval: P1M
+            changeReasonRef:
+              id: "1"
+              href: /dmpReferenceDataManagement/v1/billingCycleChangeReason/1
+            initiatedByUser: ADMX
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000000196
+          href: /dmpPartyManagement/v1/individual/CUST0000000196
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /dmpReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/conversionRateType/1
+        smallInvoiceSuppression:
+          thresholdAmount: 1.0
+          actionType: carryover
+          carryoverPeriod: P5D
+          thresholdCurrency:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+    belEbListBillingAccountsResponse:
+      description: (Status Code 200)
+      summary: List Billing Accounts
+      value:
+      - id: BA0000000090
+        name: Account BA0000000090
+        state: inactive
+        href: /belEbAccountManagement/v1/billingAccount/BA0000000090?relatedPartyId=CUST0000000196
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: false
+        taxExemptionSource: customer
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-05-21T20:16:04Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000000196
+            href: /belEbPartyManagement/v1/individual/CUST0000000196
+        billStructure:
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000000196
+          href: /belEbPartyManagement/v1/individual/CUST0000000196
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /belEbReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/conversionRateType/1
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+      - id: BA0000000088
+        name: Account BA0000000088
+        state: inactive
+        href: /belEbAccountManagement/v1/billingAccount/BA0000000088?relatedPartyId=CUST0000000196
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: false
+        taxExemptionSource: customer
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-06-02T07:37:01Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000000196
+            href: /belEbPartyManagement/v1/individual/CUST0000000196
+        billStructure:
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000000196
+          href: /belEbPartyManagement/v1/individual/CUST0000000196
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/conversionRateType/1
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+      - id: BA0000000089
+        name: Account BA0000000089
+        state: inactive
+        href: /belEbAccountManagement/v1/billingAccount/BA0000000089?relatedPartyId=CUST0000000196
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        taxExemptionSource: customer
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-05-21T20:16:03Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000000196
+            href: /belEbPartyManagement/v1/individual/CUST0000000196
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "01"
+              href: /belEbReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            id: "01"
+            href: /belEbReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            name: Customer Billcycle
+            validFor:
+              endDateTime: 2015-09-01T00:00:00Z
+            defaultBillingInterval: P1M
+            changeReasonRef:
+              id: "1"
+              href: /belEbReferenceDataManagement/v1/billingCycleChangeReason/1
+            initiatedByUser: ADMX
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000000196
+          href: /belEbPartyManagement/v1/individual/CUST0000000196
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /belEbReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/conversionRateType/1
+        smallInvoiceSuppression:
+          thresholdAmount: 1.0
+          actionType: carryover
+          carryoverPeriod: P5D
+          thresholdCurrency:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+    createBillingAccountRequest:
+      description: "POST {{base_url}}/dmpAccountManagement/v1/billingAccount"
+      summary: Create Billing Account
+      value:
+        callDetailsFlag: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-27T12:33:02.658Z
+            endDateTime: 2029-05-06T12:33:02.663Z
+          taxDefinition:
+            taxReductionType: J
+            reductionPercentage: 1.0
+            reductionReason: reason
+            jurisdictionTypeRef:
+              id: "1"
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "02"
+          format:
+            billMediumRef:
+              id: L1PDF
+        relatedParty:
+          id: CUST0000003751
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+        smallInvoiceSuppression:
+          actionType: invoice
+        primaryDocumentCurrencyRef:
+          id: EUR
+        businessUnitRef:
+          id: CSGBU
+    belEbCreateBillingAccountRequest:
+      description: "POST {{base_url}}/belEbAccountManagement/v1/billingAccount"
+      summary: Create Billing Account
+      value:
+        callDetailsFlag: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-27T12:33:02.658Z
+            endDateTime: 2029-05-06T12:33:02.663Z
+          taxDefinition:
+            taxReductionType: J
+            reductionPercentage: 1.0
+            reductionReason: reason
+            jurisdictionTypeRef:
+              id: "1"
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "02"
+          format:
+            billMediumRef:
+              id: L1PDF
+        relatedParty:
+          id: CUST0000003751
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+        smallInvoiceSuppression:
+          actionType: invoice
+        primaryDocumentCurrencyRef:
+          id: EUR
+        businessUnitRef:
+          id: CSGBU
+    createBillingAccountResponse:
+      description: (Status Code 201)
+      summary: Create Billing Account
+      value:
+        id: BA0000209553
+        name: Account BA0000209553
+        state: inactive
+        href: /dmpAccountManagement/v1/billingAccount/BA0000209553?relatedPartyId=CUST0000003751
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-27T00:00:00Z
+            endDateTime: 2029-05-06T00:00:00Z
+          taxDefinition:
+            id: "1"
+            reductionPercentage: 1.0
+            reductionReason: reason
+            reductionStatus: A
+            taxReductionType: J
+            jurisdictionTypeRef:
+              id: "1"
+              href: /dmpReferenceDataManagement/v1/jurisdictionType/1
+          certificateNumber: "1"
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-05-14T17:59:58Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000003751
+            href: /dmpPartyManagement/v1/individual/CUST0000003751
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "02"
+              href: /dmpReferenceDataManagement/v1/billingCycle/02?businessUnit=CSGBU
+            id: "02"
+            href: /dmpReferenceDataManagement/v1/billingCycle/02?businessUnit=CSGBU
+            name: Business Partner Dummy BC
+            validFor:
+              endDateTime: 2015-09-01T00:00:00Z
+            changeComment: Initial Billing Cycle assignment
+            defaultBillingInterval: P1M
+            changeReasonRef:
+              id: "4"
+              href: /dmpReferenceDataManagement/v1/billingCycleChangeReason/4
+            initiatedByUser: EOC
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000003751
+          href: /dmpPartyManagement/v1/individual/CUST0000003751
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /dmpReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/conversionRateType/1
+        smallInvoiceSuppression:
+          actionType: invoice
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+    belEbCreateBillingAccountResponse:
+      description: (Status Code 201)
+      summary: Create Billing Account
+      value:
+        id: BA0000209553
+        name: Account BA0000209553
+        state: inactive
+        href: /belEbAccountManagement/v1/billingAccount/BA0000209553?relatedPartyId=CUST0000003751
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-27T00:00:00Z
+            endDateTime: 2029-05-06T00:00:00Z
+          taxDefinition:
+            id: "1"
+            reductionPercentage: 1.0
+            reductionReason: reason
+            reductionStatus: A
+            taxReductionType: J
+            jurisdictionTypeRef:
+              id: "1"
+              href: /belEbReferenceDataManagement/v1/jurisdictionType/1
+          certificateNumber: "1"
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-05-14T17:59:58Z
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000003751
+            href: /belEbPartyManagement/v1/individual/CUST0000003751
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "02"
+              href: /belEbReferenceDataManagement/v1/billingCycle/02?businessUnit=CSGBU
+            id: "02"
+            href: /belEbReferenceDataManagement/v1/billingCycle/02?businessUnit=CSGBU
+            name: Business Partner Dummy BC
+            validFor:
+              endDateTime: 2015-09-01T00:00:00Z
+            changeComment: Initial Billing Cycle assignment
+            defaultBillingInterval: P1M
+            changeReasonRef:
+              id: "4"
+              href: /belEbReferenceDataManagement/v1/billingCycleChangeReason/4
+            initiatedByUser: ADMX
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000003751
+          href: /belEbPartyManagement/v1/individual/CUST0000003751
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /belEbReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/conversionRateType/1
+        smallInvoiceSuppression:
+          actionType: invoice
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+    readBillingAccountResponse:
+      description: (Status Code 200)
+      summary: Read Billing Account
+      value:
+        id: BA0000003189
+        name: Primary account
+        state: active
+        href: /dmpAccountManagement/v1/billingAccount/BA0000003189?relatedPartyId=CUST0000005670
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        paymentMethod:
+        - '@referredType': P
+          id: "2091"
+          href: /dmpPaymentMethods/v1/paymentMethod/2091?relatedPartyId=CUST0000005670
+        - '@referredType': D
+          id: "34238"
+          href: /dmpPaymentMethods/v1/paymentMethod/34238?relatedPartyId=CUST0000005670
+        taxExemptionSource: customer
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2020-06-07T00:00:00Z
+            endDateTime: 2020-06-08T00:00:00Z
+          taxDefinition:
+            id: "2"
+            reductionPercentage: 1.0
+            reductionReason: reason
+            reductionStatus: A
+            taxReductionType: J
+            jurisdictionTypeRef:
+              id: "1"
+              href: /dmpReferenceDataManagement/v1/jurisdictionType/1
+          certificateNumber: "2"
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-06-04T11:27:33Z
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "01"
+              href: /dmpReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            id: "01"
+            href: /dmpReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            name: Customer Billcycle
+            validFor:
+              endDateTime: 2015-09-01T00:00:00Z
+            changeComment: Initial Billing Cycle assignment
+            defaultBillingInterval: P1M
+            changeReasonRef:
+              id: "4"
+              href: /dmpReferenceDataManagement/v1/billingCycleChangeReason/4
+            initiatedByUser: ADMX
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000005670
+          href: /dmpPartyManagement/v1/individual/CUST0000005670
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /dmpReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/conversionRateType/1
+        smallInvoiceSuppression:
+          actionType: invoice
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+    belEbReadBillingAccountResponse:
+      description: (Status Code 200)
+      summary: Read Billing Account
+      value:
+        id: BA0000003189
+        name: Primary account
+        state: active
+        href: /belEbAccountManagement/v1/billingAccount/BA0000003189?relatedPartyId=CUST0000005670
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        paymentMethod:
+        - '@referredType': P
+          id: "2091"
+          href: /belEbPaymentMethods/v1/paymentMethod/2091?relatedPartyId=CUST0000005670
+        - '@referredType': D
+          id: "34238"
+          href: /belEbPaymentMethods/v1/paymentMethod/34238?relatedPartyId=CUST0000005670
+        taxExemptionSource: customer
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2020-06-07T00:00:00Z
+            endDateTime: 2020-06-08T00:00:00Z
+          taxDefinition:
+            id: "2"
+            reductionPercentage: 1.0
+            reductionReason: reason
+            reductionStatus: A
+            taxReductionType: J
+            jurisdictionTypeRef:
+              id: "1"
+              href: /belEbReferenceDataManagement/v1/jurisdictionType/1
+          certificateNumber: "2"
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2020-06-04T11:27:33Z
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "01"
+              href: /belEbReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            id: "01"
+            href: /belEbReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            name: Customer Billcycle
+            validFor:
+              endDateTime: 2015-09-01T00:00:00Z
+            changeComment: Initial Billing Cycle assignment
+            defaultBillingInterval: P1M
+            changeReasonRef:
+              id: "4"
+              href: /belEbReferenceDataManagement/v1/billingCycleChangeReason/4
+            initiatedByUser: ADMX
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        relatedParty:
+          id: CUST0000005670
+          href: /belEbPartyManagement/v1/individual/CUST0000005670
+        glAccountCodeRef:
+          id: UCA123T64CXXX00X00RC
+          href: /belEbReferenceDataManagement/v1/glAccount/UCA123T64CXXX00X00RC
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/conversionRateType/1
+        smallInvoiceSuppression:
+          actionType: invoice
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+    updateBillingAccountRequest:
+      description: "PATCH {{base_url}}/dmpAccountManagement/v1/billingAccount/BA0000209672"
+      summary: Update Billing Account
+      value:
+        relatedParty:
+          id: CUST0000003888
+        billingAccountAssignment:
+        - agreement:
+            id: CONTR0000000031
+          validFor:
+            endDateTime: 2122-08-28T09:44:16.000Z
+          billingAccountAssignmentRule:
+            id: ALL1SSSSSS
+          absoluteThreshold: 22.0
+          absoluteThresholdCurrency:
+            id: EUR
+          relativeThreshold: 44.0
+          proRateIndicator: false
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-18T12:55:39.596Z
+            endDateTime: 2021-05-28T08:55:39.597Z
+          taxDefinition:
+            taxReductionType: J
+            reductionPercentage: 1.0
+            reductionReason: reason
+            jurisdictionTypeRef:
+              id: "1"
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+        - contactType: mailingAddress
+          sequenceNumber: null
+        smallInvoiceSuppression:
+          actionType: carryover
+          carryoverPeriod: P3M
+          thresholdAmount: 2.0
+    belEbUpdateBillingAccountRequest:
+      description: "PATCH {{base_url}}/belEbAccountManagement/v1/billingAccount/BA0000209672"
+      summary: Update Billing Account
+      value:
+        relatedParty:
+          id: CUST0000003888
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-18T12:55:39.596Z
+            endDateTime: 2021-05-28T08:55:39.597Z
+          taxDefinition:
+            taxReductionType: J
+            reductionPercentage: 1.0
+            reductionReason: reason
+            jurisdictionTypeRef:
+              id: "1"
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+        - contactType: mailingAddress
+          sequenceNumber: null
+        billStructure:
+          cycleSpecification:
+            changeComment: change to 01
+            billingCycleRef:
+              id: "01"
+        smallInvoiceSuppression:
+          actionType: carryover
+          carryoverPeriod: P3M
+          thresholdAmount: 2.0
+    updateBillingAccountResponse:
+      description: (Status Code 200)
+      summary: Update Billing Account
+      value:
+        id: BA0000209672
+        name: Account BA0000209672
+        state: active
+        href: /dmpAccountManagement/v1/billingAccount/BA0000209672?relatedPartyId=CUST0000003888
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        billingAccountAssignment:
+        - sequenceNumber: 1143
+          validFor:
+            startDateTime: 2021-05-18T12:20:09Z
+            endDateTime: 2122-08-28T09:44:16Z
+          billingAccountAssignmentRule:
+            id: ALL1SSSSSS
+            href: /dmpAccountManagement/v1/billingAccountAssignmentRule/ALL1SSSSSS
+            version: "1"
+            description: All Charges
+            status: Activated
+            validFor:
+              startDateTime: 1979-12-31T20:00:00Z
+          agreement:
+            id: CONTR0000000031
+            href: /dmpAgreementManagement/v1/agreement/CONTR0000000031
+          absoluteThreshold: 22.0
+          absoluteThresholdCurrency:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+          relativeThreshold: 44.0
+          priority: "81"
+          proRateIndicator: false
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-18T00:00:00Z
+            endDateTime: 2021-05-28T00:00:00Z
+          taxDefinition:
+            id: "1"
+            reductionPercentage: 1.0
+            reductionReason: reason
+            reductionStatus: A
+            taxReductionType: J
+            jurisdictionTypeRef:
+              id: "1"
+              href: /dmpReferenceDataManagement/v1/jurisdictionType/1
+          certificateNumber: "1"
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-05-18T12:19:19Z
+        billStructure:
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /dmpReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000003888
+            href: /dmpPartyManagement/v1/individual/CUST0000003888
+        smallInvoiceSuppression:
+          thresholdAmount: 2.0
+          actionType: carryover
+          carryoverPeriod: P3M
+          thresholdCurrency:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+        relatedParty:
+          id: CUST0000003888
+          href: /dmpPartyManagement/v1/individual/CUST0000003888
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/conversionRateType/1
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /dmpReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+    belEbUpdateBillingAccountResponse:
+      description: (Status Code 200)
+      summary: Update Billing Account
+      value:
+        id: BA0000209672
+        name: Account BA0000209672
+        state: active
+        href: /belEbAccountManagement/v1/billingAccount/BA0000209672?relatedPartyId=CUST0000003888
+        collectionIndicator: false
+        currencyConversionLevel: "1"
+        isExcludedFromDunning: false
+        numberOfCopies: 1
+        primaryFlag: true
+        taxExemptionSource: billingAccount
+        taxExemption:
+        - issuingJurisdiction: "1"
+          validFor:
+            startDateTime: 2021-05-18T00:00:00Z
+            endDateTime: 2021-05-28T00:00:00Z
+          taxDefinition:
+            id: "1"
+            reductionPercentage: 1.0
+            reductionReason: reason
+            reductionStatus: A
+            taxReductionType: J
+            jurisdictionTypeRef:
+              id: "1"
+              href: /belEbReferenceDataManagement/v1/jurisdictionType/1
+          certificateNumber: "1"
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-05-18T12:19:19Z
+        billStructure:
+          cycleSpecification:
+            billingCycleRef:
+              id: "01"
+              href: /belEbReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            id: "01"
+            href: /belEbReferenceDataManagement/v1/billingCycle/01?businessUnit=CSGBU
+            name: Business Partner Dummy BC
+            validFor:
+              endDateTime: 2015-09-01T00:00:00Z
+            changeComment: change to 01
+            defaultBillingInterval: P1M
+            changeReasonRef:
+              id: "4"
+              href: /belEbReferenceDataManagement/v1/billingCycleChangeReason/4
+            initiatedByUser: ADMX
+          format:
+            billMediumRef:
+              id: L1PDF
+              href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+          presentationMedia:
+            id: L1PDF
+            href: /belEbReferenceDataManagement/v1/billMedium/L1PDF?businessUnit=CSGBU
+            name: "Layout: 1, Format: pdf"
+        contact:
+        - contactType: billingAddress
+          sequenceNumber: 1
+          relatedParty:
+            id: CUST0000003888
+            href: /belEbPartyManagement/v1/individual/CUST0000003888
+        smallInvoiceSuppression:
+          thresholdAmount: 2.0
+          actionType: carryover
+          carryoverPeriod: P3M
+          thresholdCurrency:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+        relatedParty:
+          id: CUST0000003888
+          href: /belEbPartyManagement/v1/individual/CUST0000003888
+        primaryConversionRateTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/conversionRateType/1
+        primaryDocumentCurrencyRef:
+          id: EUR
+          href: /belEbReferenceDataManagement/v1/currency/EUR
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+    listBillingAccountAssignmentRulesResponse:
+      description: (Status Code 200)
+      summary: List Billing Account Assignment Rules
+      value:
+      - id: ALL1SSSSSS
+        href: /dmpAccountManagement/v1/billingAccountAssignmentRule/ALL1SSSSSS
+        version: "1"
+        description: All Charges
+        status: Activated
+        validFor:
+          startDateTime: 1979-12-31T20:00:00Z
+    readBillingAccountAssignmentRuleResponse:
+      description: (Status Code 200)
+      summary: Read Billing Account Assignment Rule
+      value:
+        id: ALL1SSSSSS
+        href: /dmpAccountManagement/v1/billingAccountAssignmentRule/ALL1SSSSSS
+        version: "1"
+        description: All Charges
+        status: Activated
+        validFor:
+          startDateTime: 1979-12-31T20:00:00Z
+    readPartyAccountResponse:
+      description: (Status Code 200)
+      summary: Read Party Account
+      value:
+        id: CUST0000350749
+        name: Party Account
+        state: inactive
+        href: /dmpAccountManagement/v1/partyAccount/CUST0000350749
+        '@type': PartyAccount
+        accountType: individual
+        creditLimit:
+          value: 1.0
+          unit: EUR
+        unbilledAmount:
+          value: 0.0
+          unit: EUR
+        relatedParty:
+          id: CUST0000350749
+          '@referredType': Customer
+          href: /dmpCustomerManagement/v1/customer/CUST0000350749
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-04-26T10:23:40Z
+        creditLimitThreshold1Ref:
+          id: 75%
+          href: /dmpReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold2Ref:
+          id: 75%
+          href: /dmpReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold3Ref:
+          id: 75%
+          href: /dmpReferenceDataManagement/v1/threshold/75%25
+    belEbReadPartyAccountResponse:
+      description: (Status Code 200)
+      summary: Read Party Account
+      value:
+        id: CUST0000350749
+        name: Party Account
+        state: inactive
+        href: /belEbAccountManagement/v1/partyAccount/CUST0000350749
+        '@type': PartyAccount
+        accountType: individual
+        creditLimit:
+          value: 1.0
+          unit: EUR
+        unbilledAmount:
+          value: 0.0
+          unit: EUR
+        relatedParty:
+          id: CUST0000350749
+          '@referredType': Customer
+          href: /belEbCustomerManagement/v1/customer/CUST0000350749
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-04-26T10:23:40Z
+        creditLimitThreshold1Ref:
+          id: 75%
+          href: /belEbReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold2Ref:
+          id: 75%
+          href: /belEbReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold3Ref:
+          id: 75%
+          href: /belEbReferenceDataManagement/v1/threshold/75%25
+    updatePartyAccountRequest:
+      description: "PATCH {{base_url}}/dmpAccountManagement/v1/partyAccount/CUST0000350749"
+      summary: Update Party Account
+      value:
+        creditLimit:
+          value: 100.0
+          unit: EUR
+        creditLimitThreshold1Ref:
+          id: 75%
+        creditLimitThreshold2Ref:
+          id: 75%
+        creditLimitThreshold3Ref:
+          id: 75%
+    belEbUpdatePartyAccountRequest:
+      description: "PATCH {{base_url}}/belEbAccountManagement/v1/partyAccount/CUST0000350749"
+      summary: Update Party Account
+      value:
+        creditLimit:
+          value: 100.0
+          unit: EUR
+        creditLimitThreshold1Ref:
+          id: 75%
+        creditLimitThreshold2Ref:
+          id: 75%
+        creditLimitThreshold3Ref:
+          id: 75%
+    updatePartyAccountResponse:
+      description: (Status Code 200)
+      summary: Update Party Account
+      value:
+        id: CUST0000350749
+        name: Party Account
+        state: inactive
+        href: /dmpAccountManagement/v1/partyAccount/CUST0000350749
+        '@type': PartyAccount
+        accountType: individual
+        creditLimit:
+          value: 100.0
+          unit: EUR
+        unbilledAmount:
+          value: 0.0
+          unit: EUR
+        relatedParty:
+          id: CUST0000350749
+          '@referredType': Customer
+          href: /dmpCustomerManagement/v1/customer/CUST0000350749
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-04-26T10:23:40Z
+        creditLimitThreshold1Ref:
+          id: 75%
+          href: /dmpReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold2Ref:
+          id: 75%
+          href: /dmpReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold3Ref:
+          id: 75%
+          href: /dmpReferenceDataManagement/v1/threshold/75%25
+    belEbUpdatePartyAccountResponse:
+      description: (Status Code 200)
+      summary: Update Party Account
+      value:
+        id: CUST0000350749
+        name: Party Account
+        state: inactive
+        href: /belEbAccountManagement/v1/partyAccount/CUST0000350749
+        '@type': PartyAccount
+        accountType: individual
+        creditLimit:
+          value: 100.0
+          unit: EUR
+        unbilledAmount:
+          value: 0.0
+          unit: EUR
+        relatedParty:
+          id: CUST0000350749
+          '@referredType': Customer
+          href: /belEbCustomerManagement/v1/customer/CUST0000350749
+        accountBalance:
+        - balanceType: receivable
+          amount:
+            value: 0.0
+            unit: EUR
+          validFor:
+            startDateTime: 2021-04-26T10:23:40Z
+        creditLimitThreshold1Ref:
+          id: 75%
+          href: /belEbReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold2Ref:
+          id: 75%
+          href: /belEbReferenceDataManagement/v1/threshold/75%25
+        creditLimitThreshold3Ref:
+          id: 75%
+          href: /belEbReferenceDataManagement/v1/threshold/75%25
+  schemas:
+    Id:
+      description: "Public Identifier, max 256 characters."
+      maxLength: 256
+      pattern: ^(?=\s*\S).*$
+      type: string
+    BillingAccount:
+      allOf:
+      - $ref: '#/components/schemas/PartyAccount_1'
+      - $ref: '#/components/schemas/BillingAccount_allOf'
+      description: Information about a billing account.
+      x-members-accessor: true
+    ErrorMessage:
+      description: Error message schema.
+      properties:
+        code:
+          description: "Application relevant detail, defined in the API or a common\
+            \ list."
+          example: BSS.500
+          type: string
+        reason:
+          description: Explanation of the reason for the error which can be shown
+            to a client user.
+          example: Error communicating with downstream system
+          type: string
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Internal Server Error
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 500
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        instance:
+          description: Request path for this occurrence of the problem.
+          example: /resource/123
+          type: string
+        supplementaryErrors:
+          items:
+            $ref: '#/components/schemas/SupplementaryError'
+          type: array
+      required:
+      - code
+      - reason
+      type: object
+    BillingAccountCreate:
+      allOf:
+      - $ref: '#/components/schemas/BillingAccountBase'
+      - $ref: '#/components/schemas/BillingAccountCreate_allOf'
+      description: Information about create a billing account.
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="GLAccount", field="glAccountCodeRef.id", message="Invalid GL Acount")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="GLAccount", field="balanceGlAccountCodeRef.id", message="Invalid Balance GL Account")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CurrencyExt", field="primaryDocumentCurrencyRef.id", message="Invalid Primary Document Currency")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CurrencyExt", field="secondaryDocumentCurrencyRef.id", message="Invalid Secondary Document Currency")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="ConversionRateType", field="primaryConversionRateTypeRef.id", message="Invalid Primary Conversion Rate Type")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="ConversionRateType", field="secondaryConversionRateTypeRef.id", message="Invalid Secondary Conversion Rate Type")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="BusinessUnitExt", field="businessUnitRef.id", message="Invalid Business Unit")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(entity="BillMedium", field="billStructure.format.billMediumRef.id", businessUnitIdPath="businessUnitRef.id", individualIdPath="relatedParty.id", individualIdPathVariableName="", message="Invalid Bill Medium")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(entity="BillingCycle", field="billStructure.cycleSpecification.billingCycleRef.id", businessUnitIdPath="businessUnitRef.id", individualIdPath="relatedParty.id", individualIdPathVariableName="", message="Invalid Billing Cycle")
+    BillingAccountUpdate:
+      allOf:
+      - $ref: '#/components/schemas/BillingAccountBase'
+      - $ref: '#/components/schemas/BillingAccountUpdate_allOf'
+      description: Information about a billing account.
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="GLAccount", field="glAccountCodeRef.id", message="Invalid GL Acount")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="GLAccount", field="balanceGlAccountCodeRef.id", message="Invalid Balance GL Account")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CurrencyExt", field="primaryDocumentCurrencyRef.id", message="Invalid Primary Document Currency")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CurrencyExt", field="secondaryDocumentCurrencyRef.id", message="Invalid Secondary Document Currency")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="ConversionRateType", field="primaryConversionRateTypeRef.id", message="Invalid Primary Conversion Rate Type")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="ConversionRateType", field="secondaryConversionRateTypeRef.id", message="Invalid Secondary Conversion Rate Type")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="BusinessUnitExt", field="businessUnitRef.id", message="Invalid Business Unit")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(entity="BillMedium", field="billStructure.format.billMediumRef.id", businessUnitIdPath="businessUnitRef.id", individualIdPath="relatedParty.id", individualIdPathVariableName="", message="Invalid Bill Medium")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataWithBusinessUnitConstraint(entity="BillingCycle", field="billStructure.cycleSpecification.billingCycleRef.id", businessUnitIdPath="businessUnitRef.id", individualIdPath="relatedParty.id", individualIdPathVariableName="", message="Invalid Billing Cycle")
+    BillingAccountAssignmentRule:
+      allOf:
+      - $ref: '#/components/schemas/BillingAccountAssignmentRuleBase'
+      - $ref: '#/components/schemas/BillingAccountAssignmentRule_allOf'
+      description: Information about Billing Account Assignment Rule
+    PartyAccount:
+      allOf:
+      - $ref: '#/components/schemas/Account'
+      - $ref: '#/components/schemas/PartyAccount_allOf'
+      description: An party account for billing purposes.
+    PartyAccountUpdate:
+      allOf:
+      - $ref: '#/components/schemas/PartyAccountUpdate_allOf'
+      description: An party account for billing purposes.
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Threshold", field="creditLimitThreshold1Ref.id", message="Invalid Threshold")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Threshold", field="creditLimitThreshold2Ref.id", message="Invalid Threshold")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Threshold", field="creditLimitThreshold3Ref.id", message="Invalid Threshold")
+    PartyAccount_1:
+      allOf:
+      - $ref: '#/components/schemas/Account'
+      - $ref: '#/components/schemas/PartyAccount_1_allOf'
+      description: An party account for billing purposes.
+    String32:
+      description: String type of max 32 characters
+      maxLength: 32
+      type: string
+    DateTime:
+      description: |-
+        The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+        Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+      format: date-time
+      type: string
+    PaymentMethodRef:
+      description: Reference to PaymentMethod used in response messages.
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    TaxExemptionSource:
+      description: Possible values of the Tax Exemption Source.
+      enum:
+      - billingAccount
+      - customer
+      type: string
+    AccountTaxExemption:
+      allOf:
+      - $ref: '#/components/schemas/AccountTaxExemptionBase'
+      - $ref: '#/components/schemas/AccountTaxExemption_allOf'
+      description: Details for the account tax exemption.
+    BillingAccountAssignment:
+      allOf:
+      - $ref: '#/components/schemas/BillingAccountAssignmentBase'
+      - $ref: '#/components/schemas/BillingAccountAssignment_allOf'
+      description: Billing Account assignment to an Agreement and to Billing Account
+        Assignment Rule.
+    AccountBalance:
+      description: Represents the balances linked to the account.
+      properties:
+        balanceType:
+          $ref: '#/components/schemas/BalanceType'
+        amount:
+          $ref: '#/components/schemas/Money'
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+    Contact:
+      allOf:
+      - $ref: '#/components/schemas/ContactBase'
+      - $ref: '#/components/schemas/Contact_allOf'
+      description: |-
+        An attachment defining the billing Contact Entity DMP has the contact defined on the Customer level,
+        so read and update actions will implicitly be updating the contact on customer level linked to the Billing Account
+    BillStructure:
+      allOf:
+      - $ref: '#/components/schemas/BillStructureBase'
+      - $ref: '#/components/schemas/BillStructure_allOf'
+      description: A bill structure (BillStructure). The structure of the bill for
+        party accounts (billing or settlement).
+      x-members-accessor: true
+    RelatedParty:
+      allOf:
+      - $ref: '#/components/schemas/RelatedPartyBase'
+      - $ref: '#/components/schemas/RelatedParty_allOf'
+      description: |-
+        Related Entity Reference used in response messages.
+        A related party defines party or party role linked to a specific entity.
+      type: object
+    ReferenceDataRef:
+      allOf:
+      - $ref: '#/components/schemas/ReferenceDataBaseRef'
+      - $ref: '#/components/schemas/ReferenceDataRef_allOf'
+      description: ReferenceData response schema.
+      required:
+      - href
+      type: object
+    SmallInvoiceSuppression:
+      allOf:
+      - $ref: '#/components/schemas/SmallInvoiceSuppressionBase'
+      - $ref: '#/components/schemas/SmallInvoiceSuppression_allOf'
+    ThresholdBilling:
+      allOf:
+      - $ref: '#/components/schemas/ThresholdBillingBase'
+      - $ref: '#/components/schemas/ThresholdBilling_allOf'
+      description: The handling for Threshold Billing.
+      nullable: true
+    SupplementaryError:
+      description: SupplementaryError message schema.
+      properties:
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Unable to communicate with downstream system
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 404
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        detail:
+          description: |
+            A human readable explanation specific to this occurrence of the problem that is helpful to locate the problem and give advice on how to proceed. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: "HTTP response 404 : when communicating with http://localhost:8081/"
+          type: string
+        action:
+          description: The action causing the error.
+          example: AddressrolesReadService.AddressrolesReadServiceSoap11
+          type: string
+        source:
+          description: The application returning the error.
+          example: eb
+          type: string
+      type: object
+    BillingAccountBase:
+      allOf:
+      - $ref: '#/components/schemas/PartyAccountBase'
+      - $ref: '#/components/schemas/BillingAccountBase_allOf'
+      description: Billing Account base atributes common to all individual operations
+        messages
+    BillStructureCreate:
+      allOf:
+      - $ref: '#/components/schemas/BillStructureBase'
+      - $ref: '#/components/schemas/BillStructureCreate_allOf'
+      description: |-
+        The structure of the bill for party accounts reflecting on customer level on DMP.
+        Mandatory for the creation of the primary billing account. Only updated on primary
+        billing accounts to map one to one to the customer object.
+      x-members-accessor: true
+    AccountTaxExemptionCreate:
+      allOf:
+      - $ref: '#/components/schemas/AccountTaxExemptionBase'
+      - $ref: '#/components/schemas/AccountTaxExemptionCreate_allOf'
+      description: Details for the account tax exemption to create operations.
+    BillStructureUpdate:
+      allOf:
+      - $ref: '#/components/schemas/BillStructureBase'
+      - $ref: '#/components/schemas/BillStructureUpdate_allOf'
+      description: |-
+        The structure of the bill for party accounts reflecting on customer level on DMP.
+        Mandatory for the creation of the primary billing account. Only updated on primary
+        billing accounts to map one to one to the customer object.
+      x-members-accessor: true
+    BillingAccountAssignmentBase:
+      description: Billing Account assignment to an Agreement and to Billing Account
+        Assignment Rule.
+      properties:
+        sequenceNumber:
+          description: Integer type
+          format: int64
+          maximum: 9223372036854775806
+          minimum: -9223372036854775807
+          type: integer
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        billingAccountAssignmentRule:
+          $ref: '#/components/schemas/BillingAccountAssignmentRuleBase'
+        agreement:
+          $ref: '#/components/schemas/AgreementBaseRef'
+        absoluteThreshold:
+          description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+            binary64 decimal number.
+          format: double
+          type: number
+        absoluteThresholdCurrency:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        relativeThreshold:
+          description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+            binary64 decimal number.
+          format: double
+          type: number
+        priority:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        proRateIndicator:
+          description: Pro rate indicator
+          type: boolean
+      required:
+      - billingAccountAssignmentRule
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="CurrencyExt", field="absoluteThresholdCurrency.id", message="Invalid Absolut Threshold Currency")
+    AccountTaxExemptionUpdate:
+      allOf:
+      - $ref: '#/components/schemas/AccountTaxExemptionBase'
+      - $ref: '#/components/schemas/AccountTaxExemptionUpdate_allOf'
+      description: Details for the account tax exemption to update operations.
+    BillingAccountAssignmentRuleBase:
+      description: Information about Billing Account Assignment Rule
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+    String256:
+      description: String type of max 256 characters
+      maxLength: 256
+      type: string
+    String128:
+      description: String type of max 128 characters
+      maxLength: 128
+      type: string
+    TimePeriod:
+      description: This type defines a time period value consisting of a startDateTime
+        value and an endDateTime value. The startDateTime is inclusive and endDateTime
+        is exclusive. The startDateTime and endDateTime are not allowed to have the
+        same value. EndDateTime must not be before startDateTime
+      properties:
+        startDateTime:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        endDateTime:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+      type: object
+    Account:
+      allOf:
+      - $ref: '#/components/schemas/AccountBase_1'
+      - $ref: '#/components/schemas/PartyAccount_1_allOf'
+    AccountType:
+      description: The possible types of account.
+      enum:
+      - individual
+      - organization
+      type: string
+    Money:
+      description: A base / value business entity used to represent money
+      properties:
+        unit:
+          description: Currency (ISO4217 norm uses 3 letters to define the currency)
+          type: string
+        value:
+          description: A positive floating point number
+          format: float
+          type: number
+      type: object
+    RelatedParty_1:
+      allOf:
+      - $ref: '#/components/schemas/RelatedPartyBase'
+      - $ref: '#/components/schemas/RelatedParty_1_allOf'
+      description: |-
+        Related Entity Reference used in response messages.
+        A related party role linked to a specific entity.
+    AccountBase:
+      description: An account for billing purposes.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      type: object
+    ReferenceDataBaseRef:
+      description: ReferenceData base schema.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    AccountStatus:
+      description: The possible status values for an account.
+      enum:
+      - closed
+      - active
+      - inactive
+      type: string
+    AccountTaxExemptionBase:
+      description: Details for the account tax exemption common to all operations.
+      properties:
+        issuingJurisdiction:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        taxDefinition:
+          $ref: '#/components/schemas/TaxDefinitionBase'
+      required:
+      - issuingJurisdiction
+      - taxDefinition
+      - validFor
+      type: object
+    TaxDefinition:
+      allOf:
+      - $ref: '#/components/schemas/TaxDefinitionBase'
+      - $ref: '#/components/schemas/TaxDefinition_allOf'
+      description: The definition of the Tax.
+      type: object
+    AgreementRef:
+      allOf:
+      - $ref: '#/components/schemas/AgreementBaseRef'
+      - $ref: '#/components/schemas/AgreementRef_allOf'
+      description: Reference to Agreement in response messages.
+    BalanceType:
+      description: The possible types of account.
+      enum:
+      - receivable
+      type: string
+    ContactBase:
+      description: Contact base schema common to all operations.
+      properties:
+        contactType:
+          $ref: '#/components/schemas/ContactContactTypes'
+        sequenceNumber:
+          description: Nullable Integer type
+          format: int64
+          maximum: 9223372036854775806
+          minimum: 0
+          nullable: true
+          type: integer
+      required:
+      - contactType
+      type: object
+    BillStructureBase:
+      properties:
+        cycleSpecification:
+          $ref: '#/components/schemas/BillingCycleSpecificationBase'
+        format:
+          $ref: '#/components/schemas/BillFormatBase'
+      type: object
+    BillingCycleSpecification:
+      allOf:
+      - $ref: '#/components/schemas/BillingCycleSpecificationBase'
+      - $ref: '#/components/schemas/BillingCycleSpecification_allOf'
+    BillPresentationMedia:
+      description: Bill Presentation Media schema common to all operations.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        name:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      - name
+      type: object
+    BillFormat:
+      allOf:
+      - $ref: '#/components/schemas/BillFormatBase'
+      - $ref: '#/components/schemas/BillFormat_allOf'
+      description: Bill Presentation Media schema common to all operations.
+    RelatedPartyBase:
+      description: |-
+        Related Party Base schema common to all operations.
+        A related party defines party or party role linked to a specific entity.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    PartyTypes:
+      description: The possible types of party.
+      enum:
+      - Individual
+      - Organization
+      type: string
+    SmallInvoiceSuppressionBase:
+      description: SmallInvoiceSuppression base schema common to all operations
+      properties:
+        thresholdAmount:
+          description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+            binary64 decimal number.
+          format: double
+          type: number
+        actionType:
+          $ref: '#/components/schemas/SmallInvoiceSuppressionActionTypes'
+        carryoverPeriod:
+          description: |
+            This type defines a duration value. The pattern is based on the definition found at http://www.w3.org/TR/xmlschema-2/#duration.
+          pattern: "^(-?)P(?=\\d|T\\d)(?:(\\d+)Y)?(?:(\\d+)M)?(?:(\\d+)D)?(?:T(?:(\\\
+            d+)H)?(?:(\\d+)M)?(?:(\\d+(?:\\.\\d{1,3})?)S)?)?$"
+          type: string
+      required:
+      - actionType
+      type: object
+    ThresholdBillingBase:
+      nullable: true
+      properties:
+        thresholdAmount:
+          description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+            binary64 decimal number.
+          format: double
+          type: number
+        thresholdBillingOption:
+          $ref: '#/components/schemas/ThresholdBillingOption'
+        thresholdBillingPurpose:
+          $ref: '#/components/schemas/ThresholdBillingPurpose'
+      required:
+      - thresholdAmount
+      - thresholdBillingOption
+      - thresholdBillingPurpose
+      type: object
+    PartyAccountBase:
+      allOf:
+      - $ref: '#/components/schemas/AccountBase_1'
+      description: An party account for billing purposes.
+    BillingCycleSpecificationCreate:
+      allOf:
+      - $ref: '#/components/schemas/BillingCycleSpecificationBase'
+      - $ref: '#/components/schemas/BillingCycleSpecificationCreate_allOf'
+      description: Bill cycle specification. Mandatory for primary billing account.
+      x-members-accessor: true
+    TaxDefinitionBase:
+      description: The definition of the Tax.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        reductionPercentage:
+          description: |-
+            Percentage value represented as decimal.
+            Examples value are '0.1' meaning '10%' and value '1' meaning '100%'.
+          format: double
+          minimum: 0
+          type: number
+        reductionReason:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        reductionStatus:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        taxReductionType:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        jurisdictionRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        jurisdictionTypeRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        taxType:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        taxTypeRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        taxCodeRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Jurisdiction", field="jurisdictionRef.id", message="Invalid Jurisdiction")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="JurisdictionType", field="jurisdictionTypeRef.id", message="Invalid Jurisdiction Type")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="TaxType", field="taxTypeRef.id", message="Invalid Tax Type")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="TaxCode", field="taxCodeRef.id", message="Invalid Tax Code")
+    BillingCycleSpecificationUpdate:
+      allOf:
+      - $ref: '#/components/schemas/BillingCycleSpecificationBase'
+      - $ref: '#/components/schemas/BillingCycleSpecificationUpdate_allOf'
+      description: Bill cycle specification. Mandatory for primary billing account.
+      x-members-accessor: true
+    Integer:
+      description: Integer type
+      format: int64
+      maximum: 9223372036854775806
+      minimum: -9223372036854775807
+      type: integer
+    AgreementBaseRef:
+      description: Reference to Agreement in request messages.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+    Decimal:
+      description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+        binary64 decimal number.
+      format: double
+      type: number
+    AccountBase_1:
+      description: An account for billing purposes.
+      properties:
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        state:
+          $ref: '#/components/schemas/AccountStatus'
+      type: object
+    PartyRoleType:
+      description: The possible types of party role.
+      enum:
+      - Customer
+      type: string
+    ContactContactTypes:
+      description: The contactType enumeration for the Contact entity.
+      enum:
+      - billingAddress
+      - contractAddress
+      - deliveryAddress
+      - directoryAddress
+      - mailingAddress
+      - previousBillingAddress
+      - privateAddress
+      - taxAddress
+      - userAddress
+      type: string
+    NullableUnsignedInteger:
+      description: Nullable Integer type
+      format: int64
+      maximum: 9223372036854775806
+      minimum: 0
+      nullable: true
+      type: integer
+    BillingCycleSpecificationBase:
+      properties:
+        billingCycleRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+      type: object
+    BillFormatBase:
+      description: Bill Format Media base schema common to all operations.
+      properties:
+        billMediumRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+      required:
+      - billMediumRef
+      type: object
+      x-members-accessor: true
+    Duration:
+      description: |
+        This type defines a duration value. The pattern is based on the definition found at http://www.w3.org/TR/xmlschema-2/#duration.
+      pattern: "^(-?)P(?=\\d|T\\d)(?:(\\d+)Y)?(?:(\\d+)M)?(?:(\\d+)D)?(?:T(?:(\\d+)H)?(?:(\\\
+        d+)M)?(?:(\\d+(?:\\.\\d{1,3})?)S)?)?$"
+      type: string
+    SmallInvoiceSuppressionActionTypes:
+      description: Action Types of the Small Invoice Suppression.
+      enum:
+      - carryover
+      - invoice
+      - writeoff
+      type: string
+    ThresholdBillingOption:
+      description: Possible values of the Threshold Billing Option.
+      enum:
+      - immediateRequest
+      - onDemandRequest
+      type: string
+    ThresholdBillingPurpose:
+      description: Possible values of the Threshold Billing Purpose.
+      enum:
+      - informationBillRun
+      - regularBillRun
+      - simulationBillRun
+      type: string
+    Percentage:
+      description: |-
+        Percentage value represented as decimal.
+        Examples value are '0.1' meaning '10%' and value '1' meaning '100%'.
+      format: double
+      minimum: 0
+      type: number
+    BillingAccount_allOf:
+      properties:
+        allowLargeAccountMemberBillingCycleChange:
+          description: |-
+            Allow Large Account member to have billing cycle that deviates from the billing cycle
+            specified at the head of the large account.
+            This attribute is only applicable for the primary Billing Account of a head of a Large Account.
+          type: boolean
+        callDetailsFlag:
+          description: Indicates whether call details have to be generated.
+          type: boolean
+        collectionIndicator:
+          description: Indicate whether a Billing Account is in collection process.
+          type: boolean
+        currencyConversionLevel:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        isExcludedFromDunning:
+          description: Indicates whether this billing account is excluded from the
+            dunning process.
+          type: boolean
+        lastBilledDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        numberOfCopies:
+          description: Number of copies
+          type: integer
+        primaryFlag:
+          description: Indicates whether account is the primary one for the customer.
+          type: boolean
+        useLastBilledDate:
+          description: |-
+            Indicates whether the last billing date must be used as an effective date.
+            This attribute is applicable when updating other BillingAccount attributes
+            which has history such as 'state' or 'taxExemptionSource'. The attribute is
+            not returned back in response messages or read operations.
+          type: boolean
+        paymentMethod:
+          description: Determines the way how the customer pays his bill such as credit
+            card or bank transfer or cash
+          items:
+            $ref: '#/components/schemas/PaymentMethodRef'
+          type: array
+        taxExemptionSource:
+          $ref: '#/components/schemas/TaxExemptionSource'
+        taxExemption:
+          description: Proof of freedom from taxes imposed by a taxing jurisdiction
+          items:
+            $ref: '#/components/schemas/AccountTaxExemption'
+          type: array
+        billingAccountAssignment:
+          description: Assigns a Billing Account to an Agreement.
+          items:
+            $ref: '#/components/schemas/BillingAccountAssignment'
+          type: array
+        accountBalance:
+          description: A list of account balance.
+          items:
+            $ref: '#/components/schemas/AccountBalance'
+          type: array
+        contact:
+          description: |-
+            An attachment defining the billing Contact Entity DMP has the contact defined on the Customer level,
+            so read and update actions will implicitly be updating the contact on customer level linked to the Billing Account
+          items:
+            $ref: '#/components/schemas/Contact'
+          maxItems: 2
+          type: array
+        billStructure:
+          $ref: '#/components/schemas/BillStructure'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedParty'
+        balanceGlAccountCodeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        glAccountCodeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        primaryConversionRateTypeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        secondaryConversionRateTypeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        smallInvoiceSuppression:
+          $ref: '#/components/schemas/SmallInvoiceSuppression'
+        thresholdBilling:
+          $ref: '#/components/schemas/ThresholdBilling'
+        primaryDocumentCurrencyRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        secondaryDocumentCurrencyRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        businessUnitRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      required:
+      - billStructure
+      - businessUnitRef
+      - collectionIndicator
+      - currencyConversionLevel
+      - isExcludedFromDunning
+      - numberOfCopies
+      - primaryConversionRateTypeRef
+      - primaryDocumentCurrencyRef
+      - primaryFlag
+      - relatedParty
+      - taxExemptionSource
+      type: object
+      example: null
+    BillingAccountCreate_allOf:
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        billStructure:
+          $ref: '#/components/schemas/BillStructureCreate'
+        taxExemption:
+          description: Proof of freedom from taxes imposed by a taxing jurisdiction
+          items:
+            $ref: '#/components/schemas/AccountTaxExemptionCreate'
+          type: array
+      type: object
+      example: null
+    BillingAccountUpdate_allOf:
+      properties:
+        useLastBilledDate:
+          description: |-
+            Indicates whether the last billing date must be used as an effective date.
+            This attribute is applicable when updating other BillingAccount attributes
+            which has history such as 'state' or 'taxExemptionSource'. The attribute is
+            not returned back in response messages or read operations.
+          type: boolean
+        billStructure:
+          $ref: '#/components/schemas/BillStructureUpdate'
+        billingAccountAssignment:
+          description: Assigns a Billing Account to an Agreement.
+          items:
+            $ref: '#/components/schemas/BillingAccountAssignmentBase'
+          type: array
+        taxExemption:
+          description: Proof of freedom from taxes imposed by a taxing jurisdiction
+          items:
+            $ref: '#/components/schemas/AccountTaxExemptionUpdate'
+          type: array
+      type: object
+      example: null
+    BillingAccountAssignmentRule_allOf:
+      properties:
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        version:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        description:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        status:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        businessUnitRef:
+          description: Business unit applicable for the customer
+          items:
+            $ref: '#/components/schemas/ReferenceDataRef'
+          type: array
+      required:
+      - description
+      - href
+      - status
+      - validFor
+      - version
+      type: object
+      example: null
+    PartyAccount_allOf:
+      properties:
+        '@type':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        creditLimit:
+          $ref: '#/components/schemas/Money'
+        unbilledAmount:
+          $ref: '#/components/schemas/Money'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedParty_1'
+        accountBalance:
+          description: A list of account balance.
+          items:
+            $ref: '#/components/schemas/AccountBalance'
+          type: array
+        creditLimitThreshold1Ref:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        creditLimitThreshold2Ref:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        creditLimitThreshold3Ref:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      type: object
+      example: null
+    PartyAccountUpdate_allOf:
+      properties:
+        creditLimit:
+          $ref: '#/components/schemas/Money'
+        creditLimitThreshold1Ref:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        creditLimitThreshold2Ref:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        creditLimitThreshold3Ref:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+      additionalProperties: false
+      type: object
+      example: null
+    PartyAccount_1_allOf:
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        state:
+          $ref: '#/components/schemas/AccountStatus'
+      required:
+      - href
+      - id
+      - state
+      type: object
+      example: null
+    AccountTaxExemption_allOf:
+      properties:
+        certificateNumber:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        taxDefinition:
+          $ref: '#/components/schemas/TaxDefinition'
+      type: object
+      example: null
+    BillingAccountAssignment_allOf:
+      properties:
+        billingAccountAssignmentRule:
+          $ref: '#/components/schemas/BillingAccountAssignmentRule'
+        agreement:
+          $ref: '#/components/schemas/AgreementRef'
+        absoluteThresholdCurrency:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      required:
+      - billingAccountAssignmentRule
+      type: object
+      example: null
+    Contact_allOf:
+      properties:
+        relatedParty:
+          $ref: '#/components/schemas/RelatedParty'
+      required:
+      - relatedParty
+      type: object
+      example: null
+    BillStructure_allOf:
+      properties:
+        cycleSpecification:
+          $ref: '#/components/schemas/BillingCycleSpecification'
+        presentationMedia:
+          $ref: '#/components/schemas/BillPresentationMedia'
+        format:
+          $ref: '#/components/schemas/BillFormat'
+      required:
+      - format
+      - presentationMedia
+      type: object
+      example: null
+    RelatedParty_allOf:
+      properties:
+        '@referredType':
+          $ref: '#/components/schemas/PartyTypes'
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      type: object
+      example: null
+    ReferenceDataRef_allOf:
+      properties:
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      type: object
+      example: null
+    SmallInvoiceSuppression_allOf:
+      properties:
+        thresholdCurrency:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      type: object
+      example: null
+    ThresholdBilling_allOf:
+      properties:
+        thresholdCurrency:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      required:
+      - thresholdCurrency
+      type: object
+      example: null
+    BillingAccountBase_allOf:
+      properties:
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        state:
+          $ref: '#/components/schemas/AccountStatus'
+        allowLargeAccountMemberBillingCycleChange:
+          description: |-
+            Allow Large Account member to have billing cycle that deviates from the billing cycle
+            specified at the head of the large account.
+            This attribute is only applicable for the primary Billing Account of a head of a Large Account.
+          type: boolean
+        callDetailsFlag:
+          description: Indicates whether call details have to be generated.
+          type: boolean
+        currencyConversionLevel:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        isExcludedFromDunning:
+          description: Indicates whether this billing account is excluded from the
+            dunning process.
+          type: boolean
+        numberOfCopies:
+          description: Number of copies
+          type: integer
+        primaryFlag:
+          description: Indicates whether account is the primary one for the customer.
+          type: boolean
+        taxExemptionSource:
+          $ref: '#/components/schemas/TaxExemptionSource'
+        contact:
+          description: |-
+            An attachment defining the billing Contact Entity DMP has the contact defined on the Customer level,
+            so read and update actions will implicitly be updating the contact on customer level linked to the Billing Account
+          items:
+            $ref: '#/components/schemas/ContactBase'
+          maxItems: 2
+          type: array
+        billStructure:
+          $ref: '#/components/schemas/BillStructureBase'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedPartyBase'
+        balanceGlAccountCodeRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        glAccountCodeRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        primaryConversionRateTypeRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        secondaryConversionRateTypeRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        smallInvoiceSuppression:
+          $ref: '#/components/schemas/SmallInvoiceSuppressionBase'
+        thresholdBilling:
+          $ref: '#/components/schemas/ThresholdBillingBase'
+        primaryDocumentCurrencyRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        secondaryDocumentCurrencyRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+        businessUnitRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+      required:
+      - relatedParty
+      type: object
+      example: null
+    BillStructureCreate_allOf:
+      properties:
+        cycleSpecification:
+          $ref: '#/components/schemas/BillingCycleSpecificationCreate'
+      type: object
+      example: null
+    AccountTaxExemptionCreate_allOf:
+      properties:
+        issuingJurisdiction:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        taxDefinition:
+          $ref: '#/components/schemas/TaxDefinitionBase'
+      type: object
+      example: null
+    BillStructureUpdate_allOf:
+      properties:
+        cycleSpecification:
+          $ref: '#/components/schemas/BillingCycleSpecificationUpdate'
+      type: object
+      example: null
+    AccountTaxExemptionUpdate_allOf:
+      properties:
+        issuingJurisdiction:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        taxDefinition:
+          $ref: '#/components/schemas/TaxDefinitionBase'
+        certificateNumber:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      type: object
+      example: null
+    RelatedParty_1_allOf:
+      properties:
+        '@referredType':
+          $ref: '#/components/schemas/PartyRoleType'
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      type: object
+      example: null
+    TaxDefinition_allOf:
+      properties:
+        jurisdictionRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        jurisdictionTypeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        taxTypeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        taxCodeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      type: object
+      example: null
+    AgreementRef_allOf:
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      type: object
+      example: null
+    BillingCycleSpecification_allOf:
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        changeComment:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        defaultBillingInterval:
+          description: |
+            This type defines a duration value. The pattern is based on the definition found at http://www.w3.org/TR/xmlschema-2/#duration.
+          pattern: "^(-?)P(?=\\d|T\\d)(?:(\\d+)Y)?(?:(\\d+)M)?(?:(\\d+)D)?(?:T(?:(\\\
+            d+)H)?(?:(\\d+)M)?(?:(\\d+(?:\\.\\d{1,3})?)S)?)?$"
+          type: string
+        changeReasonRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        initiatedByUser:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        orderIdentifier:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        billingCycleRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      required:
+      - billingCycleRef
+      - defaultBillingInterval
+      - href
+      - id
+      - initiatedByUser
+      - name
+      - validFor
+      type: object
+      example: null
+    BillFormat_allOf:
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        name:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        billMediumRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+      required:
+      - billMediumRef
+      - href
+      - id
+      - name
+      type: object
+      example: null
+    BillingCycleSpecificationCreate_allOf:
+      properties:
+        billingCycleRef:
+          $ref: '#/components/schemas/ReferenceDataBaseRef'
+      required:
+      - billingCycleRef
+      type: object
+      example: null
+    BillingCycleSpecificationUpdate_allOf:
+      properties:
+        changeComment:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      type: object
+      example: null
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

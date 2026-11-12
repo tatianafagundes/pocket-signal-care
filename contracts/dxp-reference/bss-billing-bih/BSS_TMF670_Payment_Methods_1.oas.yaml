@@ -1,0 +1,3431 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: ericsson@example.com
+    name: API Support
+    url: http://www.ericsson.com/support
+  description: |2-
+
+    # Introduction
+
+    This document is inspired on TMF670 Payment Methods API REST Specification, Version 4.0.0 - Release 21.5
+
+    The API performs the following operations on Payment Methods:
+
+    - Create PaymentMethod
+
+    - List PaymentMethod with Payment Method Assignment
+
+    - Read PaymentMethod
+
+    - Update PaymentMethod
+
+    - Create PaymentMethodAssignment
+
+    - Update PaymentMethodAssignment
+
+    The target group:
+
+    - Solution Integrators
+
+    ## Transfer Mechanism
+
+    The transfer mechanism used is HTTPS. Both HTTP requests and HTTP responses use headers to send information about the HTTP message.
+    The access port is configurable. Clients that use this interface should support a configurable port.
+
+    ## Authentication and Authorization
+
+    Authentication is controlled by the inclusion of a Java Web Token (JWT) in the authorization header of the HTTP message.
+
+    ## HTTP Content Negotiation
+
+    HTTP content negotiation uses versioning in the URL to request a certain version of the resource representation.
+
+    ## BSS TMF670 Payment Methods REST Interface
+
+    The BSS TMF670 Payment Methods REST Interface provides a standardized mechanism
+    for the retrieval of payment information. This API handles the resource related to
+    payment methods and payment method assignment by providing information about them.
+
+    ### Resources
+
+    - PaymentMethod
+
+    - PaymentMethodAssignment
+
+    ## References
+
+    - RFC 7230 - HTTP Message syntax and Routing
+
+    - RFC 7231 - HTTP Semantics and Content
+
+    - RFC 2818 - HTTP Over TLS
+
+    - RFC 2616 - Hypertext Transfer Protocol - HTTP/1.1
+
+    - RFC 7807 - Problem Details for HTTP APIs
+
+    - RFC 2396 - Uniform Resource Identifiers (URI) - Generic Syntax
+
+    ## Contact
+  license:
+    name: Ericsson Internal
+    url: http://www.ericsson.com
+  title: BSS TMF670 Payment Methods REST Interface 1
+  version: 1.0.0
+  x-api-id: 54af2dad-fc96-4d77-a0b8-7cbd9c8934ee
+  x-audience: company-internal
+  x-doc-type: interface-description
+  x-doc-no: 1/155 19-CAF 101 633/1
+  x-doc-rev: K
+  x-doc-date-time: 2023-04-10T00:00:00Z
+servers:
+- description: Developement Server
+  url: "{scheme}://{host}:{port}/{basePath}"
+  variables:
+    scheme:
+      default: https
+      description: request scheme
+      enum:
+      - http
+      - https
+    host:
+      default: host
+      description: this value is assigned by the service provider.
+    port:
+      default: "8443"
+      description: the port of the service
+    basePath:
+      default: PaymentMethods/v1
+      description: Base path options
+security:
+- bearerAuth: []
+tags:
+- description: operations on payment methods
+  name: payment methods
+- description: operations on payment methods assignments
+  name: payment methods assignments
+paths:
+  /paymentMethod:
+    get:
+      description: This operation lists PaymentMethods entity.
+      operationId: readPaymentMethods
+      parameters:
+      - description: "A relatedPartyId, which represents a customer."
+        example: CUST0000015489
+        explode: true
+        in: query
+        name: relatedPartyId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: The business unit of the customer.
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnit
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listPaymentMethodsResponse:
+                  $ref: '#/components/examples/listPaymentMethodsResponse'
+                belEbListPaymentMethodsResponse:
+                  $ref: '#/components/examples/belEbListPaymentMethodsResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/PaymentMethod'
+                type: array
+          description: OK
+        "206":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listPaymentMethodsResponse:
+                  $ref: '#/components/examples/listPaymentMethodsResponse'
+                belEbListPaymentMethodsResponse:
+                  $ref: '#/components/examples/belEbListPaymentMethodsResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/PaymentMethod'
+                type: array
+          description: Partial Content
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Read a list of payment methods
+      tags:
+      - payment methods
+    post:
+      description: This operation creates a PaymentMethod.
+      operationId: createPaymentMethod
+      parameters:
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              createCashPaymentMethodRequest:
+                $ref: '#/components/examples/createCashPaymentMethodRequest'
+              createTokenizedPaymentMethodRequest:
+                $ref: '#/components/examples/createTokenizedPaymentMethodRequest'
+              createDirectDebitPaymentMethodRequest:
+                $ref: '#/components/examples/createDirectDebitPaymentMethodRequest'
+              createBillingAccountPaymentMethodRequest:
+                $ref: '#/components/examples/createBillingAccountPaymentMethodRequest'
+              belEbCreateCashPaymentMethodRequest:
+                $ref: '#/components/examples/belEbCreateCashPaymentMethodRequest'
+              belEbCreateTokenizedPaymentMethodRequest:
+                $ref: '#/components/examples/belEbCreateTokenizedPaymentMethodRequest'
+              belEbCreateDirectDebitPaymentMethodRequest:
+                $ref: '#/components/examples/belEbCreateDirectDebitPaymentMethodRequest'
+              belEbCreateBillingAccountPaymentMethodRequest:
+                $ref: '#/components/examples/belEbCreateBillingAccountPaymentMethodRequest'
+            schema:
+              $ref: '#/components/schemas/PaymentMethodCreate'
+        description: The payment method to be created.
+        required: true
+      responses:
+        "201":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                createCashPaymentMethodResponse:
+                  $ref: '#/components/examples/createCashPaymentMethodResponse'
+                createTokenizedPaymentMethodResponse:
+                  $ref: '#/components/examples/createTokenizedPaymentMethodResponse'
+                createDirectDebitPaymentMethodResponse:
+                  $ref: '#/components/examples/createDirectDebitPaymentMethodResponse'
+                createBillingAccountPaymentMethodResponse:
+                  $ref: '#/components/examples/createBillingAccountPaymentMethodResponse'
+                belEbCreateCashPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbCreateCashPaymentMethodResponse'
+                belEbCreateTokenizedPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbCreateTokenizedPaymentMethodResponse'
+                belEbCreateDirectDebitPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbCreateDirectDebitPaymentMethodResponse'
+                belEbCreateBillingAccountPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbCreateBillingAccountPaymentMethodResponse'
+              schema:
+                $ref: '#/components/schemas/PaymentMethod'
+          description: Created
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Create a new payment method
+      tags:
+      - payment methods
+  /paymentMethod/{id}:
+    get:
+      description: This operation retrieves PaymentMethods entity.
+      operationId: readPaymentMethod
+      parameters:
+      - description: id of the payment method to fetch
+        example: "34231"
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: "A relatedPartyId, which represents a customer."
+        example: CUST0000005670
+        explode: true
+        in: query
+        name: relatedPartyId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: The business unit of the customer.
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnit
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                readPaymentMethodResponse:
+                  $ref: '#/components/examples/readPaymentMethodResponse'
+                belEbReadPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbReadPaymentMethodResponse'
+              schema:
+                $ref: '#/components/schemas/PaymentMethod'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Read a payment method
+      tags:
+      - payment methods
+    patch:
+      description: This operation updates partially a PaymentMethod entity.
+      operationId: patchPaymentMethod
+      parameters:
+      - description: Identifier of the PaymentMethod
+        example: "34231"
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              updateTokenizedPaymentMethodRequest:
+                $ref: '#/components/examples/updateTokenizedPaymentMethodRequest'
+              updateDirectDebitPaymentMethodRequest:
+                $ref: '#/components/examples/updateDirectDebitPaymentMethodRequest'
+              updateBillingAccountPaymentMethodRequest:
+                $ref: '#/components/examples/updateBillingAccountPaymentMethodRequest'
+              belEbUpdateTokenizedPaymentMethodRequest:
+                $ref: '#/components/examples/belEbUpdateTokenizedPaymentMethodRequest'
+              belEbUpdateDirectDebitPaymentMethodRequest:
+                $ref: '#/components/examples/belEbUpdateDirectDebitPaymentMethodRequest'
+              belEbUpdateBillingAccountPaymentMethodRequest:
+                $ref: '#/components/examples/belEbUpdateBillingAccountPaymentMethodRequest'
+            schema:
+              $ref: '#/components/schemas/PaymentMethodUpdate'
+        description: The PaymentMethod to be updated
+        required: true
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                updateTokenizedPaymentMethodResponse:
+                  $ref: '#/components/examples/updateTokenizedPaymentMethodResponse'
+                updateDirectDebitPaymentMethodResponse:
+                  $ref: '#/components/examples/updateDirectDebitPaymentMethodResponse'
+                updateBillingAccountPaymentMethodResponse:
+                  $ref: '#/components/examples/updateBillingAccountPaymentMethodResponse'
+                belEbUpdateTokenizedPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbUpdateTokenizedPaymentMethodResponse'
+                belEbUpdateDirectDebitPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbUpdateDirectDebitPaymentMethodResponse'
+                belEbUpdateBillingAccountPaymentMethodResponse:
+                  $ref: '#/components/examples/belEbUpdateBillingAccountPaymentMethodResponse'
+              schema:
+                $ref: '#/components/schemas/PaymentMethod'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Updates partially a PaymentMethod
+      tags:
+      - payment methods
+  /paymentMethod/{id}/paymentMethodAssignment:
+    post:
+      description: This operation creates a PaymentMethodAssignment entity.
+      operationId: createPaymentMethodAssignment
+      parameters:
+      - description: Identifier of the PaymentMethod
+        example: "19665"
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              createPaymentMethodAssignmentRequest:
+                $ref: '#/components/examples/createPaymentMethodAssignmentRequest'
+              belEbCreatePaymentMethodAssignmentRequest:
+                $ref: '#/components/examples/belEbCreatePaymentMethodAssignmentRequest'
+            schema:
+              $ref: '#/components/schemas/PaymentMethodAssignmentCreate'
+        description: The payment method assignment to be created.
+        required: true
+      responses:
+        "201":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                createBillingAccountPaymentMethodResponse:
+                  $ref: '#/components/examples/createBillingAccountPaymentMethodResponse'
+                belEbCreatePaymentMethodAssignmentResponse:
+                  $ref: '#/components/examples/belEbCreatePaymentMethodAssignmentResponse'
+              schema:
+                $ref: '#/components/schemas/PaymentMethodAssignment'
+          description: Created
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Create a new Payment Method Assignment
+      tags:
+      - payment methods assignments
+  /paymentMethod/{id}/paymentMethodAssignment/{paymentMethodAssignmentId}:
+    patch:
+      description: This operation updates partially a PaymentMethodAssignment entity.
+      operationId: patchPaymentMethodAssignment
+      parameters:
+      - description: Identifier of the PaymentMethod
+        example: "20469"
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Identifier of the PaymentMethodAssignment
+        example: "620725"
+        explode: false
+        in: path
+        name: paymentMethodAssignmentId
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            examples:
+              updatePaymentMethodAssignmentRequest:
+                $ref: '#/components/examples/updatePaymentMethodAssignmentRequest'
+              belEbUpdatePaymentMethodAssignmentRequest:
+                $ref: '#/components/examples/belEbUpdatePaymentMethodAssignmentRequest'
+            schema:
+              $ref: '#/components/schemas/PaymentMethodAssignmentUpdate'
+        description: The PaymentMethodAssignment to be updated
+        required: true
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                updatePaymentMethodAssignmentResponse:
+                  $ref: '#/components/examples/updatePaymentMethodAssignmentResponse'
+                belEbUpdatePaymentMethodAssignmentResponse:
+                  $ref: '#/components/examples/belEbUpdatePaymentMethodAssignmentResponse'
+              schema:
+                $ref: '#/components/schemas/PaymentMethodAssignment'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Updates partially a Payment Method Assignment
+      tags:
+      - payment methods assignments
+components:
+  examples:
+    listPaymentMethodsResponse:
+      description: (Status Code 200)
+      summary: List Payment Methods
+      value:
+      - '@type': Cash
+        '@typeRef':
+          id: P
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/P
+        name: Payment Method Cash
+        id: "55256"
+        href: /dmpPaymentMethods/v1/paymentMethod/55256?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: true
+        paymentMethodAssignment:
+        - id: "1280235"
+          validFor:
+            startDateTime: 2022-09-27T00:00:00Z
+          relatedParty:
+            id: CUST0000334567
+            href: /dmpPartyManagement/v1/individual/CUST0000334567
+          status: valid
+          paymentTermRef:
+            id: "1"
+            href: /dmpReferenceDataManagement/v1/paymentTerm/1
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+      - '@type': DirectDebit
+        '@typeRef':
+          id: D
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/D
+        name: Payment Method DirectDebit
+        id: "55258"
+        href: /dmpPaymentMethods/v1/paymentMethod/55258?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "9999"
+            accountNumberType: iban
+            bank: Bradesco
+            bankCountryRef:
+              id: CHL
+              href: /dmpReferenceDataManagement/v1/country/CHL
+            bic: bic
+            city: Santa Rita do Sapucai
+            iban: iban
+            owner: owner
+            postCode: "37540000"
+            subAccountNumber: "789"
+            stateOrProvince: Minas Gerais
+            street1: Principal Avenue
+            street2: square
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+      - '@type': BillingAccount
+        '@typeRef':
+          id: B
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/B
+        name: Payment Method BillingAccount
+        id: "55259"
+        href: /dmpPaymentMethods/v1/paymentMethod/55259?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          billingAccount:
+            id: BA0000250361
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+      - '@type': Tokenized
+        '@typeRef':
+          id: M
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/M
+        name: Payment Method Tokenized
+        id: "55257"
+        href: /dmpPaymentMethods/v1/paymentMethod/55257?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          tokenizedCard:
+            lastFourDigits: "8888"
+            token: myToken
+            tokenId: "11341"
+            tokenCreationDate: 2022-09-27T17:41:50Z
+            externalPaymentMethod: externalPM
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    belEbListPaymentMethodsResponse:
+      description: (Status Code 200)
+      summary: List Payment Methods
+      value:
+      - '@type': Cash
+        '@typeRef':
+          id: P
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/P
+        name: Payment Method Cash
+        id: "55256"
+        href: /belEbPaymentMethods/v1/paymentMethod/55256?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: true
+        paymentMethodAssignment:
+        - id: "1280235"
+          validFor:
+            startDateTime: 2022-09-27T00:00:00Z
+          relatedParty:
+            id: CUST0000334567
+            href: /belEbPartyManagement/v1/individual/CUST0000334567
+          status: valid
+          paymentTermRef:
+            id: "1"
+            href: /belEbReferenceDataManagement/v1/paymentTerm/1
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+      - '@type': DirectDebit
+        '@typeRef':
+          id: D
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/D
+        name: Payment Method DirectDebit
+        id: "55258"
+        href: /belEbPaymentMethods/v1/paymentMethod/55258?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "9999"
+            accountNumberType: iban
+            bank: Bradesco
+            bankCountryRef:
+              id: CHL
+              href: /belEbReferenceDataManagement/v1/country/CHL
+            bic: bic
+            city: Santa Rita do Sapucai
+            iban: iban
+            owner: owner
+            postCode: "37540000"
+            subAccountNumber: "789"
+            stateOrProvince: Minas Gerais
+            street1: Principal Avenue
+            street2: square
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+      - '@type': BillingAccount
+        '@typeRef':
+          id: B
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/B
+        name: Payment Method BillingAccount
+        id: "55259"
+        href: /belEbPaymentMethods/v1/paymentMethod/55259?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          billingAccount:
+            id: BA0000250361
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+      - '@type': Tokenized
+        '@typeRef':
+          id: M
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/M
+        name: Payment Method Tokenized
+        id: "55257"
+        href: /belEbPaymentMethods/v1/paymentMethod/55257?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          tokenizedCard:
+            lastFourDigits: "8888"
+            token: myToken
+            tokenId: "11341"
+            tokenCreationDate: 2022-09-27T17:41:50Z
+            externalPaymentMethod: externalPM
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    createCashPaymentMethodRequest:
+      description: "POST {{base_url}}/dmpPaymentMethods/v1/paymentMethod"
+      summary: Create Cash Payment Method
+      value:
+        '@type': Cash
+        name: Payment Method Cash
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+        paymentMethodAssignment:
+        - validFor:
+            startDateTime: 2022-09-27T00:00:00Z
+          relatedParty:
+            id: CUST0000334567
+          account:
+            id: BA0000054343
+          financialDocumentTypeRef:
+            id: "1"
+          paymentTermRef:
+            id: "1"
+    createTokenizedPaymentMethodRequest:
+      description: "POST {{base_url}}/dmpPaymentMethods/v1/paymentMethod"
+      summary: Create Tokenized Payment Method
+      value:
+        '@type': Tokenized
+        name: Payment Method Tokenized
+        details:
+          tokenizedCard:
+            lastFourDigits: "8888"
+            externalPaymentMethod: externalPM
+            token: myToken
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+    createDirectDebitPaymentMethodRequest:
+      description: "POST {{base_url}}/dmpPaymentMethods/v1/paymentMethod"
+      summary: Create Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        name: Payment Method DirectDebit
+        authorizationIndicator: true
+        authorizationRemark: AuthorizationRemark
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "9999"
+            accountNumberType: iban
+            bic: bic
+            owner: owner
+            bank: Bradesco
+            iban: iban
+            subAccountNumber: "789"
+            street1: Principal Avenue
+            street2: square
+            city: Santa Rita do Sapucai
+            stateOrProvince: Minas Gerais
+            postCode: "37540000"
+            bankCountryRef:
+              id: CHL
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+    createBillingAccountPaymentMethodRequest:
+      description: "POST {{base_url}}/dmpPaymentMethods/v1/paymentMethod"
+      summary: Create Billing Account Payment Method
+      value:
+        '@type': BillingAccount
+        name: Payment Method BillingAccount
+        details:
+          billingAccount:
+            id: BA0000250361
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+    belEbCreateCashPaymentMethodRequest:
+      description: "POST {{base_url}}/belEbPaymentMethods/v1/paymentMethod"
+      summary: Create Cash Payment Method
+      value:
+        '@type': Cash
+        name: Payment Method Cash
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+        paymentMethodAssignment:
+        - validFor:
+            startDateTime: 2022-09-27T00:00:00Z
+          relatedParty:
+            id: CUST0000334567
+          account:
+            id: BA0000054343
+          financialDocumentTypeRef:
+            id: "1"
+          paymentTermRef:
+            id: "1"
+    belEbCreateTokenizedPaymentMethodRequest:
+      description: "POST {{base_url}}/belEbPaymentMethods/v1/paymentMethod"
+      summary: Create Tokenized Payment Method
+      value:
+        '@type': Tokenized
+        name: Payment Method Tokenized
+        details:
+          tokenizedCard:
+            lastFourDigits: "8888"
+            externalPaymentMethod: externalPM
+            token: myToken
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+    belEbCreateDirectDebitPaymentMethodRequest:
+      description: "POST {{base_url}}/belEbPaymentMethods/v1/paymentMethod"
+      summary: Create Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        name: Payment Method DirectDebit
+        authorizationIndicator: true
+        authorizationRemark: AuthorizationRemark
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "9999"
+            accountNumberType: iban
+            bic: bic
+            owner: owner
+            bank: Bradesco
+            iban: iban
+            subAccountNumber: "789"
+            street1: Principal Avenue
+            street2: square
+            city: Santa Rita do Sapucai
+            stateOrProvince: Minas Gerais
+            postCode: "37540000"
+            bankCountryRef:
+              id: CHL
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+    belEbCreateBillingAccountPaymentMethodRequest:
+      description: "POST {{base_url}}/belEbPaymentMethods/v1/paymentMethod"
+      summary: Create Billing Account Payment Method
+      value:
+        '@type': BillingAccount
+        name: Payment Method BillingAccount
+        details:
+          billingAccount:
+            id: BA0000250361
+        relatedParty:
+          role: Customer
+          id: CUST0000334567
+    createCashPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Cash Payment Method
+      value:
+        '@type': Cash
+        '@typeRef':
+          id: P
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/P
+        name: Payment Method Cash
+        id: "55256"
+        href: /dmpPaymentMethods/v1/paymentMethod/55256?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: true
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+        paymentMethodAssignment:
+        - id: "1280230"
+          validFor:
+            startDateTime: 2022-09-27T00:00:00Z
+          status: valid
+          relatedParty:
+            id: CUST0000334567
+            href: /dmpPartyManagement/v1/individual/CUST0000334567
+          account:
+            id: BA0000054343
+            href: /dmpAccountManagement/v1/billingAccount/BA0000054343?relatedPartyId=CUST0000334567
+          paymentTermRef:
+            id: "1"
+            href: /dmpReferenceDataManagement/v1/paymentTerm/1
+          financialDocumentTypeRef:
+            id: "1"
+            href: /dmpReferenceDataManagement/v1/financialDocumentType/1
+    createTokenizedPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Tokenized Payment Method
+      value:
+        '@type': Tokenized
+        '@typeRef':
+          id: M
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/M
+        name: Payment Method Tokenized
+        id: "55257"
+        href: /dmpPaymentMethods/v1/paymentMethod/55257?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          tokenizedCard:
+            lastFourDigits: "8888"
+            token: myToken
+            tokenId: "11341"
+            tokenCreationDate: 2022-09-27T14:41:50Z
+            externalPaymentMethod: externalPM
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    createDirectDebitPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        '@typeRef':
+          id: D
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/D
+        name: Payment Method DirectDebit
+        id: "55258"
+        href: /dmpPaymentMethods/v1/paymentMethod/55258?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "9999"
+            accountNumberType: iban
+            bank: Bradesco
+            bankCountryRef:
+              id: CHL
+              href: /dmpReferenceDataManagement/v1/country/CHL
+            bic: bic
+            city: Santa Rita do Sapucai
+            iban: iban
+            owner: owner
+            postCode: "37540000"
+            subAccountNumber: "789"
+            stateOrProvince: Minas Gerais
+            street1: Principal Avenue
+            street2: square
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    createBillingAccountPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Billing Account Payment Method
+      value:
+        '@type': BillingAccount
+        '@typeRef':
+          id: B
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/B
+        name: Payment Method BillingAccount
+        id: "55259"
+        href: /dmpPaymentMethods/v1/paymentMethod/55259?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          billingAccount:
+            id: BA0000250361
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    belEbCreateCashPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Cash Payment Method
+      value:
+        '@type': Cash
+        '@typeRef':
+          id: P
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/P
+        name: Payment Method Cash
+        id: "55256"
+        href: /belEbPaymentMethods/v1/paymentMethod/55256?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: true
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+        paymentMethodAssignment:
+        - id: "1280230"
+          validFor:
+            startDateTime: 2022-09-27T00:00:00Z
+          status: valid
+          relatedParty:
+            id: CUST0000334567
+            href: /belEbPartyManagement/v1/individual/CUST0000334567
+          account:
+            id: BA0000054343
+            href: /belEbAccountManagement/v1/billingAccount/BA0000054343?relatedPartyId=CUST0000334567
+          paymentTermRef:
+            id: "1"
+            href: /belEbReferenceDataManagement/v1/paymentTerm/1
+          financialDocumentTypeRef:
+            id: "1"
+            href: /belEbReferenceDataManagement/v1/financialDocumentType/1
+    belEbCreateTokenizedPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Tokenized Payment Method
+      value:
+        '@type': Tokenized
+        '@typeRef':
+          id: M
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/M
+        name: Payment Method Tokenized
+        id: "55257"
+        href: /belEbPaymentMethods/v1/paymentMethod/55257?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          tokenizedCard:
+            lastFourDigits: "8888"
+            token: myToken
+            tokenId: "11341"
+            tokenCreationDate: 2022-09-27T14:41:50Z
+            externalPaymentMethod: externalPM
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    belEbCreateDirectDebitPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        '@typeRef':
+          id: D
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/D
+        name: Payment Method DirectDebit
+        id: "55258"
+        href: /belEbPaymentMethods/v1/paymentMethod/55258?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "9999"
+            accountNumberType: iban
+            bank: Bradesco
+            bankCountryRef:
+              id: CHL
+              href: /belEbReferenceDataManagement/v1/country/CHL
+            bic: bic
+            city: Santa Rita do Sapucai
+            iban: iban
+            owner: owner
+            postCode: "37540000"
+            subAccountNumber: "789"
+            stateOrProvince: Minas Gerais
+            street1: Principal Avenue
+            street2: square
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    belEbCreateBillingAccountPaymentMethodResponse:
+      description: (Status Code 201)
+      summary: Create Billing Account Payment Method
+      value:
+        '@type': BillingAccount
+        '@typeRef':
+          id: B
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/B
+        name: Payment Method BillingAccount
+        id: "55259"
+        href: /belEbPaymentMethods/v1/paymentMethod/55259?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          billingAccount:
+            id: BA0000250361
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    readPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Read Payment Method
+      value:
+        '@type': Cash
+        '@typeRef':
+          id: P
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/P
+        name: Payment Method Cash
+        id: "55256"
+        href: /dmpPaymentMethods/v1/paymentMethod/55256?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: true
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    belEbReadPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Read Payment Method
+      value:
+        '@type': Cash
+        '@typeRef':
+          id: P
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/P
+        name: Payment Method Cash
+        id: "55256"
+        href: /belEbPaymentMethods/v1/paymentMethod/55256?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2022-09-27T00:00:00Z
+        validFor:
+          startDateTime: 2022-09-27T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: true
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    updateTokenizedPaymentMethodRequest:
+      description: "PATCH {{base_url}}/dmpPaymentMethods/v1/paymentMethod/38200"
+      summary: Update Tokenized Payment Method
+      value:
+        validFor:
+          startDateTime: 2021-05-30T00:00:00.000Z
+        '@type': Tokenized
+        authorizationIndicator: true
+        details:
+          tokenizedCard:
+            lastFourDigits: "2345"
+            externalPaymentMethod: extPM
+            token: tokenX
+        relatedParty:
+          id: CUST0000334836
+    updateDirectDebitPaymentMethodRequest:
+      description: "PATCH {{base_url}}/dmpPaymentMethods/v1/paymentMethod/34237"
+      summary: Update Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        authorizationIndicator: true
+        authorizationRemark: AuthorizationRemark
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "8765"
+            accountNumberType: iban
+            bic: bic
+            owner: owner
+            bank: Itau
+            iban: iban
+            subAccountNumber: "789"
+            street1: Principal Avenue
+            street2: square
+            city: Santa Rita do Sapucai
+            stateOrProvince: Minas Gerais
+            postCode: "37540000"
+            bankCountryRef:
+              id: CHL
+        relatedParty:
+          id: CUST0000334567
+    updateBillingAccountPaymentMethodRequest:
+      description: "PATCH {{base_url}}/dmpPaymentMethods/v1/paymentMethod/43283"
+      summary: Update Billing Account Payment Method
+      value:
+        validFor:
+          startDateTime: 2021-08-08T00:00:00Z
+        '@type': BillingAccount
+        details:
+          billingAccount:
+            id: BA0000218674
+        relatedParty:
+          id: CUST0000376396
+    belEbUpdateTokenizedPaymentMethodRequest:
+      description: "PATCH {{base_url}}/belEbPaymentMethods/v1/paymentMethod/38200"
+      summary: Update Tokenized Payment Method
+      value:
+        validFor:
+          startDateTime: 2021-05-30T00:00:00.000Z
+        '@type': Tokenized
+        authorizationIndicator: true
+        details:
+          tokenizedCard:
+            lastFourDigits: "2345"
+            externalPaymentMethod: extPM
+            token: tokenX
+        relatedParty:
+          id: CUST0000334836
+    belEbUpdateDirectDebitPaymentMethodRequest:
+      description: "PATCH {{base_url}}/belEbPaymentMethods/v1/paymentMethod/34237"
+      summary: Update Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        authorizationIndicator: true
+        authorizationRemark: AuthorizationRemark
+        orderNumber: "123456"
+        details:
+          bankAccountDebit:
+            accountNumber: "8765"
+            accountNumberType: iban
+            bic: bic
+            owner: owner
+            bank: Itau
+            iban: iban
+            subAccountNumber: "789"
+            street1: Principal Avenue
+            street2: square
+            city: Santa Rita do Sapucai
+            stateOrProvince: Minas Gerais
+            postCode: "37540000"
+            bankCountryRef:
+              id: CHL
+        relatedParty:
+          id: CUST0000334567
+    belEbUpdateBillingAccountPaymentMethodRequest:
+      description: "PATCH {{base_url}}/belEbPaymentMethods/v1/paymentMethod/43283"
+      summary: Update Billing Account Payment Method
+      value:
+        validFor:
+          startDateTime: 2021-08-08T00:00:00Z
+        '@type': BillingAccount
+        details:
+          billingAccount:
+            id: BA0000218674
+        relatedParty:
+          id: CUST0000376396
+    updateTokenizedPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Update Tokenized Payment Method
+      value:
+        '@type': Tokenized
+        '@typeRef':
+          id: M
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/M
+        name: Payment Method Tokenized
+        id: "38200"
+        href: /dmpPaymentMethods/v1/paymentMethod/38200?relatedPartyId=CUST0000334836
+        status: valid
+        statusDate: 2021-05-30T00:00:00Z
+        validFor:
+          startDateTime: 2021-05-30T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        details:
+          tokenizedCard:
+            lastFourDigits: "2345"
+            token: tokenX
+            tokenId: "8995"
+            tokenCreationDate: 2021-04-05T16:10:21Z
+            externalPaymentMethod: extPM
+        paymentMethodAssignment:
+        - id: "1122271"
+          validFor:
+            startDateTime: 2021-05-30T00:00:00Z
+          status: valid
+          relatedParty:
+            id: CUST0000334836
+            href: /dmpPartyManagement/v1/individual/CUST0000334836
+          paymentTermRef:
+            id: "1"
+            href: /dmpReferenceDataManagement/v1/paymentTerm/1
+        relatedParty:
+          id: CUST0000334836
+          href: /dmpPartyManagement/v1/individual/CUST0000334836
+          role: Customer
+    updateDirectDebitPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Update Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        '@typeRef':
+          id: D
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/D
+        name: Payment Method DirectDebit
+        id: "34237"
+        href: /dmpPaymentMethods/v1/paymentMethod/34237?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2021-02-09T00:00:00Z
+        validFor:
+          startDateTime: 2021-02-09T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        details:
+          bankAccountDebit:
+            accountNumber: "8765"
+            accountNumberType: iban
+            bank: Itau
+            bankCountryRef:
+              id: CHL
+              href: /dmpReferenceDataManagement/v1/country/CHL
+            bic: bic
+            city: Santa Rita do Sapucai
+            iban: iban
+            owner: owner
+            postCode: "37540000"
+            subAccountNumber: "789"
+            stateOrProvince: Minas Gerais
+            street1: Principal Avenue
+            street2: square
+        relatedParty:
+          id: CUST0000334567
+          href: /dmpPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    updateBillingAccountPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Update Billing Account Payment Method
+      value:
+        '@type': BillingAccount
+        '@typeRef':
+          id: B
+          href: /dmpReferenceDataManagement/v1/paymentMethodType/B
+        name: Payment Method BillingAccount
+        id: "43283"
+        href: /dmpPaymentMethods/v1/paymentMethod/43283?relatedPartyId=CUST0000376396
+        status: valid
+        statusDate: 2021-08-08T00:00:00Z
+        validFor:
+          startDateTime: 2021-08-08T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          billingAccount:
+            id: BA0000218431
+        paymentMethodAssignment:
+        - id: "1129057"
+          validFor:
+            startDateTime: 2021-08-08T00:00:00Z
+          status: valid
+          relatedParty:
+            id: CUST0000376396
+            href: /dmpPartyManagement/v1/individual/CUST0000376396
+          paymentTermRef:
+            id: "1"
+            href: /dmpReferenceDataManagement/v1/paymentTerm/1
+        relatedParty:
+          id: CUST0000376396
+          href: /dmpPartyManagement/v1/individual/CUST0000376396
+          role: Customer
+    belEbUpdateTokenizedPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Update Tokenized Payment Method
+      value:
+        '@type': Tokenized
+        '@typeRef':
+          id: M
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/M
+        name: Payment Method Tokenized
+        id: "38200"
+        href: /belEbPaymentMethods/v1/paymentMethod/38200?relatedPartyId=CUST0000334836
+        status: valid
+        statusDate: 2021-05-30T00:00:00Z
+        validFor:
+          startDateTime: 2021-05-30T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        details:
+          tokenizedCard:
+            lastFourDigits: "2345"
+            token: tokenX
+            tokenId: "8995"
+            tokenCreationDate: 2021-04-05T16:10:21Z
+            externalPaymentMethod: extPM
+        paymentMethodAssignment:
+        - id: "1122271"
+          validFor:
+            startDateTime: 2021-05-30T00:00:00Z
+          status: valid
+          relatedParty:
+            id: CUST0000334836
+            href: /belEbPartyManagement/v1/individual/CUST0000334836
+          paymentTermRef:
+            id: "1"
+            href: /belEbReferenceDataManagement/v1/paymentTerm/1
+        relatedParty:
+          id: CUST0000334836
+          href: /belEbPartyManagement/v1/individual/CUST0000334836
+          role: Customer
+    belEbUpdateDirectDebitPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Update Direct Debit Payment Method
+      value:
+        '@type': DirectDebit
+        '@typeRef':
+          id: D
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/D
+        name: Payment Method DirectDebit
+        id: "34237"
+        href: /belEbPaymentMethods/v1/paymentMethod/34237?relatedPartyId=CUST0000334567
+        status: valid
+        statusDate: 2021-02-09T00:00:00Z
+        validFor:
+          startDateTime: 2021-02-09T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        authorizationRemark: No authorization implemented
+        creditForAuthorization:
+          unit: EUR
+          value: 0.0
+        isAuthorized: true
+        isPreferred: false
+        details:
+          bankAccountDebit:
+            accountNumber: "8765"
+            accountNumberType: iban
+            bank: Itau
+            bankCountryRef:
+              id: CHL
+              href: /belEbReferenceDataManagement/v1/country/CHL
+            bic: bic
+            city: Santa Rita do Sapucai
+            iban: iban
+            owner: owner
+            postCode: "37540000"
+            subAccountNumber: "789"
+            stateOrProvince: Minas Gerais
+            street1: Principal Avenue
+            street2: square
+        relatedParty:
+          id: CUST0000334567
+          href: /belEbPartyManagement/v1/individual/CUST0000334567
+          role: Customer
+    belEbUpdateBillingAccountPaymentMethodResponse:
+      description: (Status Code 200)
+      summary: Update Billing Account Payment Method
+      value:
+        '@type': BillingAccount
+        '@typeRef':
+          id: B
+          href: /belEbReferenceDataManagement/v1/paymentMethodType/B
+        name: Payment Method BillingAccount
+        id: "43283"
+        href: /belEbPaymentMethods/v1/paymentMethod/43283?relatedPartyId=CUST0000376396
+        status: valid
+        statusDate: 2021-08-08T00:00:00Z
+        validFor:
+          startDateTime: 2021-08-08T00:00:00Z
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        isAuthorized: false
+        isPreferred: false
+        details:
+          billingAccount:
+            id: BA0000218431
+        paymentMethodAssignment:
+        - id: "1129057"
+          validFor:
+            startDateTime: 2021-08-08T00:00:00Z
+          status: valid
+          relatedParty:
+            id: CUST0000376396
+            href: /belEbPartyManagement/v1/individual/CUST0000376396
+          paymentTermRef:
+            id: "1"
+            href: /belEbReferenceDataManagement/v1/paymentTerm/1
+        relatedParty:
+          id: CUST0000376396
+          href: /belEbPartyManagement/v1/individual/CUST0000376396
+          role: Customer
+    createPaymentMethodAssignmentRequest:
+      description: "POST {{base_url}}/dmpPaymentMethods/v1/paymentMethod/7493/paymentMethodAssignment"
+      summary: Create Payment Method Assignment
+      value:
+        validFor:
+          startDateTime: 2020-05-22T07:27:34.020Z
+        relatedParty:
+          id: CUST0000021938
+        account:
+          id: BA0000009277
+        paymentTermRef:
+          id: "1"
+        financialDocumentTypeRef:
+          id: "1"
+    belEbCreatePaymentMethodAssignmentRequest:
+      description: "POST {{base_url}}/belEbPaymentMethods/v1/paymentMethod/7493/paymentMethodAssignment"
+      summary: Create Payment Method Assignment
+      value:
+        validFor:
+          startDateTime: 2020-05-22T07:27:34.020Z
+        relatedParty:
+          id: CUST0000021938
+        account:
+          id: BA0000009277
+        paymentTermRef:
+          id: "1"
+        financialDocumentTypeRef:
+          id: "1"
+    belEbCreatePaymentMethodAssignmentResponse:
+      description: (Status Code 201)
+      summary: Create Payment Method Assignment
+      value:
+        id: "219"
+        validFor:
+          startDateTime: 2020-05-22T00:00:00.000Z
+        status: valid
+        relatedParty:
+          id: CUST0000021938
+          href: /belEbPartyManagement/v1/individual/CUST0000021938
+        account:
+          id: BA0000009277
+          href: /belEbAccountManagement/v1/billingAccount/BA0000009277?relatedPartyId=CUST0000021938
+        paymentTermRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/paymentTerm/1
+        financialDocumentTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/financialDocumentType/1
+    updatePaymentMethodAssignmentRequest:
+      description: "PATCH {{base_url}}/dmpPaymentMethods/v1/paymentMethod/19708/paymentMethodAssignment/223"
+      summary: Update Payment Method Assignment
+      value:
+        id: "223"
+        validFor:
+          startDateTime: 2021-05-20T00:00:00.000Z
+          endDateTime: 2022-05-20T00:00:00.000Z
+        relatedParty:
+          id: CUST0000021979
+        account:
+          id: BA0000009287
+        paymentTermRef:
+          id: "1"
+        financialDocumentTypeRef:
+          id: "1"
+    belEbUpdatePaymentMethodAssignmentRequest:
+      description: "PATCH {{base_url}}/belEbPaymentMethods/v1/paymentMethod/19708/paymentMethodAssignment/223"
+      summary: Update Payment Method Assignment
+      value:
+        id: "223"
+        validFor:
+          startDateTime: 2021-05-20T00:00:00.000Z
+          endDateTime: 2022-05-20T00:00:00.000Z
+        relatedParty:
+          id: CUST0000021979
+        account:
+          id: BA0000009287
+        paymentTermRef:
+          id: "1"
+        financialDocumentTypeRef:
+          id: "1"
+    updatePaymentMethodAssignmentResponse:
+      description: (Status Code 200)
+      summary: Update Payment Method Assignment
+      value:
+        id: "223"
+        validFor:
+          startDateTime: 2021-05-20T00:00:00.000Z
+          endDateTime: 2022-05-20T00:00:00.000Z
+        status: valid
+        relatedParty:
+          id: CUST0000021979
+          href: /dmpPartyManagement/v1/individual/CUST0000021979
+        account:
+          id: BA0000009287
+          href: /dmpAccountManagement/v1/billingAccount/BA0000009287?relatedPartyId=CUST0000021979
+        paymentTermRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/paymentTerm/1
+        financialDocumentTypeRef:
+          id: "1"
+          href: /dmpReferenceDataManagement/v1/financialDocumentType/1
+    belEbUpdatePaymentMethodAssignmentResponse:
+      description: (Status Code 200)
+      summary: Update Payment Method Assignment
+      value:
+        id: "223"
+        validFor:
+          startDateTime: 2021-05-20T00:00:00.000Z
+          endDateTime: 2022-05-20T00:00:00.000Z
+        status: valid
+        relatedParty:
+          id: CUST0000021979
+          href: /belEbPartyManagement/v1/individual/CUST0000021979
+        account:
+          id: BA0000009287
+          href: /belEbAccountManagement/v1/billingAccount/BA0000009287?relatedPartyId=CUST0000021979
+        paymentTermRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/paymentTerm/1
+        financialDocumentTypeRef:
+          id: "1"
+          href: /belEbReferenceDataManagement/v1/financialDocumentType/1
+  schemas:
+    Id:
+      description: "Public Identifier, max 256 characters."
+      maxLength: 256
+      pattern: ^(?=\s*\S).*$
+      type: string
+    PaymentMethod:
+      description: The payment method information.
+      example:
+        statusDate: 2000-01-23T04:56:07.000+00:00
+        orderNumber: orderNumber
+        paymentMethodAssignment:
+        - financialDocumentTypeRef:
+            id: id
+            href: href
+          validFor:
+            startDateTime: 2000-01-23T04:56:07.000+00:00
+            endDateTime: 2000-01-23T04:56:07.000+00:00
+          id: id
+          relatedParty: null
+          paymentTermRef:
+            id: id
+            href: href
+          account:
+            '@referredType': '@referredType'
+            name: name
+            id: id
+            href: href
+          status: status
+        - financialDocumentTypeRef:
+            id: id
+            href: href
+          validFor:
+            startDateTime: 2000-01-23T04:56:07.000+00:00
+            endDateTime: 2000-01-23T04:56:07.000+00:00
+          id: id
+          relatedParty: null
+          paymentTermRef:
+            id: id
+            href: href
+          account:
+            '@referredType': '@referredType'
+            name: name
+            id: id
+            href: href
+          status: status
+        validFor:
+          startDateTime: 2000-01-23T04:56:07.000+00:00
+          endDateTime: 2000-01-23T04:56:07.000+00:00
+        '@type': null
+        '@typeRef':
+          id: id
+          href: href
+        isPreferred: true
+        relatedParty: null
+        isAuthorized: true
+        businessUnitRef:
+          id: id
+          href: href
+        creditCode: creditCode
+        creditForAuthorization:
+          unit: unit
+          value: 0.8008282
+        phoneNumberOfAuthorization: phoneNumberOfAuthorization
+        name: name
+        authorizationRemark: authorizationRemark
+        details:
+          tokenizedCard:
+            externalPaymentMethod: externalPaymentMethod
+            tokenCreationDate: 2000-01-23T04:56:07.000+00:00
+            tokenId: tokenId
+            lastFourDigits: lastFourDigits
+            token: token
+          bankAccountDebit:
+            owner: owner
+            accountNumberType: null
+            city: city
+            swiftCode: swiftCode
+            accountNumber: accountNumber
+            bank: bank
+            stateOrProvince: stateOrProvince
+            iban: iban
+            subAccountNumber: subAccountNumber
+            postCode: postCode
+            street1: street1
+            street2: street2
+            bankCountryRef:
+              id: id
+              href: href
+            bic: bic
+            bankRef:
+              id: id
+              href: href
+          billingAccount:
+            id: id
+        id: id
+        href: href
+        authorizationIndicator: true
+        status: status
+      properties:
+        '@type':
+          $ref: '#/components/schemas/PaymentMethodAtType'
+        '@typeRef':
+          $ref: '#/components/schemas/PaymentMethodTypeRef'
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        name:
+          description: String type of max 30 characters
+          maxLength: 30
+          type: string
+        status:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        statusDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        businessUnitRef:
+          $ref: '#/components/schemas/BusinessUnitRef'
+        authorizationIndicator:
+          description: Indicates if payment requires authorization.
+          type: boolean
+        authorizationRemark:
+          description: String type of max 2000 characters
+          maxLength: 2000
+          type: string
+        creditForAuthorization:
+          $ref: '#/components/schemas/Money'
+        creditCode:
+          description: String type of max 30 characters
+          maxLength: 30
+          type: string
+        isAuthorized:
+          description: Indicates if the payment is authorized.
+          type: boolean
+        isPreferred:
+          description: |-
+            If the method is the preferred one by the owner. Typically used when querying
+            for the payment methods of a specific customer or account.
+          type: boolean
+        phoneNumberOfAuthorization:
+          description: String type of max 25 characters
+          maxLength: 25
+          type: string
+        orderNumber:
+          description: String type of max 20 characters
+          maxLength: 20
+          type: string
+        details:
+          $ref: '#/components/schemas/Details'
+        paymentMethodAssignment:
+          description: The assignement of the payment method to the relatedPArty and
+            the Billing account.
+          items:
+            $ref: '#/components/schemas/PaymentMethodAssignment'
+          type: array
+        relatedParty:
+          $ref: '#/components/schemas/RelatedParty'
+      required:
+      - '@type'
+      - '@typeRef'
+      - href
+      - id
+      - name
+      - relatedParty
+      - status
+      - statusDate
+      type: object
+    ErrorMessage:
+      description: Error message schema.
+      properties:
+        code:
+          description: "Application relevant detail, defined in the API or a common\
+            \ list."
+          example: BSS.500
+          type: string
+        reason:
+          description: Explanation of the reason for the error which can be shown
+            to a client user.
+          example: Error communicating with downstream system
+          type: string
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Internal Server Error
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 500
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        instance:
+          description: Request path for this occurrence of the problem.
+          example: /resource/123
+          type: string
+        supplementaryErrors:
+          items:
+            $ref: '#/components/schemas/SupplementaryError'
+          type: array
+      required:
+      - code
+      - reason
+      type: object
+    PaymentMethodCreate:
+      description: The payment method create request message.
+      example:
+        businessUnitRef:
+          id: id
+        orderNumber: orderNumber
+        paymentMethodAssignment:
+        - financialDocumentTypeRef:
+            id: id
+          validFor:
+            startDateTime: 2000-01-23T04:56:07.000+00:00
+            endDateTime: 2000-01-23T04:56:07.000+00:00
+          relatedParty:
+            '@referredType': null
+            id: id
+          paymentTermRef:
+            id: id
+          account:
+            '@referredType': '@referredType'
+            id: id
+        - financialDocumentTypeRef:
+            id: id
+          validFor:
+            startDateTime: 2000-01-23T04:56:07.000+00:00
+            endDateTime: 2000-01-23T04:56:07.000+00:00
+          relatedParty:
+            '@referredType': null
+            id: id
+          paymentTermRef:
+            id: id
+          account:
+            '@referredType': '@referredType'
+            id: id
+        validFor:
+          startDateTime: 2000-01-23T04:56:07.000+00:00
+          endDateTime: 2000-01-23T04:56:07.000+00:00
+        '@type': null
+        name: name
+        authorizationRemark: authorizationRemark
+        details:
+          tokenizedCard:
+            externalPaymentMethod: externalPaymentMethod
+            tokenId: tokenId
+            lastFourDigits: lastFourDigits
+            token: token
+          bankAccountDebit:
+            owner: owner
+            accountNumberType: null
+            city: city
+            swiftCode: swiftCode
+            accountNumber: accountNumber
+            bank: bank
+            stateOrProvince: stateOrProvince
+            iban: iban
+            subAccountNumber: subAccountNumber
+            postCode: postCode
+            street1: street1
+            street2: street2
+            bankCountryRef:
+              id: id
+            bic: bic
+            bankRef:
+              id: id
+          billingAccount:
+            id: id
+        authorizationIndicator: true
+        relatedParty:
+          '@referredType': null
+          role: Customer
+          id: id
+      properties:
+        '@type':
+          $ref: '#/components/schemas/PaymentMethodAtType'
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        businessUnitRef:
+          $ref: '#/components/schemas/BusinessUnitRefRequest'
+        authorizationIndicator:
+          description: Indicates if payment requires authorization.
+          type: boolean
+        authorizationRemark:
+          description: String type of max 2000 characters
+          maxLength: 2000
+          type: string
+        orderNumber:
+          description: String type of max 20 characters
+          maxLength: 20
+          type: string
+        name:
+          description: String type of max 30 characters
+          maxLength: 30
+          type: string
+        details:
+          $ref: '#/components/schemas/DetailsCreate'
+        paymentMethodAssignment:
+          description: The assignement of the payment method to the relatedPArty and
+            the Billing account.
+          items:
+            $ref: '#/components/schemas/PaymentMethodAssignmentCreate'
+          type: array
+        relatedParty:
+          $ref: '#/components/schemas/RelatedPartyCreate'
+      required:
+      - '@type'
+      - name
+      - relatedParty
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.paymentmethods.validator.RelatedPartyIdConstraint
+        @com.ericsson.bss.bel.dae.paymentmethods.validator.TokenCreateConstraint
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="BusinessUnitExt", field="businessUnitRef.id", message="Invalid Business Unit")
+    PaymentMethodUpdate:
+      description: The payment method update request message.
+      example:
+        businessUnitRef:
+          id: id
+        orderNumber: orderNumber
+        validFor:
+          startDateTime: 2000-01-23T04:56:07.000+00:00
+          endDateTime: 2000-01-23T04:56:07.000+00:00
+        '@type': null
+        name: name
+        authorizationRemark: authorizationRemark
+        details:
+          tokenizedCard:
+            externalPaymentMethod: externalPaymentMethod
+            tokenId: tokenId
+            lastFourDigits: lastFourDigits
+            token: token
+          bankAccountDebit:
+            owner: owner
+            accountNumberType: null
+            city: city
+            swiftCode: swiftCode
+            accountNumber: accountNumber
+            bank: bank
+            stateOrProvince: stateOrProvince
+            iban: iban
+            subAccountNumber: subAccountNumber
+            postCode: postCode
+            street1: street1
+            street2: street2
+            bankCountryRef:
+              id: id
+            bic: bic
+            bankRef:
+              id: id
+          billingAccount:
+            id: id
+        id: id
+        authorizationIndicator: true
+        relatedParty:
+          '@referredType': null
+          id: id
+      properties:
+        '@type':
+          $ref: '#/components/schemas/PaymentMethodAtType'
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        name:
+          description: String type of max 30 characters
+          maxLength: 30
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        businessUnitRef:
+          $ref: '#/components/schemas/BusinessUnitRefRequest'
+        authorizationIndicator:
+          description: Indicates if payment requires authorization.
+          type: boolean
+        authorizationRemark:
+          description: String type of max 2000 characters
+          maxLength: 2000
+          type: string
+        orderNumber:
+          description: String type of max 20 characters
+          maxLength: 20
+          type: string
+        details:
+          $ref: '#/components/schemas/DetailsUpdate'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedPartyRequest'
+      required:
+      - '@type'
+      - relatedParty
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.paymentmethods.validator.TokenUpdateConstraint
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="BusinessUnitExt", field="businessUnitRef.id", message="Invalid Business Unit")
+    PaymentMethodAssignmentCreate:
+      description: PaymentMethodAssignment create request message.
+      example:
+        financialDocumentTypeRef:
+          id: id
+        validFor:
+          startDateTime: 2000-01-23T04:56:07.000+00:00
+          endDateTime: 2000-01-23T04:56:07.000+00:00
+        relatedParty:
+          '@referredType': null
+          id: id
+        paymentTermRef:
+          id: id
+        account:
+          '@referredType': '@referredType'
+          id: id
+      properties:
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedPartyRequest'
+        account:
+          $ref: '#/components/schemas/AccountRefRequest'
+        paymentTermRef:
+          $ref: '#/components/schemas/PaymentTermRefCreate'
+        financialDocumentTypeRef:
+          $ref: '#/components/schemas/FinancialDocumentTypeRefRequest'
+      required:
+      - paymentTermRef
+      - relatedParty
+      - validFor
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="PaymentTerm", field="paymentTermRef.id", message="Invalid Payment Term")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="FinancialDocumentType", field="financialDocumentTypeRef.id", message="Invalid Financial Document Type")
+    PaymentMethodAssignment:
+      description: The payment method assignment information.
+      example:
+        financialDocumentTypeRef:
+          id: id
+          href: href
+        validFor:
+          startDateTime: 2000-01-23T04:56:07.000+00:00
+          endDateTime: 2000-01-23T04:56:07.000+00:00
+        id: id
+        relatedParty: null
+        paymentTermRef:
+          id: id
+          href: href
+        account:
+          '@referredType': '@referredType'
+          name: name
+          id: id
+          href: href
+        status: status
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedParty'
+        status:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        account:
+          $ref: '#/components/schemas/AccountRef'
+        paymentTermRef:
+          $ref: '#/components/schemas/PaymentTermRef'
+        financialDocumentTypeRef:
+          $ref: '#/components/schemas/FinancialDocumentTypeRef'
+      required:
+      - id
+      - paymentTermRef
+      - relatedParty
+      - validFor
+      type: object
+    PaymentMethodAssignmentUpdate:
+      description: PaymentMethodAssignment update request message.
+      example:
+        financialDocumentTypeRef:
+          id: id
+        validFor:
+          startDateTime: 2000-01-23T04:56:07.000+00:00
+          endDateTime: 2000-01-23T04:56:07.000+00:00
+        relatedParty:
+          '@referredType': null
+          id: id
+        paymentTermRef:
+          id: id
+        account:
+          '@referredType': '@referredType'
+          id: id
+      properties:
+        validFor:
+          $ref: '#/components/schemas/TimePeriod'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedPartyRequest'
+        account:
+          $ref: '#/components/schemas/AccountRefRequest'
+        paymentTermRef:
+          $ref: '#/components/schemas/PaymentTermRefUpdate'
+        financialDocumentTypeRef:
+          $ref: '#/components/schemas/FinancialDocumentTypeRefRequest'
+      required:
+      - relatedParty
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="PaymentTerm", field="paymentTermRef.id", message="Invalid Payment Term")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="FinancialDocumentType", field="financialDocumentTypeRef.id", message="Invalid Financial Document Type")
+    PaymentMethodAtType:
+      description: The possible values of payment method.
+      enum:
+      - BillingAccount
+      - Cash
+      - DirectDebit
+      - Tokenized
+      type: string
+    PaymentMethodTypeRef:
+      description: Reference to PaymentMethodType used in response messages.
+      example:
+        id: id
+        href: href
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    String256:
+      description: String type of max 256 characters
+      maxLength: 256
+      type: string
+    String30:
+      description: String type of max 30 characters
+      maxLength: 30
+      type: string
+    String32:
+      description: String type of max 32 characters
+      maxLength: 32
+      type: string
+    DateTime:
+      description: |-
+        The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+        Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+      format: date-time
+      type: string
+    TimePeriod:
+      description: This type defines a time period value consisting of a startDateTime
+        value and an endDateTime value. The startDateTime is inclusive and endDateTime
+        is exclusive. The startDateTime and endDateTime are not allowed to have the
+        same value. EndDateTime must not be before startDateTime
+      example:
+        startDateTime: 2000-01-23T04:56:07.000+00:00
+        endDateTime: 2000-01-23T04:56:07.000+00:00
+      properties:
+        startDateTime:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        endDateTime:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+      type: object
+    BusinessUnitRef:
+      description: Reference to BusinessUnit used in response messages.
+      example:
+        id: id
+        href: href
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    String2000:
+      description: String type of max 2000 characters
+      maxLength: 2000
+      type: string
+    Money:
+      description: A base / value business entity used to represent money
+      example:
+        unit: unit
+        value: 0.8008282
+      properties:
+        unit:
+          description: Currency (ISO4217 norm uses 3 letters to define the currency)
+          type: string
+        value:
+          description: A positive floating point number
+          format: float
+          type: number
+      type: object
+    String25:
+      description: String type of max 25 characters
+      maxLength: 25
+      type: string
+    String20:
+      description: String type of max 20 characters
+      maxLength: 20
+      type: string
+    Details:
+      description: A union for the different types of payment means.
+      example:
+        tokenizedCard:
+          externalPaymentMethod: externalPaymentMethod
+          tokenCreationDate: 2000-01-23T04:56:07.000+00:00
+          tokenId: tokenId
+          lastFourDigits: lastFourDigits
+          token: token
+        bankAccountDebit:
+          owner: owner
+          accountNumberType: null
+          city: city
+          swiftCode: swiftCode
+          accountNumber: accountNumber
+          bank: bank
+          stateOrProvince: stateOrProvince
+          iban: iban
+          subAccountNumber: subAccountNumber
+          postCode: postCode
+          street1: street1
+          street2: street2
+          bankCountryRef:
+            id: id
+            href: href
+          bic: bic
+          bankRef:
+            id: id
+            href: href
+        billingAccount:
+          id: id
+      properties:
+        bankAccountDebit:
+          $ref: '#/components/schemas/BankAccountDebit'
+        tokenizedCard:
+          $ref: '#/components/schemas/TokenizedCard'
+        billingAccount:
+          $ref: '#/components/schemas/BillingAccount'
+      type: object
+    RelatedParty:
+      allOf:
+      - $ref: '#/components/schemas/RelatedPartyBase'
+      - $ref: '#/components/schemas/RelatedParty_allOf'
+      description: |-
+        Related Entity Reference used in response messages.
+        A related party defines party or party role linked to a specific entity.
+      type: object
+    SupplementaryError:
+      description: SupplementaryError message schema.
+      properties:
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Unable to communicate with downstream system
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 404
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        detail:
+          description: |
+            A human readable explanation specific to this occurrence of the problem that is helpful to locate the problem and give advice on how to proceed. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: "HTTP response 404 : when communicating with http://localhost:8081/"
+          type: string
+        action:
+          description: The action causing the error.
+          example: AddressrolesReadService.AddressrolesReadServiceSoap11
+          type: string
+        source:
+          description: The application returning the error.
+          example: eb
+          type: string
+      type: object
+    BusinessUnitRefRequest:
+      description: Reference to BusinessUnit used in Create and Update requests messages.
+      example:
+        id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    DetailsCreate:
+      description: A union for the different types of payment means.
+      example:
+        tokenizedCard:
+          externalPaymentMethod: externalPaymentMethod
+          tokenId: tokenId
+          lastFourDigits: lastFourDigits
+          token: token
+        bankAccountDebit:
+          owner: owner
+          accountNumberType: null
+          city: city
+          swiftCode: swiftCode
+          accountNumber: accountNumber
+          bank: bank
+          stateOrProvince: stateOrProvince
+          iban: iban
+          subAccountNumber: subAccountNumber
+          postCode: postCode
+          street1: street1
+          street2: street2
+          bankCountryRef:
+            id: id
+          bic: bic
+          bankRef:
+            id: id
+        billingAccount:
+          id: id
+      properties:
+        bankAccountDebit:
+          $ref: '#/components/schemas/BankAccountDebitCreate'
+        tokenizedCard:
+          $ref: '#/components/schemas/TokenizedCardCreate'
+        billingAccount:
+          $ref: '#/components/schemas/BillingAccount'
+      type: object
+    RelatedPartyCreate:
+      description: |-
+        Related Entity Reference used in request messages.
+        A related party defines party or party role linked to a specific entity.
+      example:
+        '@referredType': null
+        role: Customer
+        id: id
+      properties:
+        '@referredType':
+          $ref: '#/components/schemas/PartyTypes'
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        role:
+          description: Types of party role.
+          example: Customer
+          maxLength: 32
+          pattern: \b(Customer)\b
+          type: string
+      required:
+      - id
+      - role
+      type: object
+    DetailsUpdate:
+      description: A union for the different types of payment means.
+      example:
+        tokenizedCard:
+          externalPaymentMethod: externalPaymentMethod
+          tokenId: tokenId
+          lastFourDigits: lastFourDigits
+          token: token
+        bankAccountDebit:
+          owner: owner
+          accountNumberType: null
+          city: city
+          swiftCode: swiftCode
+          accountNumber: accountNumber
+          bank: bank
+          stateOrProvince: stateOrProvince
+          iban: iban
+          subAccountNumber: subAccountNumber
+          postCode: postCode
+          street1: street1
+          street2: street2
+          bankCountryRef:
+            id: id
+          bic: bic
+          bankRef:
+            id: id
+        billingAccount:
+          id: id
+      properties:
+        bankAccountDebit:
+          $ref: '#/components/schemas/BankAccountDebitUpdate'
+        tokenizedCard:
+          $ref: '#/components/schemas/TokenizedCardUpdate'
+        billingAccount:
+          $ref: '#/components/schemas/BillingAccount'
+      type: object
+    RelatedPartyRequest:
+      description: |-
+        Related Entity Reference used in response messages.
+        A related party defines party or party role linked to a specific entity.
+      example:
+        '@referredType': null
+        id: id
+      properties:
+        '@referredType':
+          $ref: '#/components/schemas/PartyTypes'
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+    AccountRefRequest:
+      description: Reference to Account used in request messages.
+      example:
+        '@referredType': '@referredType'
+        id: id
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+    PaymentTermRefCreate:
+      description: Reference to PaymentTerm used in create request messages.
+      example:
+        id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      type: object
+      x-members-accessor: true
+    FinancialDocumentTypeRefRequest:
+      description: Reference to FinancialDocumentType used in request messages.
+      example:
+        id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    AccountRef:
+      description: Reference to Account used in response messages.
+      example:
+        '@referredType': '@referredType'
+        name: name
+        id: id
+        href: href
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        name:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    PaymentTermRef:
+      description: Reference to PaymentTerm used in response messages.
+      example:
+        id: id
+        href: href
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    FinancialDocumentTypeRef:
+      description: Reference to FinancialDocumentType used in response messages.
+      example:
+        id: id
+        href: href
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    PaymentTermRefUpdate:
+      description: Reference to PaymentTerm used in update request messages.
+      example:
+        id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    BankAccountDebit:
+      description: Bank Account Debit details shown in payment method.
+      example:
+        owner: owner
+        accountNumberType: null
+        city: city
+        swiftCode: swiftCode
+        accountNumber: accountNumber
+        bank: bank
+        stateOrProvince: stateOrProvince
+        iban: iban
+        subAccountNumber: subAccountNumber
+        postCode: postCode
+        street1: street1
+        street2: street2
+        bankCountryRef:
+          id: id
+          href: href
+        bic: bic
+        bankRef:
+          id: id
+          href: href
+      properties:
+        accountNumber:
+          description: String type of max 25 characters
+          maxLength: 25
+          type: string
+        accountNumberType:
+          $ref: '#/components/schemas/BankAccountDebitAccountNumberTypes'
+        bank:
+          description: String type of max 58 characters
+          maxLength: 58
+          type: string
+        bankRef:
+          $ref: '#/components/schemas/BankRef'
+        bankCountryRef:
+          $ref: '#/components/schemas/CountryRef'
+        bic:
+          description: String type of max 11 characters
+          maxLength: 11
+          type: string
+        city:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        iban:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        owner:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        postCode:
+          description: String type of max 15 characters
+          maxLength: 15
+          type: string
+        subAccountNumber:
+          description: String type of max 20 characters
+          maxLength: 20
+          type: string
+        stateOrProvince:
+          description: String type of max 25 characters
+          maxLength: 25
+          type: string
+        street1:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        street2:
+          description: String type of max 15 characters
+          maxLength: 15
+          type: string
+        swiftCode:
+          description: String type of max 11 characters
+          maxLength: 11
+          type: string
+      required:
+      - accountNumber
+      - accountNumberType
+      type: object
+    TokenizedCard:
+      description: Tokenized Card details shown in payment method.
+      example:
+        externalPaymentMethod: externalPaymentMethod
+        tokenCreationDate: 2000-01-23T04:56:07.000+00:00
+        tokenId: tokenId
+        lastFourDigits: lastFourDigits
+        token: token
+      properties:
+        lastFourDigits:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        token:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        tokenId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        tokenCreationDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        externalPaymentMethod:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+      required:
+      - token
+      type: object
+    BillingAccount:
+      description: Identifier for Billing Account.
+      example:
+        id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+    RelatedPartyBase:
+      description: |-
+        Related Party Base schema common to all operations.
+        A related party defines party or party role linked to a specific entity.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    PartyTypes:
+      description: The possible types of party.
+      enum:
+      - Individual
+      - Organization
+      type: string
+    BankAccountDebitCreate:
+      description: Bank Account Debit details shown in payment method.
+      example:
+        owner: owner
+        accountNumberType: null
+        city: city
+        swiftCode: swiftCode
+        accountNumber: accountNumber
+        bank: bank
+        stateOrProvince: stateOrProvince
+        iban: iban
+        subAccountNumber: subAccountNumber
+        postCode: postCode
+        street1: street1
+        street2: street2
+        bankCountryRef:
+          id: id
+        bic: bic
+        bankRef:
+          id: id
+      properties:
+        accountNumber:
+          description: String type of max 25 characters
+          maxLength: 25
+          type: string
+        accountNumberType:
+          $ref: '#/components/schemas/BankAccountDebitAccountNumberTypes'
+        bank:
+          description: String type of max 58 characters
+          maxLength: 58
+          type: string
+        bankRef:
+          $ref: '#/components/schemas/BankRefRequest'
+        bankCountryRef:
+          $ref: '#/components/schemas/CountryRefRequest'
+        bic:
+          description: String type of max 11 characters
+          maxLength: 11
+          type: string
+        city:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        iban:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        owner:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        postCode:
+          description: String type of max 15 characters
+          maxLength: 15
+          type: string
+        subAccountNumber:
+          description: String type of max 20 characters
+          maxLength: 20
+          type: string
+        stateOrProvince:
+          description: String type of max 25 characters
+          maxLength: 25
+          type: string
+        street1:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        street2:
+          description: String type of max 15 characters
+          maxLength: 15
+          type: string
+        swiftCode:
+          description: String type of max 11 characters
+          maxLength: 11
+          type: string
+      required:
+      - accountNumber
+      - accountNumberType
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Country", field="bankCountryRef.id", message="Invalid Country value")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Bank", field="bankRef.id", message="Invalid Bank value")
+    TokenizedCardCreate:
+      description: Tokenized Card details shown in payment method.
+      example:
+        externalPaymentMethod: externalPaymentMethod
+        tokenId: tokenId
+        lastFourDigits: lastFourDigits
+        token: token
+      properties:
+        lastFourDigits:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        token:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        tokenId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        externalPaymentMethod:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+      required:
+      - token
+      type: object
+    BankAccountDebitUpdate:
+      description: Bank Account Debit details shown in payment method.
+      example:
+        owner: owner
+        accountNumberType: null
+        city: city
+        swiftCode: swiftCode
+        accountNumber: accountNumber
+        bank: bank
+        stateOrProvince: stateOrProvince
+        iban: iban
+        subAccountNumber: subAccountNumber
+        postCode: postCode
+        street1: street1
+        street2: street2
+        bankCountryRef:
+          id: id
+        bic: bic
+        bankRef:
+          id: id
+      properties:
+        accountNumber:
+          description: String type of max 25 characters
+          maxLength: 25
+          type: string
+        accountNumberType:
+          $ref: '#/components/schemas/BankAccountDebitAccountNumberTypes'
+        bank:
+          description: String type of max 58 characters
+          maxLength: 58
+          type: string
+        bankRef:
+          $ref: '#/components/schemas/BankRefRequest'
+        bankCountryRef:
+          $ref: '#/components/schemas/CountryRefRequest'
+        bic:
+          description: String type of max 11 characters
+          maxLength: 11
+          type: string
+        city:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        iban:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        owner:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        postCode:
+          description: String type of max 15 characters
+          maxLength: 15
+          type: string
+        subAccountNumber:
+          description: String type of max 20 characters
+          maxLength: 20
+          type: string
+        stateOrProvince:
+          description: String type of max 25 characters
+          maxLength: 25
+          type: string
+        street1:
+          description: String type of max 40 characters
+          maxLength: 40
+          type: string
+        street2:
+          description: String type of max 15 characters
+          maxLength: 15
+          type: string
+        swiftCode:
+          description: String type of max 11 characters
+          maxLength: 11
+          type: string
+      type: object
+      x-members-accessor: true
+      x-dae-generic-annotation: |
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Country", field="bankCountryRef.id", message="Invalid Country value")
+        @com.ericsson.bss.bel.dae.referencedata.validator.ReferenceDataSimpleConstraint(entity="Bank", field="bankRef.id", message="Invalid Bank value")
+    TokenizedCardUpdate:
+      description: Tokenized Card details shown in payment method.
+      example:
+        externalPaymentMethod: externalPaymentMethod
+        tokenId: tokenId
+        lastFourDigits: lastFourDigits
+        token: token
+      properties:
+        lastFourDigits:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        token:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        tokenId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        externalPaymentMethod:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+      required:
+      - token
+      type: object
+    String128:
+      description: String type of max 128 characters
+      maxLength: 128
+      type: string
+    BankAccountDebitAccountNumberTypes:
+      description: The possible values for the bank account debit account number type.
+      enum:
+      - iban
+      - swift
+      type: string
+    String58:
+      description: String type of max 58 characters
+      maxLength: 58
+      type: string
+    BankRef:
+      description: Reference to Bank used in response messages.
+      example:
+        id: id
+        href: href
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    CountryRef:
+      description: Reference to Country used in response messages.
+      example:
+        id: id
+        href: href
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      - id
+      type: object
+    String11:
+      description: String type of max 11 characters
+      maxLength: 11
+      type: string
+    String40:
+      description: String type of max 40 characters
+      maxLength: 40
+      type: string
+    String15:
+      description: String type of max 15 characters
+      maxLength: 15
+      type: string
+    BankRefRequest:
+      description: Reference to Bank used in request messages.
+      example:
+        id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    CountryRefRequest:
+      description: Reference to Country used in request messages.
+      example:
+        id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    RelatedParty_allOf:
+      properties:
+        '@referredType':
+          $ref: '#/components/schemas/PartyTypes'
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        role:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+      required:
+      - '@referredType'
+      - href
+      - role
+      type: object
+      example: null
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http

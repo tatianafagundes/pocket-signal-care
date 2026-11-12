@@ -4,6 +4,7 @@ import * as catalog from "@/services/catalog.functions";
 import * as order from "@/services/order.functions";
 import * as charging from "@/services/charging.functions";
 import * as resource from "@/services/resource.functions";
+import * as auth from "@/services/auth.functions";
 
 /*
  * api — the single port the UI uses. (Spec Fase 0.3 / 3.4)
@@ -67,4 +68,8 @@ export const api = {
   listAvailableMsisdn: (tenantId: string) => unwrap(resource.listAvailableMsisdn(tenantId)),
   reserveMsisdn: (input: unknown) => unwrap(resource.reserveMsisdn(input)),
   validateSim: (iccid: string) => unwrap(resource.validateSim(iccid)),
+
+  // Auth seam (mock + Keycloak stub) — register/login. Password never leaves the seam.
+  register: (input: unknown) => unwrap(auth.registerAccount(input)),
+  login: (input: unknown) => unwrap(auth.loginAccount(input)),
 };

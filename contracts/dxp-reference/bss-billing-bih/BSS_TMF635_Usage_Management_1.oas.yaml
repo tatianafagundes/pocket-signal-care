@@ -1,0 +1,5153 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: ericsson@example.com
+    name: API Support
+    url: http://www.ericsson.com/support
+  description: |2-
+
+    # Introduction
+
+    This document is inspired on TMF635 Usage Management API REST Specification - Release 4.0.0
+
+    The API performs the following operations on Product Balances:
+
+    - Read Usage Events
+
+    - Read Non-Usage Events
+
+    The target group:
+
+    - Solution Integrators
+
+    ## Transfer Mechanism
+
+    The transfer mechanism used is HTTPS. Both HTTP requests and HTTP responses use headers to send information about the HTTP message.
+    The access port is configurable. Clients that use this interface should support a configurable port.
+
+    ## Authentication and Authorization
+
+    Authentication is controlled by the inclusion of a Java Web Token (JWT) in the authorization header of the HTTP message.
+
+    ## HTTP Content Negotiation
+
+    HTTP content negotiation uses versioning in the URL to request a certain version of the resource representation.
+
+    ## BSS TMF635 Usage Management REST Interface
+
+    The BSS TMF635 Usage Management REST Interface enables the user to retrieve, and search for information
+    regarding the usage and non-usage events under the customer contract.
+
+    ### Resources
+
+    - Usage
+
+    ## References
+
+    - RFC 7230 - HTTP Message syntax and Routing
+
+    - RFC 7231 - HTTP Semantics and Content
+
+    - RFC 2818 - HTTP Over TLS
+
+    - RFC 2616 - Hypertext Transfer Protocol - HTTP/1.1
+
+    - RFC 7807 - Problem Details for HTTP APIs
+
+    - RFC 2396 - Uniform Resource Identifiers (URI) - Generic Syntax
+
+    ## Contact
+  license:
+    name: Ericsson Internal
+    url: http://www.ericsson.com
+  title: BSS TMF635 Usage Management REST Interface 1
+  version: 1.0.0
+  x-api-id: 50c34311-638a-4467-98d3-43100783ebc2
+  x-audience: company-internal
+  x-doc-type: interface-description
+  x-doc-no: 1/155 19-CAF 101 637/1
+  x-doc-rev: K
+  x-doc-date-time: 2023-04-10T00:00:00Z
+servers:
+- description: The production API server
+  url: "{scheme}://{host}:{port}/{basePath}"
+  variables:
+    scheme:
+      default: https
+      description: request scheme
+      enum:
+      - http
+      - https
+    host:
+      default: host
+      description: this value is assigned by the service provider
+    port:
+      default: "8443"
+      description: the port of the service
+    basePath:
+      default: UsageManagement/v1
+      description: Base path options
+security:
+- bearerAuth: []
+tags:
+- description: Usage operations
+  name: usage
+paths:
+  /usage:
+    get:
+      description: This operation list or find Usage entities
+      operationId: listUsage
+      parameters:
+      - description: Agreement Identifier of the subscriber for whom the usage event
+          was created.
+        example: CONTR0000000061
+        explode: true
+        in: query
+        name: agreementId
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: The Business Unit identifier of which the Agreement belongs to.
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnit
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: |-
+          The billing date of a billed event in ISO 8601 format (YYYY-MM-DDThh:mm:ss.sTZD).
+          Only applicable if the status parameter is set to 'billed'
+        example: 2020-10-14T20:36:48.000-03:00
+        explode: true
+        in: query
+        name: billingDate
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: The CDR identifier.
+        example: "2010044694540"
+        explode: true
+        in: query
+        name: cdrId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: |-
+          Product Identifier.
+          It shall not be provided in case of the listed scenarios:
+          - Getting usage or non-usage history of a contract.
+        example: "439043"
+        explode: true
+        in: query
+        name: productId
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: Indicates the billing status of the record.
+        example: billed
+        explode: true
+        in: query
+        name: status
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Filters data valid for start date. Optional parameter in ISO
+          8601 format (YYYY-MM-DDThh:mm:ss.sTZD).
+        example: 2020-09-15T20:36:48.000-03:00
+        explode: true
+        in: query
+        name: validFor.startDateTime
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: Filters data valid for end date. Optional parameter in ISO 8601
+          format (YYYY-MM-DDThh:mm:ss.sTZD).
+        example: 2020-10-15T20:36:48.000-03:00
+        explode: true
+        in: query
+        name: validFor.endDateTime
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: |-
+          Usage Type.
+          If not specified the type 'usage' is used as default.
+        example: usage
+        explode: true
+        in: query
+        name: usageType
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: |-
+          Charge Type.
+          If not specified it is assumed that both one-time and recurring charges will be retrieved.
+        example: oneTimeCharge
+        explode: true
+        in: query
+        name: chargeType
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listUsagesResponse:
+                  $ref: '#/components/examples/listUsagesResponse'
+                listNonUsagesResponse:
+                  $ref: '#/components/examples/listNonUsagesResponse'
+                belEbListUsagesResponse:
+                  $ref: '#/components/examples/belEbListUsagesResponse'
+                belEbListNonUsagesResponse:
+                  $ref: '#/components/examples/belEbListNonUsagesResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/Usage'
+                type: array
+          description: OK
+        "206":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                listUsagesResponse:
+                  $ref: '#/components/examples/listUsagesResponse'
+                listNonUsagesResponse:
+                  $ref: '#/components/examples/listNonUsagesResponse'
+                belEbListUsagesResponse:
+                  $ref: '#/components/examples/belEbListUsagesResponse'
+                belEbListNonUsagesResponse:
+                  $ref: '#/components/examples/belEbListNonUsagesResponse'
+              schema:
+                items:
+                  $ref: '#/components/schemas/Usage'
+                type: array
+          description: Partial Content
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: List or find Usage objects
+      tags:
+      - usage
+  /usage/{id}:
+    get:
+      description: |-
+        This operation retrieves a Usage entity. Attribute selection is enabled
+        for all first level attributes.
+      operationId: retrieveUsage
+      parameters:
+      - description: Identifier of the Usage
+        example: 2010044694540UCONTR0000000060
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: simple
+      - description: The Business Unit identifier of which the Agreement belongs to.
+        example: CSGBU
+        explode: true
+        in: query
+        name: businessUnit
+        required: false
+        schema:
+          $ref: '#/components/schemas/Id'
+        style: form
+      - description: Comma-separated properties to provide in response
+        explode: true
+        in: query
+        name: fields
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json;charset=utf-8:
+              examples:
+                readUsageResponse:
+                  $ref: '#/components/examples/readUsageResponse'
+                readNonUsageResponse:
+                  $ref: '#/components/examples/readNonUsageResponse'
+                belEbReadUsageResponse:
+                  $ref: '#/components/examples/belEbReadUsageResponse'
+                belEbReadNonUsageResponse:
+                  $ref: '#/components/examples/belEbReadNonUsageResponse'
+              schema:
+                $ref: '#/components/schemas/Usage'
+          description: OK
+        "400":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Bad Request
+        "401":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Not Found
+        "405":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Method Not Allowed
+        "409":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Conflict
+        "500":
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+        default:
+          content:
+            application/problem+json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Internal Server Error
+      summary: Retrieves a Usage by ID
+      tags:
+      - usage
+components:
+  examples:
+    listUsagesResponse:
+      description: (Status Code 200)
+      summary: List Usages
+      value:
+      - id: 2010044694546UCONTR0000000061
+        href: /dmpUsageManagement/v1/usage/2010044694546UCONTR0000000061?businessUnit=CSGBU
+        description: usage event
+        status: billed
+        usageDate: 2020-10-15T11:49:31-03:00
+        usageType: usage
+        cdrId: "2010044694546"
+        cdrSubId: "1602773371"
+        invoiceNumber: "24"
+        udrFileId: "1498"
+        udrId: "4"
+        usageCharacteristic:
+        - name: cdrCreationAction
+          valueType: String 100
+          valueSequence:
+          - value: Invocation
+          charSpecificationId: Invocation
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: anonymizedDialedDigits
+          valueType: String 100
+          valueSequence:
+          - value: "4947100049"
+          charSpecificationId: "4947100049"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callingPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "4947100026"
+          charSpecificationId: "4947100026"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: calledPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "4947100049"
+          charSpecificationId: "4947100049"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: cashFlowDirection
+          valueType: String 100
+          valueSequence:
+          - value: Receivable charges
+          charSpecificationId: Receivable charges
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callDestination
+          valueType: String 2
+          valueSequence:
+          - value: NV
+          charSpecificationId: NV
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: hostingNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: node
+          valueType: String 100
+          valueSequence:
+          - value: diameterd
+          charSpecificationId: diameterd
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: char
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callTerminationResult
+          valueType: String 100
+          valueSequence:
+          - value: Completed
+          charSpecificationId: Completed
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: MSCAddress
+          valueType: String 100
+          valueSequence:
+          - value: diameterd
+          charSpecificationId: diameterd
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: tariffTimeName
+          valueType: String 50
+          valueSequence:
+          - value: Any Time
+          charSpecificationId: Any Time
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: tariffZoneName
+          valueType: String 30
+          valueSequence:
+          - value: National
+          charSpecificationId: National
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: UDRBasePartId
+          valueType: long
+          valueSequence:
+          - value: "1"
+          charSpecificationId: "1"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeTerminatedInd
+          valueType: Boolean
+          valueSequence:
+          - value: "true"
+          charSpecificationId: "true"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: reverseChargingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: roamingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: udsMemberCode
+          valueType: long
+          valueSequence:
+          - value: "36"
+          charSpecificationId: "36"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: udsElementCode
+          valueType: long
+          valueSequence:
+          - value: "62"
+          charSpecificationId: "62"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: fieldDescription
+          valueType: String 100
+          valueSequence:
+          - value: CDR_ID
+          charSpecificationId: CDR_ID
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: itemValue
+          valueType: String 100
+          valueSequence:
+          - value: "2010044694546"
+          charSpecificationId: "2010044694546"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: duration
+          valueType: float
+          valueSequence:
+          - value: "11.0"
+          charSpecificationId: "11.0"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: durationUnit
+          valueType: String 5
+          valueSequence:
+          - value: Sec
+          charSpecificationId: Sec
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callType
+          valueType: String 100
+          valueSequence:
+          - value: 1 - MOC (Mobile Originated Call)
+          charSpecificationId: 1 - MOC (Mobile Originated Call)
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2020-10-15T11:49:55-03:00
+          usageRatingTag: includedUsage
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          effectiveDiscountedAmount:
+            value: 0.0
+            unit: EUR
+          effectiveExternalAmountTaxedIndicator: false
+          effectiveExternalTaxForTax: false
+          effectiveRatedVolume:
+            amount: 0.0
+            units: Sec
+          effectiveRoundedVolume:
+            amount: 0.0
+            units: Sec
+          ratedFlatAmount:
+            value: 0.018
+            unit: EUR
+          ratedVolume:
+            amount: 11.0
+            units: Sec
+          usageChargeType: internalCharge
+          usageRateType: Base Rating (Air)
+          sharedAccountProviderDirectoryNumber: "4947100027"
+          sharedAccountProviderAgreement:
+            id: CONTR0000000062
+            '@referredType': Agreement
+            href: /dmpAgreementManagement/v1/agreement/CONTR0000000062
+          sharedAccountProviderNumberingPlanRef:
+            id: E.164
+            href: /dmpReferenceDataManagement/v1/logicalResourceValueType/E.164
+          billingFreeUnitOrChargingBalance:
+          - bucket:
+              id: "121"
+              bucketSpecification:
+                id: Dummy_balance_DA121_Voice_Money
+                href: http://vma-wm-nbil-0106:8080/discovery/v1/balanceSpecification/Dummy_balance_DA121_Voice_Money
+            bucketType: dedicatedAccount
+            freeCharge:
+              value: 0.018
+              unit: EUR
+            freeExternalTaxRate: 0.0
+            freeRateVolume:
+              amount: 11.0
+              units: Sec
+            freeRoundedVolume:
+              amount: 11.0
+              units: Sec
+          product:
+            id: "439043"
+            href: /dmpProductInventoryManagement/v1/product/439043?agreementId=CONTR0000000062
+            productOffering:
+              '@referredType': ProductOffering
+              id: PO_CS_Provider_Voice_M1
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/PO_CS_Provider_Voice_M1
+            realizingService:
+              '@referredType': customerFacingService
+              id: CFSS_Provider_Voice_M1
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000007731
+          href: /dmpPartyManagement/v1/individual/CUST0000007731
+        agreement:
+          id: CONTR0000000061
+          '@referredType': Agreement
+          href: /dmpAgreementManagement/v1/agreement/CONTR0000000061
+      - id: 2010044694541UCONTR0000000061
+        href: /dmpUsageManagement/v1/usage/2010044694541UCONTR0000000061?businessUnit=CSGBU
+        description: usage event
+        status: billed
+        usageDate: 2020-10-14T20:36:40-03:00
+        usageType: usage
+        cdrId: "2010044694541"
+        cdrSubId: "1602718600"
+        invoiceNumber: "24"
+        udrFileId: "1493"
+        udrId: "0"
+        usageCharacteristic:
+        - name: cdrCreationAction
+          valueType: String 100
+          valueSequence:
+          - value: Invocation
+          charSpecificationId: Invocation
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: anonymizedDialedDigits
+          valueType: String 100
+          valueSequence:
+          - value: "4947100049"
+          charSpecificationId: "4947100049"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callingPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "4947100026"
+          charSpecificationId: "4947100026"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: calledPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "4947100049"
+          charSpecificationId: "4947100049"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: cashFlowDirection
+          valueType: String 100
+          valueSequence:
+          - value: Receivable charges
+          charSpecificationId: Receivable charges
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callDestination
+          valueType: String 2
+          valueSequence:
+          - value: NV
+          charSpecificationId: NV
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: hostingNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: node
+          valueType: String 100
+          valueSequence:
+          - value: diameterd
+          charSpecificationId: diameterd
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: char
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callTerminationResult
+          valueType: String 100
+          valueSequence:
+          - value: Completed
+          charSpecificationId: Completed
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: MSCAddress
+          valueType: String 100
+          valueSequence:
+          - value: diameterd
+          charSpecificationId: diameterd
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: tariffTimeName
+          valueType: String 50
+          valueSequence:
+          - value: Any Time
+          charSpecificationId: Any Time
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: tariffZoneName
+          valueType: String 30
+          valueSequence:
+          - value: National
+          charSpecificationId: National
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: UDRBasePartId
+          valueType: long
+          valueSequence:
+          - value: "1"
+          charSpecificationId: "1"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeTerminatedInd
+          valueType: Boolean
+          valueSequence:
+          - value: "true"
+          charSpecificationId: "true"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: reverseChargingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: roamingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: udsMemberCode
+          valueType: long
+          valueSequence:
+          - value: "36"
+          charSpecificationId: "36"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: udsElementCode
+          valueType: long
+          valueSequence:
+          - value: "62"
+          charSpecificationId: "62"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: fieldDescription
+          valueType: String 100
+          valueSequence:
+          - value: CDR_ID
+          charSpecificationId: CDR_ID
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: itemValue
+          valueType: String 100
+          valueSequence:
+          - value: "2010044694541"
+          charSpecificationId: "2010044694541"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: duration
+          valueType: float
+          valueSequence:
+          - value: "16.0"
+          charSpecificationId: "16.0"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: durationUnit
+          valueType: String 5
+          valueSequence:
+          - value: Sec
+          charSpecificationId: Sec
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callType
+          valueType: String 100
+          valueSequence:
+          - value: 1 - MOC (Mobile Originated Call)
+          charSpecificationId: 1 - MOC (Mobile Originated Call)
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2020-10-14T20:37:12-03:00
+          usageRatingTag: includedUsage
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          effectiveDiscountedAmount:
+            value: 0.0
+            unit: EUR
+          effectiveExternalAmountTaxedIndicator: false
+          effectiveExternalTaxForTax: false
+          effectiveRatedVolume:
+            amount: 0.0
+            units: Sec
+          effectiveRoundedVolume:
+            amount: 0.0
+            units: Sec
+          ratedFlatAmount:
+            value: 0.026
+            unit: EUR
+          ratedVolume:
+            amount: 16.0
+            units: Sec
+          usageChargeType: internalCharge
+          usageRateType: Base Rating (Air)
+          sharedAccountProviderDirectoryNumber: "4947100027"
+          sharedAccountProviderAgreement:
+            id: CONTR0000000062
+            '@referredType': Agreement
+            href: /dmpAgreementManagement/v1/agreement/CONTR0000000062
+          sharedAccountProviderNumberingPlanRef:
+            id: E.164
+            href: /dmpReferenceDataManagement/v1/logicalResourceValueType/E.164
+          billingFreeUnitOrChargingBalance:
+          - bucket:
+              id: "121"
+              bucketSpecification:
+                id: Dummy_balance_DA121_Voice_Money
+                href: http://vma-wm-nbil-0106:8080/discovery/v1/balanceSpecification/Dummy_balance_DA121_Voice_Money
+            bucketType: dedicatedAccount
+            freeCharge:
+              value: 0.026
+              unit: EUR
+            freeExternalTaxRate: 0.0
+            freeRateVolume:
+              amount: 16.0
+              units: Sec
+            freeRoundedVolume:
+              amount: 16.0
+              units: Sec
+          product:
+            id: "439043"
+            href: /dmpProductInventoryManagement/v1/product/439043?agreementId=CONTR0000000062
+            productOffering:
+              '@referredType': ProductOffering
+              id: PO_CS_Provider_Voice_M1
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/PO_CS_Provider_Voice_M1
+            realizingService:
+              '@referredType': customerFacingService
+              id: CFSS_Provider_Voice_M1
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000007731
+          href: /dmpPartyManagement/v1/individual/CUST0000007731
+        agreement:
+          id: CONTR0000000061
+          '@referredType': Agreement
+          href: /dmpAgreementManagement/v1/agreement/CONTR0000000061
+    listNonUsagesResponse:
+      description: (Status Code 200)
+      summary: List Non-Usages
+      value:
+      - id: 29703NCONTR0000000105
+        href: /dmpUsageManagement/v1/usage/29703NCONTR0000000105?businessUnit=CSGBU
+        description: non-usage event
+        status: rated
+        usageDate: 2020-10-01T19:00:00-03:00
+        usageType: nonUsage
+        cdrId: "29703"
+        cdrSubId: "1"
+        udrId: "1"
+        usageCharacteristic:
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2020-10-01T19:00:00-03:00
+          charSpecificationId: 2020-10-01T19:00:00-03:00
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+          isBilled: false
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2020-10-01T19:00:00-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          ratedFlatAmount:
+            value: 21.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: true
+          product:
+            id: "606097"
+            href: /dmpProductInventoryManagement/v1/product/606097?agreementId=CONTR0000000105
+            productOffering:
+              '@referredType': ProductOffering
+              id: PO_EC_TBA_daily_Da_Meta16
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/PO_EC_TBA_daily_Da_Meta16
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000011277
+          href: /dmpPartyManagement/v1/individual/CUST0000011277
+        agreement:
+          id: CONTR0000000105
+          '@referredType': Agreement
+          href: /dmpAgreementManagement/v1/agreement/CONTR0000000105
+      - id: 25303NCONTR0000000105
+        href: /dmpUsageManagement/v1/usage/25303NCONTR0000000105?businessUnit=CSGBU
+        description: non-usage event
+        status: rated
+        usageDate: 2020-09-30T19:01:01-03:00
+        usageType: nonUsage
+        cdrId: "25303"
+        cdrSubId: "1"
+        udrId: "0"
+        usageCharacteristic:
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2020-09-30T19:01:01-03:00
+          charSpecificationId: 2020-09-30T19:01:01-03:00
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+          isBilled: false
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2020-09-30T19:01:01-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          ratedFlatAmount:
+            value: 21.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: true
+          product:
+            id: "606097"
+            href: /dmpProductInventoryManagement/v1/product/606097?agreementId=CONTR0000000105
+            productOffering:
+              '@referredType': ProductOffering
+              id: PO_EC_TBA_daily_Da_Meta16
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/PO_EC_TBA_daily_Da_Meta16
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000011277
+          href: /dmpPartyManagement/v1/individual/CUST0000011277
+        agreement:
+          id: CONTR0000000105
+          '@referredType': Agreement
+          href: /dmpAgreementManagement/v1/agreement/CONTR0000000105
+    belEbListUsagesResponse:
+      description: (Status Code 200)
+      summary: List Usages
+      value:
+      - id: 36001UCONTR0000000042
+        href: /belEbUsageManagement/v1/usage/36001UCONTR0000000042?businessUnit=CSGBU
+        description: usage event
+        status: rated
+        usageDate: 2015-10-10T11:13:15-03:00
+        usageType: usage
+        cdrId: "36001"
+        cdrSubId: "1"
+        udrFileId: "42"
+        udrId: "0"
+        usageCharacteristic:
+        - name: cdrCreationAction
+          valueType: String 100
+          valueSequence:
+          - value: Invocation
+          charSpecificationId: Invocation
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: durationUnit
+          valueType: String 5
+          valueSequence:
+          - value: Sec
+          charSpecificationId: Sec
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: false
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2015-10-09T09:56:45-03:00
+          usageRatingTag: includedUsage
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          effectiveDiscountedAmount:
+            value: 1.1
+            unit: EUR
+          effectiveExternalAmountTaxedIndicator: false
+          effectiveExternalTaxForTax: false
+          ratedFlatAmount:
+            value: 1.1
+            unit: EUR
+          ratedVolume:
+            amount: 16.0
+            units: Sec
+          usageChargeType: internalCharge
+          usageRateType: Base Rating (Air)
+          product:
+            id: "00002"
+            href: /belEbProductInventoryManagement/v1/product/00002?agreementId=CONTR0000000042
+            productOffering:
+              '@referredType': ProductOffering
+              id: CSOptVoiceData
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/CSOptVoiceData
+            realizingService:
+              '@referredType': customerFacingService
+              id: CFSSTELEPHONY
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000000004
+          href: /belEbPartyManagement/v1/individual/CUST0000000004
+        agreement:
+          id: CONTR0000000042
+          '@referredType': Agreement
+          href: /belEbAgreementManagement/v1/agreement/CONTR0000000042
+    belEbListNonUsagesResponse:
+      description: (Status Code 200)
+      summary: List Non-Usages
+      value:
+      - id: 478601NCONTR0000000313
+        href: /belEbUsageManagement/v1/usage/478601NCONTR0000000313?businessUnit=CSGBU
+        description: non-usage event
+        status: billed
+        usageDate: 2022-07-22T14:12:45-03:00
+        usageType: nonUsage
+        cdrId: "478601"
+        cdrSubId: "1"
+        udrId: "0"
+        usageCharacteristic:
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 22
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-10-25T18:13:00-03:00
+          chargePeriodEndDate: 2020-11-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-06-22T14:12:45-03:00
+          chargePeriodEndDate: 2022-07-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 2
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-05-22T14:12:45-03:00
+          chargePeriodEndDate: 2022-06-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 3
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-04-22T14:12:45-03:00
+          chargePeriodEndDate: 2022-05-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 4
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-03-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-04-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 5
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-02-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-03-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 6
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-01-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-02-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 7
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-12-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-01-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 8
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 4.32
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-11-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-12-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 9
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-10-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-11-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 10
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-09-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-10-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 11
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-08-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-09-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 12
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-07-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-08-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 13
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-06-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-07-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 14
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-05-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-06-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 15
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-04-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-05-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 16
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-03-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-04-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 17
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-02-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-03-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 18
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-01-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-02-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 19
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-12-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-01-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 20
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-10-25T18:13:00-03:00
+          chargePeriodEndDate: 2022-07-22T14:12:45-03:00
+          chargeProrateIndicator: fixed
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 21
+            subItemId: 1
+          quantityRecurringCharge: 1
+          ratedFlatAmount:
+            value: 5.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-11-22T15:12:45-03:00
+          chargePeriodEndDate: 2020-12-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 22
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000000610
+          href: /belEbPartyManagement/v1/individual/CUST0000000610
+        agreement:
+          id: CONTR0000000313
+          '@referredType': Agreement
+          href: /belEbAgreementManagement/v1/agreement/CONTR0000000313
+    readUsageResponse:
+      description: (Status Code 200)
+      summary: Read Usage
+      value:
+        id: 2010044694540UCONTR0000000060
+        href: /dmpUsageManagement/v1/usage/2010044694540UCONTR0000000060?businessUnit=CSGBU
+        description: usage event
+        status: billed
+        usageDate: 2020-10-14T20:36:18-03:00
+        usageType: usage
+        cdrId: "2010044694540"
+        cdrSubId: "1602718578"
+        invoiceNumber: "23"
+        udrFileId: "1492"
+        udrId: "0"
+        usageCharacteristic:
+        - name: cdrCreationAction
+          valueType: String 100
+          valueSequence:
+          - value: Invocation
+          charSpecificationId: Invocation
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: anonymizedDialedDigits
+          valueType: String 100
+          valueSequence:
+          - value: "4947100049"
+          charSpecificationId: "4947100049"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callingPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "4947100025"
+          charSpecificationId: "4947100025"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: calledPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "4947100049"
+          charSpecificationId: "4947100049"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: cashFlowDirection
+          valueType: String 100
+          valueSequence:
+          - value: Receivable charges
+          charSpecificationId: Receivable charges
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callDestination
+          valueType: String 2
+          valueSequence:
+          - value: NV
+          charSpecificationId: NV
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: hostingNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: node
+          valueType: String 100
+          valueSequence:
+          - value: diameterd
+          charSpecificationId: diameterd
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: char
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callTerminationResult
+          valueType: String 100
+          valueSequence:
+          - value: Completed
+          charSpecificationId: Completed
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: MSCAddress
+          valueType: String 100
+          valueSequence:
+          - value: diameterd
+          charSpecificationId: diameterd
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: tariffTimeName
+          valueType: String 50
+          valueSequence:
+          - value: Any Time
+          charSpecificationId: Any Time
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: tariffZoneName
+          valueType: String 30
+          valueSequence:
+          - value: National
+          charSpecificationId: National
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: UDRBasePartId
+          valueType: long
+          valueSequence:
+          - value: "1"
+          charSpecificationId: "1"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeTerminatedInd
+          valueType: Boolean
+          valueSequence:
+          - value: "true"
+          charSpecificationId: "true"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: reverseChargingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: roamingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: udsMemberCode
+          valueType: long
+          valueSequence:
+          - value: "36"
+          charSpecificationId: "36"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: udsElementCode
+          valueType: long
+          valueSequence:
+          - value: "62"
+          charSpecificationId: "62"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: fieldDescription
+          valueType: String 100
+          valueSequence:
+          - value: CDR_ID
+          charSpecificationId: CDR_ID
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: itemValue
+          valueType: String 100
+          valueSequence:
+          - value: "2010044694540"
+          charSpecificationId: "2010044694540"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: duration
+          valueType: float
+          valueSequence:
+          - value: "16.0"
+          charSpecificationId: "16.0"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: durationUnit
+          valueType: String 5
+          valueSequence:
+          - value: Sec
+          charSpecificationId: Sec
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callType
+          valueType: String 100
+          valueSequence:
+          - value: 1 - MOC (Mobile Originated Call)
+          charSpecificationId: 1 - MOC (Mobile Originated Call)
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2020-10-14T20:36:48-03:00
+          usageRatingTag: includedUsage
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          effectiveDiscountedAmount:
+            value: 0.0
+            unit: EUR
+          effectiveExternalAmountTaxedIndicator: false
+          effectiveExternalTaxForTax: false
+          effectiveRatedVolume:
+            amount: 0.0
+            units: Sec
+          effectiveRoundedVolume:
+            amount: 0.0
+            units: Sec
+          ratedFlatAmount:
+            value: 0.026
+            unit: EUR
+          ratedVolume:
+            amount: 16.0
+            units: Sec
+          usageChargeType: internalCharge
+          usageRateType: Base Rating (Air)
+          sharedAccountProviderDirectoryNumber: "4947100027"
+          sharedAccountProviderAgreement:
+            id: CONTR0000000062
+            '@referredType': Agreement
+            href: /dmpAgreementManagement/v1/agreement/CONTR0000000062
+          sharedAccountProviderNumberingPlanRef:
+            id: E.164
+            href: /dmpReferenceDataManagement/v1/logicalResourceValueType/E.164
+          billingFreeUnitOrChargingBalance:
+          - bucket:
+              id: "121"
+              bucketSpecification:
+                id: Dummy_balance_DA121_Voice_Money
+                href: http://vma-wm-nbil-0106:8080/discovery/v1/balanceSpecification/Dummy_balance_DA121_Voice_Money
+            bucketType: dedicatedAccount
+            freeCharge:
+              value: 0.026
+              unit: EUR
+            freeExternalTaxRate: 0.0
+            freeRateVolume:
+              amount: 16.0
+              units: Sec
+            freeRoundedVolume:
+              amount: 16.0
+              units: Sec
+          product:
+            id: "439043"
+            href: /dmpProductInventoryManagement/v1/product/439043?agreementId=CONTR0000000062
+            productOffering:
+              '@referredType': ProductOffering
+              id: PO_CS_Provider_Voice_M1
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/PO_CS_Provider_Voice_M1
+            realizingService:
+              '@referredType': customerFacingService
+              id: CFSS_Provider_Voice_M1
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000007730
+          href: /dmpPartyManagement/v1/individual/CUST0000007730
+        agreement:
+          id: CONTR0000000060
+          '@referredType': Agreement
+          href: /dmpAgreementManagement/v1/agreement/CONTR0000000060
+    readNonUsageResponse:
+      description: (Status Code 200)
+      summary: Read Non-Usage
+      value:
+        id: 30701NCONTR0000000091
+        href: /dmpUsageManagement/v1/usage/30701NCONTR0000000091?businessUnit=CSGBU
+        description: non-usage event
+        status: rated
+        usageDate: 2020-10-02T19:00:00-03:00
+        usageType: nonUsage
+        cdrId: "30701"
+        cdrSubId: "1"
+        udrId: "0"
+        usageCharacteristic:
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2020-10-02T19:00:00-03:00
+          charSpecificationId: 2020-10-02T19:00:00-03:00
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /dmpReferenceDataManagement/v1/currency/EUR
+          isBilled: false
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2020-10-02T19:00:00-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          ratedFlatAmount:
+            value: 21.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: true
+          product:
+            id: "541383"
+            href: /dmpProductInventoryManagement/v1/product/541383?agreementId=CONTR0000000091
+            productOffering:
+              '@referredType': ProductOffering
+              id: PO_EC_TBA_daily_Da_Meta16
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/PO_EC_TBA_daily_Da_Meta16
+        businessUnitRef:
+          id: CSGBU
+          href: /dmpReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000009451
+          href: /dmpPartyManagement/v1/individual/CUST0000009451
+        agreement:
+          id: CONTR0000000091
+          '@referredType': Agreement
+          href: /dmpAgreementManagement/v1/agreement/CONTR0000000091
+    belEbReadUsageResponse:
+      description: (Status Code 200)
+      summary: Read Usage
+      value:
+        id: 36001UCONTR0000000042
+        href: /belEbUsageManagement/v1/usage/36001UCONTR0000000042?businessUnit=CSGBU
+        description: usage event
+        status: rated
+        usageDate: 2015-10-10T11:13:15-03:00
+        usageType: usage
+        cdrId: "36001"
+        cdrSubId: "1"
+        udrFileId: "42"
+        udrId: "0"
+        usageCharacteristic:
+        - name: cdrCreationAction
+          valueType: String 100
+          valueSequence:
+          - value: Invocation
+          charSpecificationId: Invocation
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: anonymizedDialedDigits
+          valueType: String 100
+          valueSequence:
+          - value: "47112208"
+          charSpecificationId: "47112208"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callingPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "55509910003"
+          charSpecificationId: "55509910003"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: calledPartyNumber
+          valueType: String 100
+          valueSequence:
+          - value: "47112208"
+          charSpecificationId: "47112208"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: cashFlowDirection
+          valueType: String 100
+          valueSequence:
+          - value: Receivable charges
+          charSpecificationId: Receivable charges
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: locationAddress
+          valueType: String 64
+          valueSequence:
+          - value: "30405001001"
+          charSpecificationId: "30405001001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callDestination
+          valueType: String 2
+          valueSequence:
+          - value: NV
+          charSpecificationId: NV
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetwork
+          valueType: long
+          valueSequence:
+          - value: "1001"
+          charSpecificationId: "1001"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: char
+          valueSequence:
+          - value: "Y"
+          charSpecificationId: "Y"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callTerminationResult
+          valueType: String 100
+          valueSequence:
+          - value: Completed
+          charSpecificationId: Completed
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: MSCAddress
+          valueType: String 100
+          valueSequence:
+          - value: "55570699300095"
+          charSpecificationId: "55570699300095"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: tariffTimeName
+          valueType: String 50
+          valueSequence:
+          - value: Weekday-Peak
+          charSpecificationId: Weekday-Peak
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: UDRBasePartId
+          valueType: long
+          valueSequence:
+          - value: "1"
+          charSpecificationId: "1"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeTerminatedInd
+          valueType: Boolean
+          valueSequence:
+          - value: "true"
+          charSpecificationId: "true"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: reverseChargingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: roamingInd
+          valueType: Boolean
+          valueSequence:
+          - value: "false"
+          charSpecificationId: "false"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: duration
+          valueType: float
+          valueSequence:
+          - value: "16.0"
+          charSpecificationId: "16.0"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: durationUnit
+          valueType: String 5
+          valueSequence:
+          - value: Sec
+          charSpecificationId: Sec
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: callType
+          valueType: String 100
+          valueSequence:
+          - value: 1 - MOC (Mobile Originated Call)
+          charSpecificationId: 1 - MOC (Mobile Originated Call)
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: false
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2015-10-09T09:56:45-03:00
+          usageRatingTag: includedUsage
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          effectiveDiscountedAmount:
+            value: 1.1
+            unit: EUR
+          effectiveExternalAmountTaxedIndicator: false
+          effectiveExternalTaxForTax: false
+          ratedFlatAmount:
+            value: 1.1
+            unit: EUR
+          ratedVolume:
+            amount: 16.0
+            units: Sec
+          usageChargeType: internalCharge
+          usageRateType: Base Rating (Air)
+          product:
+            id: "00002"
+            href: /belEbProductInventoryManagement/v1/product/00002?agreementId=CONTR0000000042
+            productOffering:
+              '@referredType': ProductOffering
+              id: CSOptVoiceData
+              href: http://vma-wm-nbil-0106:8080/discovery/v1/productOffering/CSOptVoiceData
+            realizingService:
+              '@referredType': customerFacingService
+              id: CFSSTELEPHONY
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000000004
+          href: /belEbPartyManagement/v1/individual/CUST0000000004
+        agreement:
+          id: CONTR0000000042
+          '@referredType': Agreement
+          href: /belEbAgreementManagement/v1/agreement/CONTR0000000042
+    belEbReadNonUsageResponse:
+      description: (Status Code 200)
+      summary: Read Non-Usage
+      value:
+        id: 478601NCONTR0000000313
+        href: /belEbUsageManagement/v1/usage/478601NCONTR0000000313?businessUnit=CSGBU
+        description: non-usage event
+        status: billed
+        usageDate: 2022-07-22T14:12:45-03:00
+        usageType: nonUsage
+        cdrId: "478601"
+        cdrSubId: "1"
+        udrId: "0"
+        usageCharacteristic:
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "28"
+          charSpecificationId: "28"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 1
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 2
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 2
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 2
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 2
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 2
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 2
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 3
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 3
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 3
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 3
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 3
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 3
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 4
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 4
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 4
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 4
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 4
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 4
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 5
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 5
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 5
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 5
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 5
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 5
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 6
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 6
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 6
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 6
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "28"
+          charSpecificationId: "28"
+          charPosition:
+            itemId: 6
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 6
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 7
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 7
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 7
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 7
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 7
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 7
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 8
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 8
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 8
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 8
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 8
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 8
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 9
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 9
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 9
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 9
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 9
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 9
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 10
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 10
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 10
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 10
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 10
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 10
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 11
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 11
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 11
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 11
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 11
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 11
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 12
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 12
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 12
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 12
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 12
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 12
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 13
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 13
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 13
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 13
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 13
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 13
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 14
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 14
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 14
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 14
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 14
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 14
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 15
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 15
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 15
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 15
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 15
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 15
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 16
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 16
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 16
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 16
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 16
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 16
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 17
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 17
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 17
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 17
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 17
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 17
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 18
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 18
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 18
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 18
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "28"
+          charSpecificationId: "28"
+          charPosition:
+            itemId: 18
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 18
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 19
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 19
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 19
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 19
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 19
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 19
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "31"
+          charSpecificationId: "31"
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 20
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 21
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 21
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "5.0"
+          charSpecificationId: "5.0"
+          charPosition:
+            itemId: 21
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 21
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "635"
+          charSpecificationId: "635"
+          charPosition:
+            itemId: 21
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 21
+            subItemId: 1
+        - name: endDate
+          valueType: DATE_TIME
+          valueSequence:
+          - value: 2022-07-22T14:12:45-03:00
+          charSpecificationId: 2022-07-22T14:12:45-03:00
+          charPosition:
+            itemId: 22
+            subItemId: 1
+        - name: homeNetworkCode
+          valueType: LONG
+          valueSequence:
+          - value: "1021"
+          charSpecificationId: "1021"
+          charPosition:
+            itemId: 22
+            subItemId: 1
+        - name: itemPriceAmount
+          valueType: MONEY
+          valueSequence:
+          - value: "7.0"
+          charSpecificationId: "7.0"
+          charPosition:
+            itemId: 22
+            subItemId: 1
+        - name: itemPriceCurrency
+          valueType: MONEY
+          valueSequence:
+          - value: EUR
+          charSpecificationId: EUR
+          charPosition:
+            itemId: 22
+            subItemId: 1
+        - name: chargeNoDays
+          valueType: LONG
+          valueSequence:
+          - value: "30"
+          charSpecificationId: "30"
+          charPosition:
+            itemId: 22
+            subItemId: 1
+        - name: prepayIndicator
+          valueType: CHAR
+          valueSequence:
+          - value: "N"
+          charSpecificationId: "N"
+          charPosition:
+            itemId: 22
+            subItemId: 1
+        ratedProductUsage:
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-10-25T18:13:00-03:00
+          chargePeriodEndDate: 2020-11-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 1
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-06-22T14:12:45-03:00
+          chargePeriodEndDate: 2022-07-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 2
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-05-22T14:12:45-03:00
+          chargePeriodEndDate: 2022-06-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 3
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-04-22T14:12:45-03:00
+          chargePeriodEndDate: 2022-05-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 4
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-03-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-04-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 5
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-02-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-03-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 6
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2022-01-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-02-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 7
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 7.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-12-22T15:12:45-03:00
+          chargePeriodEndDate: 2022-01-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 8
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 4.32
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-11-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-12-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 9
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-10-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-11-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 10
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-09-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-10-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 11
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-08-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-09-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 12
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-07-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-08-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 13
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-06-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-07-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 14
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-05-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-06-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 15
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-04-22T14:12:45-03:00
+          chargePeriodEndDate: 2021-05-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 16
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-03-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-04-22T14:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 17
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-02-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-03-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 18
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2021-01-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-02-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 19
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-12-22T15:12:45-03:00
+          chargePeriodEndDate: 2021-01-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 20
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-10-25T18:13:00-03:00
+          chargePeriodEndDate: 2022-07-22T14:12:45-03:00
+          chargeProrateIndicator: fixed
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 21
+            subItemId: 1
+          quantityRecurringCharge: 1
+          ratedFlatAmount:
+            value: 5.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        - currencyCode: EUR
+          currencyCodeRef:
+            id: EUR
+            href: /belEbReferenceDataManagement/v1/currency/EUR
+          isBilled: true
+          offerTariffType: normal
+          ratingAmountType: total
+          ratingDate: 2022-07-22T14:12:45-03:00
+          usageRatingTag: includedUsage
+          chargeOverwriteIndicator: false
+          chargePeriodStartDate: 2020-11-22T15:12:45-03:00
+          chargePeriodEndDate: 2020-12-22T15:12:45-03:00
+          chargeProrateIndicator: notProrated
+          chargeType: recurringCharge
+          chargeSubType: past
+          characteristicPosition:
+            itemId: 22
+            subItemId: 1
+          quantityRecurringCharge: 0
+          ratedFlatAmount:
+            value: 0.0
+            unit: EUR
+          ratedFlatAmountGrossIndicator: false
+        businessUnitRef:
+          id: CSGBU
+          href: /belEbReferenceDataManagement/v1/businessUnit/CSGBU
+        relatedParty:
+          id: CUST0000000610
+          href: /belEbPartyManagement/v1/individual/CUST0000000610
+        agreement:
+          id: CONTR0000000313
+          '@referredType': Agreement
+          href: /belEbAgreementManagement/v1/agreement/CONTR0000000313
+  schemas:
+    Id:
+      description: "Public Identifier, max 256 characters."
+      maxLength: 256
+      pattern: ^(?=\s*\S).*$
+      type: string
+    Usage:
+      description: Information about the Usage.
+      example:
+        callId: callId
+        udrId: udrId
+        agreement: null
+        description: description
+        origCdrId: origCdrId
+        udrFileId: udrFileId
+        relatedParty: null
+        ratedProductUsage:
+        - effectiveRatedVolume:
+            amount: 5.637377
+            units: units
+          characteristicPosition:
+            subItemId: 5559347081229897728
+            itemId: 738633633822310400
+          billingFreeUnitOrChargingBalance:
+          - bucket: null
+            bucketType: null
+            freeRoundedVolume:
+              amount: 5.637377
+              units: units
+            freeCharge:
+              unit: unit
+              value: 1.4658129
+            freeExternalTaxRate: 7.061401241503109
+            freeUnitProduct:
+              productOffering:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              productOfferingPrice:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              id: id
+              href: href
+              realizingService:
+                '@referredType': '@referredType'
+                id: id
+            freeRateVolume:
+              amount: 5.637377
+              units: units
+            sharedAccountProviderBalance: true
+            freeUnitPackageRef: null
+          - bucket: null
+            bucketType: null
+            freeRoundedVolume:
+              amount: 5.637377
+              units: units
+            freeCharge:
+              unit: unit
+              value: 1.4658129
+            freeExternalTaxRate: 7.061401241503109
+            freeUnitProduct:
+              productOffering:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              productOfferingPrice:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              id: id
+              href: href
+              realizingService:
+                '@referredType': '@referredType'
+                id: id
+            freeRateVolume:
+              amount: 5.637377
+              units: units
+            sharedAccountProviderBalance: true
+            freeUnitPackageRef: null
+          chargeOverwriteIndicator: true
+          sharedAccountProviderProduct:
+            productOffering:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            productOfferingPrice:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            id: id
+            href: href
+            realizingService:
+              '@referredType': '@referredType'
+              id: id
+          offerTariffType: null
+          chargeType: null
+          effectiveExternalTaxRate: 5.962133916683182
+          sharedAccountProviderNumberingPlanRef: null
+          sharedAccountMemberNumberingPlanRef: null
+          isBilled: true
+          ratedFlatAmountGrossIndicator: true
+          usageRateType: usageRateType
+          chargePeriodEndDate: 2000-01-23T04:56:07.000+00:00
+          ratedFlatAmount:
+            unit: unit
+            value: 1.4658129
+          usageChargeType: null
+          sharedAccountProviderAgreement: null
+          ratedTaxAmount:
+            unit: unit
+            value: 1.4658129
+          usageRatingTag: null
+          currencyCodeRef: null
+          effectiveExternalTax:
+            unit: unit
+            value: 1.4658129
+          product:
+            productOffering:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            productOfferingPrice:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            id: id
+            href: href
+            realizingService:
+              '@referredType': '@referredType'
+              id: id
+          effectiveRoundedVolume:
+            amount: 5.637377
+            units: units
+          chargePeriodStartDate: 2000-01-23T04:56:07.000+00:00
+          chargeProrateIndicator: null
+          chargeSubType: null
+          sharedAccountMemberDirectoryNumber: sharedAccountMemberDirectoryNumber
+          effectiveExternalAmountTaxedIndicator: true
+          quantityRecurringCharge: -4976680883935979520
+          ratingDate: 2000-01-23T04:56:07.000+00:00
+          effectiveExternalTaxForTax: true
+          bundledProductOfferingHierarchy: bundledProductOfferingHierarchy
+          sharedAccountProviderDirectoryNumber: sharedAccountProviderDirectoryNumber
+          currencyCode: currencyCode
+          ratingAmountType: null
+          ratedVolume:
+            amount: 5.637377
+            units: units
+          sharedAccountMemberAgreement: null
+          effectiveDiscountedAmount:
+            unit: unit
+            value: 1.4658129
+        - effectiveRatedVolume:
+            amount: 5.637377
+            units: units
+          characteristicPosition:
+            subItemId: 5559347081229897728
+            itemId: 738633633822310400
+          billingFreeUnitOrChargingBalance:
+          - bucket: null
+            bucketType: null
+            freeRoundedVolume:
+              amount: 5.637377
+              units: units
+            freeCharge:
+              unit: unit
+              value: 1.4658129
+            freeExternalTaxRate: 7.061401241503109
+            freeUnitProduct:
+              productOffering:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              productOfferingPrice:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              id: id
+              href: href
+              realizingService:
+                '@referredType': '@referredType'
+                id: id
+            freeRateVolume:
+              amount: 5.637377
+              units: units
+            sharedAccountProviderBalance: true
+            freeUnitPackageRef: null
+          - bucket: null
+            bucketType: null
+            freeRoundedVolume:
+              amount: 5.637377
+              units: units
+            freeCharge:
+              unit: unit
+              value: 1.4658129
+            freeExternalTaxRate: 7.061401241503109
+            freeUnitProduct:
+              productOffering:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              productOfferingPrice:
+                '@referredType': '@referredType'
+                id: id
+                href: href
+              id: id
+              href: href
+              realizingService:
+                '@referredType': '@referredType'
+                id: id
+            freeRateVolume:
+              amount: 5.637377
+              units: units
+            sharedAccountProviderBalance: true
+            freeUnitPackageRef: null
+          chargeOverwriteIndicator: true
+          sharedAccountProviderProduct:
+            productOffering:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            productOfferingPrice:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            id: id
+            href: href
+            realizingService:
+              '@referredType': '@referredType'
+              id: id
+          offerTariffType: null
+          chargeType: null
+          effectiveExternalTaxRate: 5.962133916683182
+          sharedAccountProviderNumberingPlanRef: null
+          sharedAccountMemberNumberingPlanRef: null
+          isBilled: true
+          ratedFlatAmountGrossIndicator: true
+          usageRateType: usageRateType
+          chargePeriodEndDate: 2000-01-23T04:56:07.000+00:00
+          ratedFlatAmount:
+            unit: unit
+            value: 1.4658129
+          usageChargeType: null
+          sharedAccountProviderAgreement: null
+          ratedTaxAmount:
+            unit: unit
+            value: 1.4658129
+          usageRatingTag: null
+          currencyCodeRef: null
+          effectiveExternalTax:
+            unit: unit
+            value: 1.4658129
+          product:
+            productOffering:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            productOfferingPrice:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            id: id
+            href: href
+            realizingService:
+              '@referredType': '@referredType'
+              id: id
+          effectiveRoundedVolume:
+            amount: 5.637377
+            units: units
+          chargePeriodStartDate: 2000-01-23T04:56:07.000+00:00
+          chargeProrateIndicator: null
+          chargeSubType: null
+          sharedAccountMemberDirectoryNumber: sharedAccountMemberDirectoryNumber
+          effectiveExternalAmountTaxedIndicator: true
+          quantityRecurringCharge: -4976680883935979520
+          ratingDate: 2000-01-23T04:56:07.000+00:00
+          effectiveExternalTaxForTax: true
+          bundledProductOfferingHierarchy: bundledProductOfferingHierarchy
+          sharedAccountProviderDirectoryNumber: sharedAccountProviderDirectoryNumber
+          currencyCode: currencyCode
+          ratingAmountType: null
+          ratedVolume:
+            amount: 5.637377
+            units: units
+          sharedAccountMemberAgreement: null
+          effectiveDiscountedAmount:
+            unit: unit
+            value: 1.4658129
+        cdrId: cdrId
+        usageDate: 2000-01-23T04:56:07.000+00:00
+        businessUnitRef: null
+        invoiceNumber: invoiceNumber
+        id: id
+        href: href
+        usageCharacteristic:
+        - null
+        - null
+        cdrSubId: cdrSubId
+        status: null
+        usageType: null
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        description:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        status:
+          $ref: '#/components/schemas/UsageStatus'
+        usageDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        usageType:
+          $ref: '#/components/schemas/UsageTypes'
+        callId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        cdrId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        cdrSubId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        invoiceNumber:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        origCdrId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        udrFileId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        udrId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        usageCharacteristic:
+          description: "Characteristics of the usage, non-usage record."
+          items:
+            $ref: '#/components/schemas/Characteristic'
+          minItems: 1
+          type: array
+        ratedProductUsage:
+          description: An occurrence of employing a product for its intended purpose
+            with all rating details.
+          items:
+            $ref: '#/components/schemas/RatedProductUsage'
+          minItems: 1
+          type: array
+        businessUnitRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        relatedParty:
+          $ref: '#/components/schemas/RelatedParty'
+        agreement:
+          $ref: '#/components/schemas/AgreementRef'
+      required:
+      - agreement
+      - businessUnitRef
+      - cdrId
+      - cdrSubId
+      - href
+      - id
+      - ratedProductUsage
+      - relatedParty
+      - status
+      - udrId
+      - usageCharacteristic
+      - usageDate
+      - usageType
+      type: object
+    ErrorMessage:
+      description: Error message schema.
+      properties:
+        code:
+          description: "Application relevant detail, defined in the API or a common\
+            \ list."
+          example: BSS.500
+          type: string
+        reason:
+          description: Explanation of the reason for the error which can be shown
+            to a client user.
+          example: Error communicating with downstream system
+          type: string
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Internal Server Error
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 500
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        instance:
+          description: Request path for this occurrence of the problem.
+          example: /resource/123
+          type: string
+        supplementaryErrors:
+          items:
+            $ref: '#/components/schemas/SupplementaryError'
+          type: array
+      required:
+      - code
+      - reason
+      type: object
+    String256:
+      description: String type of max 256 characters
+      maxLength: 256
+      type: string
+    UsageStatus:
+      description: Indicates whether the event is billed or rated.
+      enum:
+      - billed
+      - rated
+      type: string
+    DateTime:
+      description: |-
+        The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+        Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+      format: date-time
+      type: string
+    UsageTypes:
+      description: The possible types of usage event.
+      enum:
+      - nonUsage
+      - usage
+      type: string
+    Characteristic:
+      allOf:
+      - $ref: '#/components/schemas/CharacteristicBase'
+      - $ref: '#/components/schemas/Characteristic_allOf'
+    RatedProductUsage:
+      description: An occurrence of employing a product for its intended purpose with
+        all rating details.
+      example:
+        effectiveRatedVolume:
+          amount: 5.637377
+          units: units
+        characteristicPosition:
+          subItemId: 5559347081229897728
+          itemId: 738633633822310400
+        billingFreeUnitOrChargingBalance:
+        - bucket: null
+          bucketType: null
+          freeRoundedVolume:
+            amount: 5.637377
+            units: units
+          freeCharge:
+            unit: unit
+            value: 1.4658129
+          freeExternalTaxRate: 7.061401241503109
+          freeUnitProduct:
+            productOffering:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            productOfferingPrice:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            id: id
+            href: href
+            realizingService:
+              '@referredType': '@referredType'
+              id: id
+          freeRateVolume:
+            amount: 5.637377
+            units: units
+          sharedAccountProviderBalance: true
+          freeUnitPackageRef: null
+        - bucket: null
+          bucketType: null
+          freeRoundedVolume:
+            amount: 5.637377
+            units: units
+          freeCharge:
+            unit: unit
+            value: 1.4658129
+          freeExternalTaxRate: 7.061401241503109
+          freeUnitProduct:
+            productOffering:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            productOfferingPrice:
+              '@referredType': '@referredType'
+              id: id
+              href: href
+            id: id
+            href: href
+            realizingService:
+              '@referredType': '@referredType'
+              id: id
+          freeRateVolume:
+            amount: 5.637377
+            units: units
+          sharedAccountProviderBalance: true
+          freeUnitPackageRef: null
+        chargeOverwriteIndicator: true
+        sharedAccountProviderProduct:
+          productOffering:
+            '@referredType': '@referredType'
+            id: id
+            href: href
+          productOfferingPrice:
+            '@referredType': '@referredType'
+            id: id
+            href: href
+          id: id
+          href: href
+          realizingService:
+            '@referredType': '@referredType'
+            id: id
+        offerTariffType: null
+        chargeType: null
+        effectiveExternalTaxRate: 5.962133916683182
+        sharedAccountProviderNumberingPlanRef: null
+        sharedAccountMemberNumberingPlanRef: null
+        isBilled: true
+        ratedFlatAmountGrossIndicator: true
+        usageRateType: usageRateType
+        chargePeriodEndDate: 2000-01-23T04:56:07.000+00:00
+        ratedFlatAmount:
+          unit: unit
+          value: 1.4658129
+        usageChargeType: null
+        sharedAccountProviderAgreement: null
+        ratedTaxAmount:
+          unit: unit
+          value: 1.4658129
+        usageRatingTag: null
+        currencyCodeRef: null
+        effectiveExternalTax:
+          unit: unit
+          value: 1.4658129
+        product:
+          productOffering:
+            '@referredType': '@referredType'
+            id: id
+            href: href
+          productOfferingPrice:
+            '@referredType': '@referredType'
+            id: id
+            href: href
+          id: id
+          href: href
+          realizingService:
+            '@referredType': '@referredType'
+            id: id
+        effectiveRoundedVolume:
+          amount: 5.637377
+          units: units
+        chargePeriodStartDate: 2000-01-23T04:56:07.000+00:00
+        chargeProrateIndicator: null
+        chargeSubType: null
+        sharedAccountMemberDirectoryNumber: sharedAccountMemberDirectoryNumber
+        effectiveExternalAmountTaxedIndicator: true
+        quantityRecurringCharge: -4976680883935979520
+        ratingDate: 2000-01-23T04:56:07.000+00:00
+        effectiveExternalTaxForTax: true
+        bundledProductOfferingHierarchy: bundledProductOfferingHierarchy
+        sharedAccountProviderDirectoryNumber: sharedAccountProviderDirectoryNumber
+        currencyCode: currencyCode
+        ratingAmountType: null
+        ratedVolume:
+          amount: 5.637377
+          units: units
+        sharedAccountMemberAgreement: null
+        effectiveDiscountedAmount:
+          unit: unit
+          value: 1.4658129
+      properties:
+        currencyCode:
+          description: String type of max 32 characters
+          maxLength: 32
+          type: string
+        currencyCodeRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        isBilled:
+          description: Indicates whether the usage record is billed or rated.
+          type: boolean
+        offerTariffType:
+          $ref: '#/components/schemas/OfferTariffTypes'
+        ratingAmountType:
+          $ref: '#/components/schemas/RatingAmountTypes'
+        ratingDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        usageRatingTag:
+          $ref: '#/components/schemas/UsageRatingTags'
+        bundledProductOfferingHierarchy:
+          description: String type of max 512 characters
+          maxLength: 512
+          type: string
+        chargeOverwriteIndicator:
+          description: Indicates whether the charge was overwritten.
+          type: boolean
+        chargePeriodStartDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        chargePeriodEndDate:
+          description: |-
+            The date-time type as defined by RFC3339 - https://datatracker.ietf.org/doc/html/rfc3339#section-5.6
+            Example values are '2014-03-18T14:35:05Z', '2014-03-18T14:35:05.003Z' and '2014-03-18T14:35:05.003+01:00'
+          format: date-time
+          type: string
+        chargeProrateIndicator:
+          $ref: '#/components/schemas/ChargeProrateIndicatorTypes'
+        chargeType:
+          $ref: '#/components/schemas/ChargeTypes'
+        chargeSubType:
+          $ref: '#/components/schemas/ChargeSubTypes'
+        characteristicPosition:
+          $ref: '#/components/schemas/ItemPosition'
+        effectiveDiscountedAmount:
+          $ref: '#/components/schemas/Money'
+        effectiveExternalAmountTaxedIndicator:
+          description: Effective external amount taxed indicator.
+          type: boolean
+        effectiveExternalTax:
+          $ref: '#/components/schemas/Money'
+        effectiveExternalTaxForTax:
+          description: Effective external tax taxed.
+          type: boolean
+        effectiveExternalTaxRate:
+          description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+            binary64 decimal number.
+          format: double
+          type: number
+        effectiveRatedVolume:
+          $ref: '#/components/schemas/Quantity'
+        effectiveRoundedVolume:
+          $ref: '#/components/schemas/Quantity'
+        quantityRecurringCharge:
+          description: Integer type
+          format: int64
+          maximum: 9223372036854775806
+          minimum: -9223372036854775807
+          type: integer
+        ratedFlatAmount:
+          $ref: '#/components/schemas/Money'
+        ratedFlatAmountGrossIndicator:
+          description: Rated flat amount gross indicator.
+          type: boolean
+        ratedTaxAmount:
+          $ref: '#/components/schemas/Money'
+        ratedVolume:
+          $ref: '#/components/schemas/Quantity'
+        usageChargeType:
+          $ref: '#/components/schemas/UsageChargeTypes'
+        usageRateType:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        sharedAccountProviderDirectoryNumber:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        sharedAccountMemberDirectoryNumber:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        sharedAccountProviderAgreement:
+          $ref: '#/components/schemas/AgreementRef'
+        sharedAccountMemberAgreement:
+          $ref: '#/components/schemas/AgreementRef'
+        sharedAccountProviderNumberingPlanRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        sharedAccountMemberNumberingPlanRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        billingFreeUnitOrChargingBalance:
+          description: Billing Free Unit or Charging Balance information.
+          items:
+            $ref: '#/components/schemas/BillingFreeUnitOrChargingBalance'
+          type: array
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        sharedAccountProviderProduct:
+          $ref: '#/components/schemas/ProductRef'
+      required:
+      - characteristicPosition
+      - currencyCode
+      - isBilled
+      - ratingDate
+      type: object
+    ReferenceDataRef:
+      allOf:
+      - $ref: '#/components/schemas/ReferenceDataBaseRef'
+      - $ref: '#/components/schemas/ReferenceDataRef_allOf'
+      description: ReferenceData response schema.
+      required:
+      - href
+      type: object
+    RelatedParty:
+      allOf:
+      - $ref: '#/components/schemas/RelatedPartyBase'
+      - $ref: '#/components/schemas/RelatedParty_allOf'
+      description: |-
+        Related Entity Reference used in response messages.
+        A related party defines party or party role linked to a specific entity.
+    AgreementRef:
+      allOf:
+      - $ref: '#/components/schemas/AgreementBaseRef'
+      - $ref: '#/components/schemas/AgreementRef_allOf'
+      description: Reference to Agreement in response messages.
+    SupplementaryError:
+      description: SupplementaryError message schema.
+      properties:
+        title:
+          description: |
+            A short summary of the problem type. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: Unable to communicate with downstream system
+          type: string
+        status:
+          description: |
+            The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 404
+          exclusiveMaximum: true
+          format: int32
+          maximum: 600
+          minimum: 100
+          type: integer
+        detail:
+          description: |
+            A human readable explanation specific to this occurrence of the problem that is helpful to locate the problem and give advice on how to proceed. Written in English and readable for engineers, usually not suited for non technical stakeholders and not localized.
+          example: "HTTP response 404 : when communicating with http://localhost:8081/"
+          type: string
+        action:
+          description: The action causing the error.
+          example: AddressrolesReadService.AddressrolesReadServiceSoap11
+          type: string
+        source:
+          description: The application returning the error.
+          example: eb
+          type: string
+      type: object
+    CharacteristicBase:
+      description: Characteristic common attributes.
+      properties:
+        name:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        valueType:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        valueSequence:
+          description: The value sequence of the characteristic.
+          items:
+            $ref: '#/components/schemas/ValueSequence'
+          type: array
+        charSpecificationId:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - charSpecificationId
+      - name
+      - valueSequence
+      - valueType
+      type: object
+    ItemPosition:
+      description: The position of item in an array.
+      example:
+        subItemId: 5559347081229897728
+        itemId: 738633633822310400
+      properties:
+        itemId:
+          description: Unsigned Integer type
+          format: int64
+          maximum: 9223372036854775806
+          minimum: 0
+          type: integer
+        subItemId:
+          description: Unsigned Integer type
+          format: int64
+          maximum: 9223372036854775806
+          minimum: 0
+          type: integer
+      type: object
+    String32:
+      description: String type of max 32 characters
+      maxLength: 32
+      type: string
+    OfferTariffTypes:
+      description: The type of tariff applied.
+      enum:
+      - normal
+      type: string
+    RatingAmountTypes:
+      description: The type of rating amount.
+      enum:
+      - total
+      type: string
+    UsageRatingTags:
+      description: Indicates whether the usage is rated inside or outside the usage
+        bundle.
+      enum:
+      - includedUsage
+      type: string
+    String512:
+      description: String type of max 512 characters
+      maxLength: 512
+      type: string
+    ChargeProrateIndicatorTypes:
+      description: The type prorate applied.
+      enum:
+      - prorated
+      - notProrated
+      - fixed
+      type: string
+    ChargeTypes:
+      description: The type of charge applied.
+      enum:
+      - recurringCharge
+      - oneTimeCharge
+      type: string
+    ChargeSubTypes:
+      description: The sub type of charge applied.
+      enum:
+      - advance
+      - credit
+      - past
+      type: string
+    Money:
+      description: A base / value business entity used to represent money
+      example:
+        unit: unit
+        value: 1.4658129
+      properties:
+        unit:
+          description: Currency (ISO4217 norm uses 3 letters to define the currency)
+          type: string
+        value:
+          description: A positive floating point number
+          format: float
+          type: number
+      type: object
+    Decimal:
+      description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+        binary64 decimal number.
+      format: double
+      type: number
+    Quantity:
+      description: An amount in a given unit.
+      example:
+        amount: 5.637377
+        units: units
+      properties:
+        amount:
+          description: Numeric value in a given unit.
+          format: float
+          type: number
+        units:
+          description: Unit
+          type: string
+      type: object
+    Integer:
+      description: Integer type
+      format: int64
+      maximum: 9223372036854775806
+      minimum: -9223372036854775807
+      type: integer
+    UsageChargeTypes:
+      description: The type of usage charge applied.
+      enum:
+      - internalCharge
+      - externalCharge
+      - surcharge
+      - reRatedCharge
+      - display
+      type: string
+    String128:
+      description: String type of max 128 characters
+      maxLength: 128
+      type: string
+    BillingFreeUnitOrChargingBalance:
+      description: Billing Free Unit or Charging Balance information.
+      example:
+        bucket: null
+        bucketType: null
+        freeRoundedVolume:
+          amount: 5.637377
+          units: units
+        freeCharge:
+          unit: unit
+          value: 1.4658129
+        freeExternalTaxRate: 7.061401241503109
+        freeUnitProduct:
+          productOffering:
+            '@referredType': '@referredType'
+            id: id
+            href: href
+          productOfferingPrice:
+            '@referredType': '@referredType'
+            id: id
+            href: href
+          id: id
+          href: href
+          realizingService:
+            '@referredType': '@referredType'
+            id: id
+        freeRateVolume:
+          amount: 5.637377
+          units: units
+        sharedAccountProviderBalance: true
+        freeUnitPackageRef: null
+      properties:
+        bucket:
+          $ref: '#/components/schemas/BucketRef'
+        bucketType:
+          $ref: '#/components/schemas/BucketTypes'
+        freeCharge:
+          $ref: '#/components/schemas/Money'
+        freeExternalTaxRate:
+          description: IEEE 754-2008/ISO 60559:2011 (https://en.wikipedia.org/wiki/IEEE_754)
+            binary64 decimal number.
+          format: double
+          type: number
+        freeRateVolume:
+          $ref: '#/components/schemas/Quantity'
+        freeRoundedVolume:
+          $ref: '#/components/schemas/Quantity'
+        sharedAccountProviderBalance:
+          description: Indicates whether call details have to be generated.
+          type: boolean
+        freeUnitPackageRef:
+          $ref: '#/components/schemas/ReferenceDataRef'
+        freeUnitProduct:
+          $ref: '#/components/schemas/ProductRef'
+      type: object
+    ProductRef:
+      description: Reference to the Product.
+      example:
+        productOffering:
+          '@referredType': '@referredType'
+          id: id
+          href: href
+        productOfferingPrice:
+          '@referredType': '@referredType'
+          id: id
+          href: href
+        id: id
+        href: href
+        realizingService:
+          '@referredType': '@referredType'
+          id: id
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+        productOffering:
+          $ref: '#/components/schemas/ProductOfferingRef'
+        productOfferingPrice:
+          $ref: '#/components/schemas/ProductOfferingPriceRef'
+        realizingService:
+          $ref: '#/components/schemas/ServiceRef'
+      required:
+      - href
+      - id
+      - productOffering
+      type: object
+    ReferenceDataBaseRef:
+      description: ReferenceData base schema.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    RelatedPartyBase:
+      description: |-
+        Related Party Base schema common to all operations.
+        A related party defines party or party role linked to a specific entity.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+      x-members-accessor: true
+    AgreementBaseRef:
+      description: Reference to Agreement in request messages.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - id
+      type: object
+    ValueSequence:
+      properties:
+        seq:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        value:
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+      type: object
+    UnsignedInteger:
+      description: Unsigned Integer type
+      format: int64
+      maximum: 9223372036854775806
+      minimum: 0
+      type: integer
+    BucketRef:
+      allOf:
+      - $ref: '#/components/schemas/BucketBaseRef'
+      - $ref: '#/components/schemas/BucketRef_allOf'
+      description: Reference to Bucket used in response messages.
+    BucketTypes:
+      description: A enumeration with the types that a bucket can assume.
+      enum:
+      - mainAccount
+      - dedicatedAccount
+      - usageCounter
+      type: string
+    ProductOfferingRef:
+      description: A reference to the Product Offering.
+      example:
+        '@referredType': '@referredType'
+        id: id
+        href: href
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - '@referredType'
+      - href
+      - id
+      type: object
+    ProductOfferingPriceRef:
+      description: A reference to the Product Offering Price.
+      example:
+        '@referredType': '@referredType'
+        id: id
+        href: href
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - id
+      type: object
+    ServiceRef:
+      description: A reference to the different types of service.
+      example:
+        '@referredType': '@referredType'
+        id: id
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      required:
+      - '@referredType'
+      - id
+      type: object
+    BucketBaseRef:
+      description: Reference to Bucket common to all operations messages.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+        bucketSpecification:
+          $ref: '#/components/schemas/SpecificationBase'
+      required:
+      - bucketSpecification
+      type: object
+    Specification:
+      allOf:
+      - $ref: '#/components/schemas/SpecificationBase'
+      - $ref: '#/components/schemas/ReferenceDataRef_allOf'
+      description: Specification.
+    SpecificationBase:
+      description: Specification base common attributes.
+      properties:
+        id:
+          description: "Public Identifier, max 256 characters."
+          maxLength: 256
+          pattern: ^(?=\s*\S).*$
+          type: string
+      type: object
+    Characteristic_allOf:
+      properties:
+        charPosition:
+          $ref: '#/components/schemas/ItemPosition'
+      required:
+      - charPosition
+      type: object
+      example: null
+    ReferenceDataRef_allOf:
+      properties:
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      type: object
+      example: null
+    RelatedParty_allOf:
+      properties:
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      type: object
+      example: null
+    AgreementRef_allOf:
+      properties:
+        '@referredType':
+          description: String type of max 128 characters
+          maxLength: 128
+          type: string
+        href:
+          description: String type of max 256 characters
+          maxLength: 256
+          type: string
+      required:
+      - href
+      type: object
+      example: null
+    BucketRef_allOf:
+      properties:
+        bucketSpecification:
+          $ref: '#/components/schemas/Specification'
+      required:
+      - bucketSpecification
+      type: object
+      example: null
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
