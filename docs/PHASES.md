@@ -355,3 +355,31 @@ Dívidas conscientes registradas na spec: Journey Mesh/BFF/Composite API reais, 
 reais, identidade (Catar/México), marco de captura assíncrono, valor livre + voucher, crédito
 pelo fulfilment. Nenhum código de produto escrito ainda — aguardando validação do recorte e da
 ordem com a dona do produto.
+
+### Fase 7.1 — entregue: modelo + estado (SIM/eSIM + endereço + pagamento)
+
+Commits `f99e917` (base) + `f6d8d3d` (refinamentos da revisão). Só modelo e estado — nenhuma tela
+ainda. `src/services/model.ts` ganhou `SimChoice` (`physical`|`esim`), `Offer.simTypes?`,
+`Product.simType?`, `DeliveryAddress` (TMF673), `EsimProfile` (código `LPA:1$…`, estados do perfil
+GSMA), `PaymentResult` e `FirstTopUp` (os três tempos do pré-pago como estados). `onboarding-context.ts`
+passou os passos para `welcome → plan → sim → addons → number → account → delivery → review → success`,
+acrescentou `simType/deliveryAddress/addressId/authorizationRef/orderId` ao estado, e trocou a
+constante estática de contagem de passos por `workingStepsFor({offersEsim, simType})` (puro: `sim` só
+se a marca oferece eSIM; `delivery` cai para eSIM). `onboarding-persistence.ts` revive os campos novos
+com validação estrita. O stepper passou a receber os passos por prop. Revisão (code-reviewer): APROVADO,
+zero bloqueios; aplicados comentários de invariante, referência cruzada `authorizationRef/orderId`, e um
+ajuste de teste. 162 testes, build + lint verdes, paridade i18n 192/192.
+
+### Fase 7.2 — entregue: seam de pagamento (authorize/capture/void)
+
+Commit `f2f1aa3`. Seam `payment` (extensão paymentAuthorization + TMF676, mock) no mesmo padrão dos
+demais: `src/schemas/payment.ts` (zod — `amountMinor` inteiro positivo, `methodToken` opaco, nunca PAN),
+`payment/payment-driver.ts` (interface), `payment/payment-mock.ts` (mock determinístico), `payment/
+payment-http.ts` (stub `notConfigured`), `payment.functions.ts` (funções do seam) e fiação em `api.ts`
+(`authorizePayment/capturePayment/voidPayment/getPayment`). `driver-config.ts` ganhou o seam `payment`
+(`VITE_PAYMENT_DRIVER`, default mock). `authorize` reserva e devolve `authorizationRef`; `capture` cobra
+no marco e é **idempotente no ref** (capturar duas vezes não cobra de novo — disciplina "Don't pay again"
+do dossiê, no nível do seam); `void` libera uma autorização não capturada e recusa uma já capturada
+(conflito → precisa estorno, não void); `getPayment` lê o estado atual. Mock determinístico: token com
+`4000` recusa (`payment.cardDeclined`, rejected), qualquer outro autoriza. Dinheiro em unidades menores +
+moeda ISO (EUR), nunca float. 10 testes novos (172 no total), build + lint verdes.
