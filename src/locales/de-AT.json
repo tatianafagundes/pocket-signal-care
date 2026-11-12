@@ -48,6 +48,7 @@
       "subtitle": "Dein Tarif, Guthaben und Produkte.",
       "loadError": "Wir konnten deinen Tarif nicht laden.",
       "retry": "Erneut versuchen",
+      "loading": "Dein Tarif wird geladen…",
       "balanceLabel": "Guthaben",
       "balanceEmpty": "Noch kein Guthaben — lad zum ersten Mal auf.",
       "productsLabel": "Deine Produkte",

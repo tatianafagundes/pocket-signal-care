@@ -14,8 +14,12 @@ import type { TenantId } from "@/lib/tenant-rules";
  * real customerId and this needs no change.
  */
 
-/** The demo customer seeded per tenant (charging-mock / order-mock). */
-function demoCustomerId(tenant: TenantId): string {
+/**
+ * The demo customer seeded per tenant (charging-mock / order-mock) — the fallback "current
+ * customer" before a real session exists, and the customerId a mock login resolves to (there is
+ * no email→customer map yet). The one place `demo-${tenant}` is formed; callers use this.
+ */
+export function fallbackCustomerId(tenant: TenantId): string {
   return `demo-${tenant}`;
 }
 
@@ -23,5 +27,5 @@ function demoCustomerId(tenant: TenantId): string {
 export function useCurrentCustomerId(): string {
   const { session } = useSession();
   const { tenant } = useTenant();
-  return session?.customerId ?? demoCustomerId(tenant);
+  return session?.customerId ?? fallbackCustomerId(tenant);
 }

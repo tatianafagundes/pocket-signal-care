@@ -27,11 +27,11 @@ export const Route = createFileRoute("/my-plan")({
 
 function Page() {
   const { t } = useLocalizedTranslation();
-  const { locale } = useTenant();
+  const { tenant, locale } = useTenant();
   const customerId = useCurrentCustomerId();
 
   const query = useQuery({
-    queryKey: ["customer360", customerId],
+    queryKey: ["customer360", tenant, customerId],
     queryFn: () => api.getCustomer360(customerId),
   });
 
@@ -41,10 +41,15 @@ function Page() {
       subtitle={t("pages.myPlan.subtitle", "Your plan, balance and products.")}
     >
       {query.isPending ? (
-        <div className="grid gap-3" aria-hidden="true">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
+        <>
+          <p className="sr-only" role="status">
+            {t("pages.myPlan.loading", "Loading your plan…")}
+          </p>
+          <div className="grid gap-3" aria-hidden="true">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        </>
       ) : query.isError ? (
         <SeamErrorNotice
           error={

@@ -48,6 +48,7 @@
       "subtitle": "Your plan, balance and products.",
       "loadError": "We couldn't load your plan.",
       "retry": "Try again",
+      "loading": "Loading your plan…",
       "balanceLabel": "Balance",
       "balanceEmpty": "No balance yet — make your first top up.",
       "productsLabel": "Your products",

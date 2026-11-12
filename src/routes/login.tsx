@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { useSession } from "@/hooks/use-session";
+import { fallbackCustomerId } from "@/lib/current-customer";
 import { PageShell } from "@/components/page-shell";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import {
@@ -72,7 +73,7 @@ function LoginPage() {
       // we sign the user into the seeded demo customer for the tenant. A real IdP (Fase 8) returns
       // or resolves the real customerId; only this line changes then.
       setSession({
-        customerId: `demo-${tenant}`,
+        customerId: fallbackCustomerId(tenant),
         email: session.email,
         tenantId: tenant,
         givenName: null,
