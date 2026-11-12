@@ -96,8 +96,8 @@ export interface UsageBucket {
   remaining?: UsageQuantity;
   /** Validity RANGE (TMF654 validFor). `start` future ⇒ pending; `end` past ⇒ expired. Both ISO. */
   validFor?: {
-    start?: string;
-    end?: string;
+    start?: string | undefined;
+    end?: string | undefined;
   };
   /** Stable reference to the offer that granted this bucket — lets the 360 group/route by offer. */
   offerId?: string;

@@ -63,11 +63,11 @@ function Page() {
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
   const [boughtOfferId, setBoughtOfferId] = useState<string | null>(null);
   const buy = useMutation({
-    mutationFn: (offerId: string) => purchaseAddOn(customerId, offerId),
-    onSuccess: (_orderId, offerId) => {
-      setBoughtOfferId(offerId);
-      // Refresh the customer's plan so the add-on shows in My plan, and re-qualify the list
-      // against the (unchanged, but future-charging) balance.
+    mutationFn: (offer: Offer) => purchaseAddOn(customerId, offer),
+    onSuccess: (_orderId, offer) => {
+      setBoughtOfferId(offer.offerId);
+      // Refresh the customer's plan so the add-on shows in My plan, and the usage buckets so the
+      // granted allowance shows, and re-qualify the list against the (now-charged) balance.
       void queryClient.invalidateQueries({ queryKey: ["customer360", tenant, customerId] });
       void queryClient.invalidateQueries({ queryKey: ["add-ons", tenant, customerId] });
     },
@@ -81,8 +81,10 @@ function Page() {
   }
 
   function handleBuy(offerId: string) {
+    const offer = query.data?.find((a) => a.offer.offerId === offerId)?.offer;
+    if (offer === undefined) return;
     setActiveOfferId(offerId);
-    buy.mutate(offerId);
+    buy.mutate(offer);
   }
 
   return (

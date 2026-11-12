@@ -1,14 +1,20 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
 import { runRead, runWrite } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
-import type { Balance } from "@/services/model";
-import { customerIdSchema, topUpSchema, deductSchema } from "@/schemas/charging";
+import type { Balance, UsageBucket } from "@/services/model";
+import {
+  customerIdSchema,
+  topUpSchema,
+  deductSchema,
+  grantAllowanceSchema,
+} from "@/schemas/charging";
 import type { ChargingDriver } from "@/services/charging/charging-driver";
 import { createChargingMock } from "@/services/charging/charging-mock";
 import { createChargingHttp } from "@/services/charging/charging-http";
 
 /*
- * Charging (ECEV) seam. (Spec Fase 4.4) getBalance / topUp / rateAndDeduct. Mock by default.
+ * Charging (ECEV) seam. (Spec Fase 4.4 + usage buckets) getBalance / topUp / rateAndDeduct, plus
+ * the usage axis getUsage / grantAllowance (TMF654 product buckets). Mock by default.
  * Amounts are minor units (euro cents). Same shape as the other seams.
  */
 
@@ -41,5 +47,20 @@ export function rateAndDeduct(input: unknown): Promise<SeamResult<{ ok: true }>>
   if (!parsed.success) return invalid<{ ok: true }>("charging.deduct.invalid");
   return runWrite({ tenantId: "ecev" }, "charging.rateAndDeduct", () =>
     driver.rateAndDeduct(parsed.data.customerId, parsed.data.amountMinor),
+  );
+}
+
+export function getUsage(customerIdRaw: string): Promise<SeamResult<UsageBucket[]>> {
+  const parsed = customerIdSchema.safeParse(customerIdRaw);
+  if (!parsed.success) return invalid<UsageBucket[]>("charging.customer.invalid");
+  return runRead({ tenantId: "ecev" }, "charging.getUsage", () => driver.getUsage(parsed.data));
+}
+
+export function grantAllowance(input: unknown): Promise<SeamResult<UsageBucket>> {
+  const parsed = grantAllowanceSchema.safeParse(input);
+  if (!parsed.success) return invalid<UsageBucket>("charging.grantAllowance.invalid");
+  const { customerId, ...grant } = parsed.data;
+  return runWrite({ tenantId: "ecev" }, "charging.grantAllowance", () =>
+    driver.grantAllowance(customerId, grant),
   );
 }

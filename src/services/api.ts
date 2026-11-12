@@ -68,6 +68,8 @@ export const api = {
   getBalance: (customerId: string) => unwrap(charging.getBalance(customerId)),
   topUp: (input: unknown) => unwrap(charging.topUp(input)),
   rateAndDeduct: (input: unknown) => unwrap(charging.rateAndDeduct(input)),
+  getUsage: (customerId: string) => unwrap(charging.getUsage(customerId)),
+  grantAllowance: (input: unknown) => unwrap(charging.grantAllowance(input)),
 
   // Resource seam (DSIMA, mock) — SIM/MSISDN + eSIM provisioning (esimProfile, GSMA SGP.22)
   listAvailableMsisdn: (tenantId: string) => unwrap(resource.listAvailableMsisdn(tenantId)),
