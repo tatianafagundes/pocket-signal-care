@@ -59,6 +59,8 @@ describe("cpr seam (mock driver)", () => {
         expect(plan.offer).not.toBeNull();
         expect(plan.offer?.offerId).toBe(plan.offerId);
         expect(simProduct.offer).toBeNull();
+        // Usage (TMF654): the seeded buckets reach the 360, ordered data→voice→sms→roaming.
+        expect(r.data.usage.map((b) => b.type)).toEqual(["data", "voice", "sms", "roaming"]);
       }
     });
 
@@ -96,6 +98,18 @@ describe("cpr seam (mock driver)", () => {
         expect(r.data.customer.customerId).toBe("demo-drei");
         // A failed timeline yields [], never blanks the 360.
         expect(r.data.interactions).toEqual([]);
+      }
+    });
+
+    it("degrades gracefully when ECEV usage fails (empty usage, 360 still renders)", async () => {
+      forceError("charging.getUsage");
+      const r = await getCustomer360("demo-drei");
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.data.customer.customerId).toBe("demo-drei");
+        // A failed usage read yields [], never blanks the 360; the money axis is unaffected.
+        expect(r.data.usage).toEqual([]);
+        expect(r.data.balance?.amountMinor).toBe(1500);
       }
     });
 

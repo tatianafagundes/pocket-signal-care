@@ -15,7 +15,7 @@ import type { CprDriver } from "@/services/cpr/cpr-driver";
 import { createCprMock } from "@/services/cpr/cpr-mock";
 import { createCprHttp } from "@/services/cpr/cpr-http";
 import { getInstalledBase } from "@/services/order.functions";
-import { getBalance } from "@/services/charging.functions";
+import { getBalance, getUsage } from "@/services/charging.functions";
 import { listOffers, listAddOns } from "@/services/catalog.functions";
 
 /*
@@ -78,26 +78,32 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
   }
   const customerId = parsed.data;
   // The 360 fan-out lives HERE (not in a driver): CPR owns party+customer; the installed base
-  // comes from the order (EOC) seam and the balance from the charging (ECEV) seam. Compose the
-  // three with the pure rule. If CPR fails, fail; if order/charging fail, degrade gracefully
-  // (empty base / null balance) so the 360 still renders the customer rather than erroring out.
+  // comes from the order (EOC) seam, and the balance and usage buckets from the charging (ECEV)
+  // seam, enriched with the catalogue (ECM). Compose with the pure rule. If CPR fails, fail; if any
+  // other source fails, degrade gracefully (empty base / null balance / empty usage / empty
+  // catalogue) so the 360 still renders the customer rather than erroring out.
   return runRead({ tenantId: "cpr" }, "cpr.getCustomer360", async () => {
     const cpr = await driver.getCustomerAndParty(customerId);
     if (!cpr.ok) return cpr;
     // The customer's tenant drives the catalogue fetch — known only after the CPR read resolves.
     const tenantId = cpr.data.customer.tenantId;
 
-    const [baseRes, balanceRes, interactionsRes, offersRes, addOnsRes] = await Promise.all([
-      getInstalledBase(customerId),
-      getBalance(customerId),
-      driver.listInteractions(customerId),
-      listOffers(tenantId),
-      listAddOns(tenantId),
-    ]);
+    const [baseRes, balanceRes, usageRes, interactionsRes, offersRes, addOnsRes] =
+      await Promise.all([
+        getInstalledBase(customerId),
+        getBalance(customerId),
+        getUsage(customerId),
+        driver.listInteractions(customerId),
+        listOffers(tenantId),
+        listAddOns(tenantId),
+      ]);
     // The RAW installed base (un-enriched Product[]); composeCustomer360 joins the catalogue onto
     // it to produce the enriched EnrichedProduct[] on Customer360.installedBase.
     const rawInstalledBase = baseRes.ok ? baseRes.data : [];
     const balance = balanceRes.ok ? balanceRes.data : null;
+    // Usage (TMF654 buckets) degrades like balance: a failed ECEV usage read shows no buckets, not
+    // an error — the money axis and the rest of the 360 still render.
+    const usage = usageRes.ok ? usageRes.data : [];
     // Interactions degrade gracefully like base/balance: a failed timeline must not blank the 360.
     const interactions = interactionsRes.ok ? interactionsRes.data : [];
     // Catalogue enrichment also degrades: if ECM fails, offers is empty and each product's `offer`
@@ -114,6 +120,7 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
         party: cpr.data.party,
         installedBase: rawInstalledBase,
         balance,
+        usage,
         interactions,
         offers,
       }),
