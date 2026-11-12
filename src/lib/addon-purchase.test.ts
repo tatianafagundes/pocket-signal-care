@@ -28,7 +28,7 @@ describe("purchaseAddOn", () => {
     expect(orderId).toBe("order-1");
     expect(mockApi.createCart).toHaveBeenCalledWith("demo-drei");
     expect(mockApi.addItem).toHaveBeenCalledWith({ cartId: "cart-1", offerId: "drei-addon-1gb" });
-    expect(mockApi.submitOrder).toHaveBeenCalledWith("cart-1");
+    expect(mockApi.submitOrder).toHaveBeenCalledWith({ cartId: "cart-1" });
   });
 
   it("creates a fresh cart per call (no shared cart across purchases)", async () => {

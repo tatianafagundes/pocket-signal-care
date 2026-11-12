@@ -1,5 +1,5 @@
 import { ok, err, seamError } from "@/services/seam-result";
-import type { Product } from "@/services/model";
+import type { Product, SimChoice } from "@/services/model";
 import type { TenantId } from "@/lib/tenant-rules";
 import { withMock } from "@/services/mock-support";
 import type { OrderDriver } from "@/services/order/order-driver";
@@ -22,6 +22,8 @@ interface Cart {
 
 const carts = new Map<string, Cart>();
 const installedBase = new Map<string, Product[]>();
+// orderId -> the order's delivery addressId (physical SIM only). Traceable, mirrors TMF622.
+const orderAddresses = new Map<string, string>();
 let seeded = false;
 
 // The demo customer's seeded plan must reference an offerId that EXISTS in the catalog mock
@@ -93,27 +95,34 @@ export function createOrderMock(): OrderDriver {
       });
     },
 
-    submitOrder(cartId) {
+    submitOrder(cartId, opts) {
       return withMock("order.submitOrder", () => {
         const cart = carts.get(cartId);
         if (!cart) return err(seamError("order.cart.notFound", "notFound", "retry"));
         if (cart.offerIds.length === 0) {
           return err(seamError("order.cart.empty", "validation", "fixInput"));
         }
-        // Provision each cart item as a product on the customer's installed base.
+        const simType: SimChoice | undefined = opts?.simType;
+        // Provision each cart item as a product on the customer's installed base. A SIM product
+        // records which form was ordered (simType), so My plan can show "eSIM" vs "Physical SIM".
         const base = installedBase.get(cart.customerId) ?? [];
         for (const offerId of cart.offerIds) {
+          const kind = kindForOffer(offerId);
           base.push({
             productId: `prod-${cryptoId()}`,
             offerId,
             name: offerId,
-            kind: kindForOffer(offerId),
+            kind,
             status: "active",
+            ...(kind === "sim" && simType ? { simType } : {}),
           });
         }
         installedBase.set(cart.customerId, base);
         carts.delete(cartId);
-        return ok({ orderId: `order-${cryptoId()}`, status: "completed" as const });
+        const orderId = `order-${cryptoId()}`;
+        // Record the delivery address on the order (physical SIM only), mirroring TMF622.
+        if (opts?.addressId) orderAddresses.set(orderId, opts.addressId);
+        return ok({ orderId, status: "completed" as const });
       });
     },
 

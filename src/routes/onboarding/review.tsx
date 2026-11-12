@@ -76,10 +76,20 @@ function ReviewPage() {
   async function confirm() {
     setTerminalError(null);
     try {
+      // The plan price is the first top-up (same money, no separate amount step). Read fresh from
+      // the looked-up offer so a plan change upstream can't leave a stale amount.
+      const planPriceMinor = offer?.priceMinor ?? 0;
+      // MOCK payment token. Fase 7.5 replaces this with the token the payment step collects from
+      // the (tokenized) card form; it is NEVER a PAN and is never stored in state. "4242" authorizes
+      // in the payment mock; a token containing "4000" would decline.
+      // TODO(Fase 7.5): thread the real collected method token here.
+      const methodToken = "tok-visa-4242";
       const customerId = await runOnboardingSubmit({
         state,
         patch,
         onStep: (step) => setBusyStep(step),
+        planPriceMinor,
+        methodToken,
       });
       // Auto-login: the activation created this customer, so start their session NOW — before the
       // onboarding reset on the success screen discards the wizard state. The session is a separate

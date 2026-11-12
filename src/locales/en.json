@@ -271,13 +271,18 @@
       "incomplete": "Some steps are missing. Go back and complete them first.",
       "balanceNote": "You start with no balance — top up any time to use your plan.",
       "progress": {
+        "authorize": "Authorizing your payment…",
         "createParty": "Creating your profile…",
         "createCustomer": "Setting up your account…",
+        "createAddress": "Saving your delivery address…",
+        "requestEsim": "Preparing your eSIM…",
         "createCart": "Preparing your order…",
         "addPlan": "Adding your plan…",
         "addSim": "Adding your SIM…",
         "addAddOns": "Adding your extras…",
         "submitOrder": "Activating…",
+        "capture": "Confirming your payment…",
+        "credit": "Adding your first top-up…",
         "finalizing": "Finishing up…"
       },
       "terminalError": "We couldn't finish activating your plan. Your account is saved — you can try again."

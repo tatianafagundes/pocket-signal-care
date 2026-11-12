@@ -52,8 +52,11 @@ export function initialOnboardingState(tenant: TenantId): OnboardingState {
     customerId: null,
     cartId: null,
     addressId: null,
+    esimProfileId: null,
     authorizationRef: null,
     orderId: null,
+    captured: false,
+    credited: false,
   };
 }
 
@@ -84,6 +87,10 @@ function reviveForTenant(raw: unknown, tenant: TenantId, now: number): Onboardin
   const strArray = (v: unknown): string[] =>
     Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
   const simType = (v: unknown): SimChoice | null => (v === "physical" || v === "esim" ? v : null);
+  // A money-milestone flag resumes as "done" ONLY if it was literally `true`; anything else
+  // (missing, malformed) is `false`, so the worst case is a redundant idempotent retry, never a
+  // skipped capture/credit.
+  const bool = (v: unknown): boolean => v === true;
   return {
     tenant,
     step: state.step,
@@ -99,8 +106,11 @@ function reviveForTenant(raw: unknown, tenant: TenantId, now: number): Onboardin
     customerId: str(state.customerId),
     cartId: str(state.cartId),
     addressId: str(state.addressId),
+    esimProfileId: str(state.esimProfileId),
     authorizationRef: str(state.authorizationRef),
     orderId: str(state.orderId),
+    captured: bool(state.captured),
+    credited: bool(state.credited),
   };
 }
 

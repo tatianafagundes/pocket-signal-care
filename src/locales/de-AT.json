@@ -271,13 +271,18 @@
       "incomplete": "Es fehlen noch Schritte. Geh zurück und schließ sie zuerst ab.",
       "balanceNote": "Du startest ohne Guthaben — lad jederzeit auf, um deinen Tarif zu nutzen.",
       "progress": {
+        "authorize": "Deine Zahlung wird autorisiert…",
         "createParty": "Dein Profil wird erstellt…",
         "createCustomer": "Dein Konto wird eingerichtet…",
+        "createAddress": "Deine Lieferadresse wird gespeichert…",
+        "requestEsim": "Deine eSIM wird vorbereitet…",
         "createCart": "Deine Bestellung wird vorbereitet…",
         "addPlan": "Dein Tarif wird hinzugefügt…",
         "addSim": "Deine SIM wird hinzugefügt…",
         "addAddOns": "Deine Extras werden hinzugefügt…",
         "submitOrder": "Wird aktiviert…",
+        "capture": "Deine Zahlung wird bestätigt…",
+        "credit": "Dein erstes Guthaben wird hinzugefügt…",
         "finalizing": "Wird abgeschlossen…"
       },
       "terminalError": "Wir konnten deinen Tarif nicht fertig aktivieren. Dein Konto ist gespeichert — du kannst es erneut versuchen."

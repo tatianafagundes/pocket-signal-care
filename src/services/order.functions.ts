@@ -2,7 +2,7 @@ import { seamError, type SeamResult } from "@/services/seam-result";
 import { runRead, runWrite } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
 import type { Product } from "@/services/model";
-import { customerIdSchema, cartIdSchema, addItemSchema } from "@/schemas/order";
+import { customerIdSchema, addItemSchema, submitOrderSchema } from "@/schemas/order";
 import type { OrderDriver } from "@/services/order/order-driver";
 import { createOrderMock } from "@/services/order/order-mock";
 import { createOrderHttp } from "@/services/order/order-http";
@@ -36,11 +36,14 @@ export function addItem(input: unknown) {
   );
 }
 
-export function submitOrder(cartIdRaw: string) {
-  const parsed = cartIdSchema.safeParse(cartIdRaw);
+export function submitOrder(input: unknown) {
+  const parsed = submitOrderSchema.safeParse(input);
   if (!parsed.success)
     return invalid<{ orderId: string; status: "completed" | "pending" }>("order.cart.invalid");
-  return runWrite({ tenantId: "eoc" }, "order.submitOrder", () => driver.submitOrder(parsed.data));
+  const { cartId, addressId, simType } = parsed.data;
+  return runWrite({ tenantId: "eoc" }, "order.submitOrder", () =>
+    driver.submitOrder(cartId, { addressId, simType }),
+  );
 }
 
 export function getInstalledBase(customerIdRaw: string): Promise<SeamResult<Product[]>> {

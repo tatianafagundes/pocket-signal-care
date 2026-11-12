@@ -6,7 +6,7 @@ import { api } from "@/services/api";
  * Buying an add-on for an EXISTING customer reuses the order seam, exactly like onboarding adds
  * add-ons at activation:
  *
- *   createCart(customerId) → addItem({ cartId, offerId }) → submitOrder(cartId)
+ *   createCart(customerId) → addItem({ cartId, offerId }) → submitOrder({ cartId })
  *
  * submitOrder provisions the add-on as a Product { kind: "add-on" } onto the customer's installed
  * base, so it then shows up in getCustomer360 (installedBase is fed by the order seam). This is the
@@ -29,6 +29,7 @@ import { api } from "@/services/api";
 export async function purchaseAddOn(customerId: string, offerId: string): Promise<string> {
   const cart = await api.createCart(customerId);
   await api.addItem({ cartId: cart.cartId, offerId });
-  const order = await api.submitOrder(cart.cartId);
+  // No SIM and no delivery address for an add-on purchase — a bare cart submit.
+  const order = await api.submitOrder({ cartId: cart.cartId });
   return order.orderId;
 }

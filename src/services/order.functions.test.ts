@@ -28,7 +28,7 @@ describe("order seam (mock)", () => {
     const added = await addItem({ cartId: cart.data.cartId, offerId: "dreigo-go-8" });
     expect(added.ok).toBe(true);
 
-    const order = await submitOrder(cart.data.cartId);
+    const order = await submitOrder({ cartId: cart.data.cartId });
     expect(order.ok).toBe(true);
     if (order.ok) expect(order.data.status).toBe("completed");
 
@@ -43,11 +43,11 @@ describe("order seam (mock)", () => {
   it("rejects submitting an empty cart and an unknown cart", async () => {
     const cart = await createCart("demo-drei");
     if (!cart.ok) return;
-    const empty = await submitOrder(cart.data.cartId);
+    const empty = await submitOrder({ cartId: cart.data.cartId });
     expect(empty.ok).toBe(false);
     if (!empty.ok) expect(empty.error.code).toBe("order.cart.empty");
 
-    const unknown = await submitOrder("cart-does-not-exist");
+    const unknown = await submitOrder({ cartId: "cart-does-not-exist" });
     expect(unknown.ok).toBe(false);
     if (!unknown.ok) expect(unknown.error.code).toBe("order.cart.notFound");
   });
@@ -57,7 +57,7 @@ describe("order seam (mock)", () => {
     const cart = await createCart(customerId);
     if (!cart.ok) return;
     await addItem({ cartId: cart.data.cartId, offerId: "drei-roaming-addon" });
-    await submitOrder(cart.data.cartId);
+    await submitOrder({ cartId: cart.data.cartId });
     const base = await getInstalledBase(customerId);
     if (base.ok) {
       const addon = base.data.find((p) => p.offerId === "drei-roaming-addon");
@@ -70,7 +70,7 @@ describe("order seam (mock)", () => {
     const cart = await createCart(customerId);
     if (!cart.ok) return;
     await addItem({ cartId: cart.data.cartId, offerId: "dreigo-stream-pass" });
-    await submitOrder(cart.data.cartId);
+    await submitOrder({ cartId: cart.data.cartId });
     const base = await getInstalledBase(customerId);
     if (base.ok) {
       const pass = base.data.find((p) => p.offerId === "dreigo-stream-pass");

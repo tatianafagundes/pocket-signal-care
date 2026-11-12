@@ -111,13 +111,19 @@ export interface OnboardingState {
    * the order — the dossiê's "Don't pay again" rule. No PAN/CVV/token is ever stored here.
    *
    * `addressId`: returned by `logistics.createAddress` (TMF673), physical SIM only.
+   * `esimProfileId`: returned by `resource.requestEsimProfile`, eSIM only. Reused on retry.
    * `authorizationRef`: set from `PaymentResult.authorizationRef` at the authorize step; 7.4 reuses
    *   it on every retry path (skip authorize if present).
-   * `orderId`: captured from `submitOrder`'s result (today discarded); skip submitOrder if present.
+   * `orderId`: captured from `submitOrder`'s result; skip submitOrder if present.
+   * `captured` / `credited`: money milestones already done, so a retry after a later failure does
+   *   NOT capture or credit twice (the "Don't pay again" rule — see runOnboardingSubmit).
    */
   addressId: string | null;
+  esimProfileId: string | null;
   authorizationRef: string | null;
   orderId: string | null;
+  captured: boolean;
+  credited: boolean;
 }
 
 /** The fields a caller may patch. `tenant` is set once at init and not patched here. */

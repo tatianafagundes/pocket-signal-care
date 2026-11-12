@@ -59,7 +59,7 @@ export const api = {
   // Order seam (EOC, mock)
   createCart: (customerId: string) => unwrap(order.createCart(customerId)),
   addItem: (input: unknown) => unwrap(order.addItem(input)),
-  submitOrder: (cartId: string) => unwrap(order.submitOrder(cartId)),
+  submitOrder: (input: unknown) => unwrap(order.submitOrder(input)),
   getInstalledBase: (customerId: string) => unwrap(order.getInstalledBase(customerId)),
 
   // Charging seam (ECEV, mock)
