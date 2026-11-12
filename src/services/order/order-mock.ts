@@ -67,7 +67,9 @@ function cryptoId(): string {
 /** Classify an offer id into a product kind from its name. */
 function kindForOffer(offerId: string): Product["kind"] {
   if (/\bsim\b|esim|iccid/i.test(offerId)) return "sim";
-  if (/add-?on|roam|boost/i.test(offerId)) return "add-on";
+  // Anchored so future plan ids (e.g. "bypass", "upstream", "passport") don't false-match:
+  // "-pass" as a trailing segment (dreigo-stream-pass), "-stream", "add-on", "roam", "boost".
+  if (/add-?on|roam|boost|-pass\b|-stream\b|\bstream-/i.test(offerId)) return "add-on";
   return "plan";
 }
 

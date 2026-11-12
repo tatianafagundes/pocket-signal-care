@@ -248,3 +248,85 @@ and the specific MSISDN `taken` concurrency copy can't be reproduced with the cl
 (per-page module state) — the generic unavailable+retry path is captured, the specific copy stays
 unit-tested. The capture scripts are throwaway (not committed); the review docs are in
 `docs/design/`.
+
+## Fase 6 — Add-on purchase flow
+
+### Decision: buy = order path (provision to installed base), not a balance debit
+
+An existing customer buying an add-on goes through the **order seam**, exactly like onboarding
+already adds add-ons: `createCart(customerId) → addItem({cartId, offerId}) → submitOrder(cartId)`.
+In the mock, `submitOrder` provisions each cart offerId as a `Product { kind: "add-on" }` onto
+**that cart's `customerId`** installed base, so the add-on then shows up in `getCustomer360`
+(installedBase is fed by the order seam; sorted plan → add-on → sim). This works for an existing
+`demo-<tenant>` customer with no backend change — verified by the order mock's own test against
+seeded `demo-dreigo` (installed-base count +1).
+
+**Why not `charging.rateAndDeduct`:** charging is a pure prepaid ledger (one integer per customer,
+`topUp`/`rateAndDeduct` by raw `amountMinor`). It has **no entitlement concept**, so a debit alone
+would leave the add-on invisible in the 360 — only a smaller balance. The spec's aspirational chain
+is `submitOrder → rateAndDeduct` (charge the order), but in the current mocks the two seams share
+**no key and no transaction**: `rateAndDeduct` takes `customerId`+`amountMinor`, not an `orderId`,
+so wiring both client-side would be a non-atomic two-write with no rollback (provision the add-on,
+then fail the debit → money/entitlement inconsistent). The real ECEV resolves an order's charge
+internally; that coupling belongs to the Fase 8 HTTP driver, not a hand-rolled client orchestration
+I'd have to tear out. So Fase 6 provisions the entitlement (honest: the add-on is now *owned*) and
+uses `qualifyOffer` (balance ≥ price) as the affordability gate — the stand-in for "can they pay"
+without faking a charge.
+
+**Classification fix (prerequisite):** `order-mock.ts` `kindForOffer` regex `/add-?on|roam|boost/i`
+classifies `drei-addon-1gb` / `drei-addon-eu-1gb` correctly as `add-on`, but `dreigo-stream-pass`
+matches nothing → it would provision as `kind: "plan"`. Fixed so streaming passes provision as
+`add-on` (otherwise a bought streaming pass would masquerade as the customer's plan in the 360).
+
+### Fase 6 built — buy an add-on (order path) + multi-perspective review
+
+`lib/addon-purchase.ts` `purchaseAddOn(customerId, offerId)` = `createCart → addItem →
+submitOrder` (lets SeamFailure propagate to the caller's react-query mutation). The `/add-ons`
+route owns the mutation and drives a per-card buy state (idle / busy / success / error); on
+success it invalidates `["customer360", …]` and `["add-ons", …]` so the add-on shows in My plan
+and the list re-qualifies. `AddOnCard` grew a Buy button (disabled when unqualified) with a busy
+spinner, a success state, and an inline error. Removed the old `buyNote` "coming soon" prop;
+`pages.addOns.buyNote` → `pages.addOns.buy.{cta,busy,added,error}` (en + de-AT, parity 191/191).
+
+Prerequisite fix: `order-mock` `kindForOffer` now classifies `dreigo-stream-pass` as `add-on`
+(was `plan` — the regex missed `pass`/`stream`); anchored (`-pass\b`, `-stream\b`, `\bstream-`)
+so future plan ids like `bypass`/`upstream`/`passport` can't false-match. Verified against all 12
+catalog ids. 152 tests (4 new: streaming-pass classification + 3 `purchaseAddOn`), build + lint
+green.
+
+Captured idle / success / error at phone 390×844 for both brands, plus My plan after buying
+(the add-on lands in "Your products", sorted plan → add-on → SIM — proof the order path
+provisions into the installed base). Reviewed by two independent passes:
+
+- **code-reviewer: APPROVED.** Two suggestions taken: (1) a multi-card race — while card A's buy
+  was in flight, card B's button stayed enabled and A's failure could paint B; fixed by disabling
+  all Buy buttons while any purchase is pending (`anyBusy`). (2) the classification regex was
+  unbounded; anchored it (above). Declined: a `createCart`-failure unit test (nitpick — the
+  propagation path is already proven by the `addItem`-failure test; no speculative padding).
+- **design-review: no blockers.** Real a11y findings in the new code, all fixed:
+  - **VC-3 (WCAG 2.4.3):** success unmounted the focused `<Button>` and swapped a `<p>` in,
+    orphaning keyboard/SR focus. Now the button stays mounted as a disabled "Added" state — focus
+    preserved, and it keeps the card's visual weight (also answers VC-4).
+  - **VC-5 (WCAG 4.1.3 / 1.3.1):** the error `<p>` had no `role`/`aria-live` and wasn't tied to
+    the button. Now `role="alert"` + the button's `aria-describedby` points at it.
+  - **R-1 (AAA refinement):** the busy spinner now has `motion-reduce:animate-none`.
+  - **VC-1 / VC-2 (DESIGN.md divergence):** the shared shadcn `<Button>` is `rounded-md` with a
+    `shadow` and 44px, but DESIGN.md wants pill / no-shadow / 52px. This is the app-wide button
+    used by the whole onboarding flow, NOT add-on-specific — fixing it here would be a
+    cross-cutting design-system change out of this phase's scope. Logged as debt (below). The
+    prior Fase E review wrongly logged "pill nos botões: aderente"; corrected.
+
+Debt raised this phase:
+- **Button shape/shadow/height vs DESIGN.md** (VC-1/VC-2): the primary `<Button>` is a
+  shadow'd 44px `rounded-md`, not the pill / no-shadow / 52px the system specifies. App-wide fix
+  in `components/ui/button.tsx` — a dedicated design-system pass, not a per-feature change.
+- **Raw offerId as product name in My plan:** the order mock sets `Product.name = offerId`, so
+  My plan shows "drei-addon-1gb" / "up" / "SIM" instead of catalogue names. Pre-existing (hits
+  plan + SIM too), but Fase 6 raised its visibility — the user sees a polished "+1 GB" card say
+  "Added to your plan," then finds it as "drei-addon-1gb" seconds later. Fix is mapping
+  offerId → catalogue name in the order mock, not in the screen. Priority bumped.
+- **Not charged yet:** buying provisions the entitlement but does NOT debit balance (deliberate
+  — see the decision above). The real charge-by-order is the Fase 8 HTTP driver.
+- **"Added" is local route state:** `boughtOfferId` lives in the route component; after a hard
+  refresh the bought add-on re-qualifies and shows "Add to my plan" again (buyable twice). A
+  durable "already owned" state should come from `getInstalledBase` once the real backend exists.

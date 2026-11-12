@@ -64,4 +64,17 @@ describe("order seam (mock)", () => {
       expect(addon?.kind).toBe("add-on");
     }
   });
+
+  it("classifies a streaming pass as an add-on, not a plan", async () => {
+    const customerId = "demo-dreigo";
+    const cart = await createCart(customerId);
+    if (!cart.ok) return;
+    await addItem({ cartId: cart.data.cartId, offerId: "dreigo-stream-pass" });
+    await submitOrder(cart.data.cartId);
+    const base = await getInstalledBase(customerId);
+    if (base.ok) {
+      const pass = base.data.find((p) => p.offerId === "dreigo-stream-pass");
+      expect(pass?.kind).toBe("add-on");
+    }
+  });
 });

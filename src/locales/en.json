@@ -68,7 +68,12 @@
       "moreInfo": "More info",
       "lessInfo": "Less info",
       "detailHeading": "What's included",
-      "buyNote": "Buying add-ons is coming soon.",
+      "buy": {
+        "cta": "Add to my plan",
+        "busy": "Adding…",
+        "added": "Added to your plan",
+        "error": "Couldn't add this add-on. Please try again."
+      },
       "ineligible": {
         "offer.ineligible.insufficientBalance": "Top up first — this add-on costs more than your balance."
       },

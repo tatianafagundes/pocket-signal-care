@@ -68,7 +68,12 @@
       "moreInfo": "Mehr Infos",
       "lessInfo": "Weniger Infos",
       "detailHeading": "Das ist dabei",
-      "buyNote": "Zusatzpakete kaufen ist bald möglich.",
+      "buy": {
+        "cta": "Zu meinem Tarif hinzufügen",
+        "busy": "Wird hinzugefügt…",
+        "added": "Zu deinem Tarif hinzugefügt",
+        "error": "Dieses Zusatzpaket konnte nicht hinzugefügt werden. Bitte versuch es erneut."
+      },
       "ineligible": {
         "offer.ineligible.insufficientBalance": "Lad zuerst auf — dieses Zusatzpaket kostet mehr als dein Guthaben."
       },

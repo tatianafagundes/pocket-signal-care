@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { PageShell } from "@/components/page-shell";
-import { AddOnCard } from "@/components/add-ons/add-on-card";
+import { AddOnCard, type BuyStatus } from "@/components/add-ons/add-on-card";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
 import { useCurrentCustomerId } from "@/lib/current-customer";
+import { purchaseAddOn } from "@/lib/addon-purchase";
 import type { Offer } from "@/services/model";
 import type { QualifyResult } from "@/services/catalog-rules";
 
@@ -38,6 +40,7 @@ function Page() {
   const { t } = useLocalizedTranslation();
   const { tenant } = useTenant();
   const customerId = useCurrentCustomerId();
+  const queryClient = useQueryClient();
 
   // Fetch the add-ons, then qualify each against the current customer's balance (TMF679). One
   // query keeps the list and its qualifications consistent (no flicker of cards without a state).
@@ -53,6 +56,34 @@ function Page() {
       );
     },
   });
+
+  // Buy = createCart → addItem → submitOrder on the current customer (see lib/addon-purchase).
+  // The offerId being bought drives the per-card busy/error state; "success" persists so the card
+  // can show the "Added" confirmation until the list re-qualifies.
+  const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
+  const [boughtOfferId, setBoughtOfferId] = useState<string | null>(null);
+  const buy = useMutation({
+    mutationFn: (offerId: string) => purchaseAddOn(customerId, offerId),
+    onSuccess: (_orderId, offerId) => {
+      setBoughtOfferId(offerId);
+      // Refresh the customer's plan so the add-on shows in My plan, and re-qualify the list
+      // against the (unchanged, but future-charging) balance.
+      void queryClient.invalidateQueries({ queryKey: ["customer360", tenant, customerId] });
+      void queryClient.invalidateQueries({ queryKey: ["add-ons", tenant, customerId] });
+    },
+  });
+
+  function statusFor(offerId: string): BuyStatus {
+    if (buy.isPending && activeOfferId === offerId) return "busy";
+    if (buy.isError && activeOfferId === offerId) return "error";
+    if (boughtOfferId === offerId) return "success";
+    return "idle";
+  }
+
+  function handleBuy(offerId: string) {
+    setActiveOfferId(offerId);
+    buy.mutate(offerId);
+  }
 
   return (
     <PageShell
@@ -91,7 +122,9 @@ function Page() {
               <AddOnCard
                 offer={offer}
                 qualify={qualify}
-                buyNote={t("pages.addOns.buyNote", "Buying add-ons is coming soon.")}
+                onBuy={handleBuy}
+                buyStatus={statusFor(offer.offerId)}
+                anyBusy={buy.isPending}
               />
             </li>
           ))}
