@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -132,6 +133,10 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // The onboarding wizard is a focused full-screen flow: hide the self-care tabs there.
+  const inOnboarding = useRouterState({
+    select: (s) => s.location.pathname.startsWith("/onboarding"),
+  });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -142,7 +147,7 @@ function RootComponent() {
           <AppHeader />
           <TenantNotFoundBanner />
           <Outlet />
-          <BottomTabBar />
+          {!inOnboarding && <BottomTabBar />}
         </div>
       </TenantProvider>
     </QueryClientProvider>

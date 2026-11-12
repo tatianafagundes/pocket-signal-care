@@ -1,5 +1,8 @@
 {
-  "app": { "name": "whitelabel", "tagline": "Dein Prepaid-Handy, ganz nach dir" },
+  "app": {
+    "name": "whitelabel",
+    "tagline": "Dein Prepaid-Handy, ganz nach dir"
+  },
   "tenant": {
     "notFound": "„{{requested}}“ konnten wir nicht finden. Wir zeigen stattdessen Drei.",
     "goToDrei": "Zu Drei wechseln",
@@ -16,7 +19,12 @@
   "pages": {
     "home": {
       "title": "Schön, dich zu sehen",
-      "subtitle": "Dein Guthaben und deine Nutzung erscheinen hier in Kürze."
+      "subtitle": "Dein Guthaben und deine Nutzung erscheinen hier in Kürze.",
+      "onboarding": {
+        "title": "Neu bei {{brand}}? Jetzt starten",
+        "body": "Wähle deinen Wertkartentarif, deine Nummer und leg in wenigen Minuten los.",
+        "cta": "Onboarding starten"
+      }
     },
     "myPlan": {
       "title": "Mein Tarif",
@@ -114,8 +122,16 @@
       }
     },
     "seamError": {
-      "auth": { "register": { "emailInUse": "Für diese E-Mail gibt es schon ein Konto. Versuch dich stattdessen anzumelden." } },
-      "resource": { "msisdn": { "taken": "Diese Nummer wurde gerade vergeben. Wähl eine andere." } }
+      "auth": {
+        "register": {
+          "emailInUse": "Für diese E-Mail gibt es schon ein Konto. Versuch dich stattdessen anzumelden."
+        }
+      },
+      "resource": {
+        "msisdn": {
+          "taken": "Diese Nummer wurde gerade vergeben. Wähl eine andere."
+        }
+      }
     },
     "details": {
       "title": "Deine Daten",

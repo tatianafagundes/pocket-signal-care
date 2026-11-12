@@ -1,5 +1,8 @@
 {
-  "app": { "name": "whitelabel", "tagline": "Your prepaid mobile, your way" },
+  "app": {
+    "name": "whitelabel",
+    "tagline": "Your prepaid mobile, your way"
+  },
   "tenant": {
     "notFound": "We couldn't find \"{{requested}}\". Showing Drei instead.",
     "goToDrei": "Go to Drei",
@@ -16,7 +19,12 @@
   "pages": {
     "home": {
       "title": "Hi there, great to see you",
-      "subtitle": "Your balance and usage summary will appear here soon."
+      "subtitle": "Your balance and usage summary will appear here soon.",
+      "onboarding": {
+        "title": "New to {{brand}}? Get started",
+        "body": "Pick your prepaid plan, choose your number and get connected in minutes.",
+        "cta": "Start onboarding"
+      }
     },
     "myPlan": {
       "title": "My plan",
@@ -114,8 +122,16 @@
       }
     },
     "seamError": {
-      "auth": { "register": { "emailInUse": "That email already has an account. Try signing in instead." } },
-      "resource": { "msisdn": { "taken": "That number was just taken. Pick another." } }
+      "auth": {
+        "register": {
+          "emailInUse": "That email already has an account. Try signing in instead."
+        }
+      },
+      "resource": {
+        "msisdn": {
+          "taken": "That number was just taken. Pick another."
+        }
+      }
     },
     "details": {
       "title": "Your details",
