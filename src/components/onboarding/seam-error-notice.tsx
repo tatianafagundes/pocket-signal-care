@@ -43,7 +43,7 @@ export function SeamErrorNotice({ error, onRetry, className }: SeamErrorNoticePr
             type="button"
             variant="outline"
             size="sm"
-            className="self-start"
+            className="min-h-11 self-start"
             onClick={onRetry}
           >
             {t("onboarding.error.retry", "Try again")}

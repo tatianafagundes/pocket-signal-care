@@ -177,8 +177,45 @@ clean by both reviewers (traced + mutation-tested).
 
 ---
 
-## Next: Fase E — runtime state matrix + a11y sweep
+## Fase E — runtime capture + a11y/visual review — done
 
-Walk the state×screen matrix at runtime with forced errors, and run the accessibility + i18n
-sweep (focus on step change, "Step N of M", first-invalid-field focus, contrast exception A1,
-de-AT with no raw keys) via `ui-capture`. See the Kiro-workspace `tasks.md` Fase E.
+The onboarding flow was run in a real browser (Playwright, via the ui-capture skill) and the full
+happy path captured end-to-end — the first time the app was verified running, not just by tests.
+Captures live in `docs/design/capturas/`; the visual review is in
+`docs/design/2025-02-14-onboarding-fase-e-visual.md`.
+
+Two independent reviews ran: a visual pass on the rendered screens and a static a11y/i18n audit of
+the code. Findings were triaged against the running app before any fix — several "blockers" were
+capture artifacts, not real bugs.
+
+Fixed (confirmed real):
+- **Focus ring on the wizard heading** — it had `outline-none` with no `focus-ring`, so the
+  programmatic focus on each step change was invisible to keyboard users (WCAG 2.4.7). Now uses
+  the `focus-ring` utility.
+- **Sub-44px touch targets** — the review "Change" links, assist yes/no + Skip + Suggest, the
+  seam-error "Try again", the WizardNav Back, and the my-plan/home CTAs were 32–36px. Raised to
+  `min-h-11` at each call site (left the shadcn Button base alone — changing it is too broad).
+- **Selected plan card border** — selection showed only via the radio dot; the card now also
+  carries a 2px accent-ink border (DESIGN.md), driven by the radio's `data-state` via `has-[]`, so
+  selection is not conveyed by a single signal.
+- **Password checklist glyph** — an unmet criterion used a hollow circle that read as a selectable
+  radio; it's now a dash (a "pending" marker), with the check for met.
+
+Rejected, with evidence (this is the point of running it, not just reviewing images):
+- **"Sticky header/footer cover content" (the visual review's two blockers)** — a capture
+  artifact of the desktop full-page screenshot compositing a `position: sticky` footer over tall
+  content. Re-captured at a real phone viewport (390×844) and measured the bounding boxes: the
+  Confirm-password field sits at y≈736 with the footer at y≈788 — fully visible and reachable,
+  content scrolls under the pinned footer normally. Not a bug; the fix was to the capture method
+  (phone viewport), not the app.
+- **"Link colour is bright cyan" (VC-3)** — false alarm. The links already use `text-accent-ink`
+  (`#0073a0`, ≥4.5:1), not the bright `#0096c5`. Not measurable from the image; confirmed in the
+  tokens.
+
+Not re-litigated: the Drei primary-button contrast is the documented A1 exception. Verified clean:
+i18n en/de-AT parity, form autocomplete tokens, aria-live regions (step, checklist transitions,
+loading, errors), focus-order mechanism, heading structure (one h1 per screen).
+
+Debt noted: states not in the capture set (terminal submit error, expired-MSISDN, "see all plans")
+weren't reviewed at runtime; the `head()` meta is hardcoded English + a "whitelabel" placeholder
+(not localized/tenant-branded) — a separate i18n workstream.

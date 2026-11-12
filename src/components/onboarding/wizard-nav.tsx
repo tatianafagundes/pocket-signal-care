@@ -43,7 +43,13 @@ export function WizardNav({
     <div className="sticky bottom-0 -mx-5 -mb-5 mt-6 rounded-b-card border-t border-hairline bg-surface px-5 py-3">
       <div className="flex items-center gap-3">
         {onBack ? (
-          <Button type="button" variant="ghost" onClick={onBack} disabled={busy}>
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11"
+            onClick={onBack}
+            disabled={busy}
+          >
             {t("onboarding.nav.back", "Back")}
           </Button>
         ) : null}

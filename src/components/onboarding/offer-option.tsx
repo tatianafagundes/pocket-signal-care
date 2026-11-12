@@ -72,11 +72,10 @@ export function OfferOption({ offer, recommendedLabel }: OfferOptionProps) {
   }
 
   return (
-    <div className="rounded-card border border-hairline bg-surface transition-colors">
-      <label
-        htmlFor={radioId}
-        className="flex items-start gap-3 p-4 hover:border-accent-ink cursor-pointer"
-      >
+    // Selected state = a 2px accent-ink border (DESIGN.md), driven by the radio's data-state via
+    // `has-[]` — so selection is signalled by the card border AND the radio dot, not colour alone.
+    <div className="rounded-card border border-hairline bg-surface transition-colors hover:border-accent-ink has-[[data-state=checked]]:border-2 has-[[data-state=checked]]:border-accent-ink">
+      <label htmlFor={radioId} className="flex items-start gap-3 p-4 cursor-pointer">
         <RadioGroupItem
           id={radioId}
           value={offer.offerId}

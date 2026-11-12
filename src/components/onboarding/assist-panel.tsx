@@ -100,6 +100,7 @@ export function AssistPanel({ offers, onSuggest }: AssistPanelProps) {
                     type="button"
                     variant={active ? "default" : "outline"}
                     size="sm"
+                    className="min-h-11 min-w-11"
                     aria-pressed={active}
                     onClick={() => setAnswer(key, value)}
                   >
@@ -128,10 +129,16 @@ export function AssistPanel({ offers, onSuggest }: AssistPanelProps) {
       ) : null}
 
       <div className="mt-4 flex items-center gap-3">
-        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="min-h-11"
+          onClick={() => setOpen(false)}
+        >
           {t("onboarding.plan.assist.skip", "Skip")}
         </Button>
-        <Button type="button" size="sm" className="ml-auto" onClick={suggest}>
+        <Button type="button" size="sm" className="ml-auto min-h-11" onClick={suggest}>
           {t("onboarding.plan.assist.suggest", "Suggest a plan")}
         </Button>
       </div>

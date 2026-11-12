@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Circle } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { scorePassword } from "@/services/auth-rules";
@@ -66,9 +66,11 @@ export function PasswordChecklist({ password, id }: PasswordChecklistProps) {
           return (
             <li key={c} className="flex items-center gap-2 type-caption">
               {met ? (
+                // met = check; unmet = dash (a "pending" marker, not a hollow circle that reads
+                // as a selectable radio). State also carries in the text weight below.
                 <Check className="h-3.5 w-3.5 text-accent-ink" aria-hidden="true" />
               ) : (
-                <Circle className="h-3.5 w-3.5 text-text-secondary" aria-hidden="true" />
+                <Minus className="h-3.5 w-3.5 text-text-secondary" aria-hidden="true" />
               )}
               <span className={met ? "text-text-primary" : "text-text-secondary"}>
                 {t(`onboarding.account.strength.${c}`, c)}

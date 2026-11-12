@@ -82,7 +82,10 @@ export function WizardPage({ step, title, subtitle, children }: WizardPageProps)
       <h1
         ref={headingRef}
         tabIndex={-1}
-        className="type-title rounded-control text-text-primary outline-none"
+        /* focus-ring (not outline-none): the heading receives programmatic focus on each step
+           change, so a keyboard user must SEE where they landed. focus-ring scopes to
+           :focus-visible, so a pointer interaction won't show it. */
+        className="focus-ring type-title rounded-control text-text-primary"
       >
         {title}
       </h1>

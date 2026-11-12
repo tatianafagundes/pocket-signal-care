@@ -42,7 +42,7 @@ function Page() {
             "Pick your prepaid plan, choose your number and get connected in minutes.",
           )}
         </p>
-        <Button asChild className="mt-4 w-full">
+        <Button asChild className="mt-4 min-h-11 w-full">
           <Link to="/onboarding">{t("pages.home.onboarding.cta", "Start onboarding")}</Link>
         </Button>
         <p className="mt-3 text-center type-caption text-text-secondary">

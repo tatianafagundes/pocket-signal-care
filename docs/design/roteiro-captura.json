@@ -1,0 +1,15 @@
+[
+  { "nome": "01-welcome", "esperar": "text=See plans" },
+  { "nome": "02-plan", "clicar": "text=See plans", "esperar": "text=Choose a plan", "pausa": 800 },
+  { "nome": "03-plan-assist", "clicar": "text=Help me choose", "esperar": "text=A few quick questions" },
+  { "nome": "04-plan-selected", "clicar": "#offer-drei-up", "pausa": 300 },
+  { "nome": "05-addons", "clicar": "button:has-text('Continue')", "esperar": "text=Add extras", "pausa": 600 },
+  { "nome": "06-addon-selected", "clicar": "#addon-drei-addon-1gb", "pausa": 300 },
+  { "nome": "07-number", "clicar": "button:has-text('Continue')", "esperar": "text=Pick your number", "pausa": 900 },
+  { "nome": "08-number-selected", "clicar": "[role=radio]", "pausa": 300 },
+  { "nome": "09-account", "clicar": "button:has-text('Reserve this number')", "esperar": "text=Create your account", "pausa": 1000 },
+  { "nome": "10-account-filled", "preencher": { "input[autocomplete=given-name]": "Mia", "input[autocomplete=family-name]": "Berg", "input[autocomplete=email]": "mia@example.at", "input[autocomplete=new-password] >> nth=0": "Str0ngPass", "input[autocomplete=new-password] >> nth=1": "Str0ngPass" }, "pausa": 500 },
+  { "nome": "11-review", "clicar": "button:has-text('Continue')", "esperar": "text=Review and activate", "pausa": 1000 },
+  { "nome": "12-success", "clicar": "button:has-text('Confirm and activate')", "esperar": "text=all set", "pausa": 3000 },
+  { "nome": "13-my-plan", "clicar": "text=Go to my plan", "esperar": "text=My plan", "pausa": 1200 }
+]

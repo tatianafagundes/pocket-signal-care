@@ -234,7 +234,14 @@ function SummaryRow({ label, value, onChange, changeLabel, busy }: SummaryRowPro
         <dt className="type-caption text-text-secondary">{label}</dt>
         <dd className="type-body text-text-primary">{value}</dd>
       </div>
-      <Button type="button" variant="link" size="sm" onClick={onChange} disabled={busy}>
+      <Button
+        type="button"
+        variant="link"
+        size="sm"
+        className="min-h-11"
+        onClick={onChange}
+        disabled={busy}
+      >
         {changeLabel}
       </Button>
     </div>

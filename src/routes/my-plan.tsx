@@ -109,7 +109,7 @@ function Page() {
             )}
           </section>
 
-          <Button asChild variant="outline" className="w-full">
+          <Button asChild variant="outline" className="min-h-11 w-full">
             <Link to="/top-up">{t("nav.topUp", "Top up")}</Link>
           </Button>
         </div>
