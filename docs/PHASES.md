@@ -383,3 +383,23 @@ do dossiê, no nível do seam); `void` libera uma autorização não capturada e
 (conflito → precisa estorno, não void); `getPayment` lê o estado atual. Mock determinístico: token com
 `4000` recusa (`payment.cardDeclined`, rejected), qualquer outro autoriza. Dinheiro em unidades menores +
 moeda ISO (EUR), nunca float. 10 testes novos (172 no total), build + lint verdes.
+
+### Fase 7.3 — entregue: seam `logistics` (TMF673) + eSIM no `resource`
+
+Commit `b4f5e23`. Duas peças, ambas mock, ambas no padrão dos demais seams.
+
+**`logistics` (TMF673 Geographic Address Management, seam novo):** `logistics.functions.ts` +
+`logistics/{driver,mock,http}.ts` + `schemas/logistics.ts`. `createAddress` valida e persiste um
+endereço de entrega e devolve `addressId`; `getAddress` lê de volta por id (idempotente). Recusa
+determinística: país fora de AT, ou CEP começando com `00`, cai em `logistics.addressOutsideDeliveryArea`
+(rejected/fixInput) — o caminho de erro de endereço do demo. `driver-config.ts` ganhou o seam
+`logistics` (`VITE_LOGISTICS_DRIVER`, default mock).
+
+**eSIM no `resource` (DSIMA, extensão esimProfile / GSMA SGP.22):** `requestEsimProfile` pede ao
+SM-DP+ (mock) um perfil para um cliente — **idempotente por customer+tenant** (retry devolve o mesmo
+perfil, nunca um segundo eSIM, mesma disciplina "Don't pay again" aplicada ao provisionamento);
+`getEsimProfile` consulta o ciclo de vida por id. `activationCode` é a string LPA
+`LPA:1$<smdp>$<matchingId>` (texto + QR), ICCID de teste de 19 dígitos, `status: ready`.
+
+`api.ts` fia `createAddress/getAddress` e `requestEsimProfile/getEsimProfile`. 16 testes novos (184
+no total), build + lint verdes, paridade i18n intacta (telas vêm na 7.5).
