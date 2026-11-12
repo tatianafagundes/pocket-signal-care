@@ -313,9 +313,10 @@
         "heading": "Payment",
         "firstTopUp": "Plan · first top-up",
         "authorizedToday": "Authorized today",
-        "authorizeNote": "What you authorize today becomes your first balance. We only charge it when your plan is ready.",
+        "authorizeNote": "Your plan price becomes your first balance, and extras switch on with your plan. We only charge your card when your plan is ready.",
         "cardLabel": "Card number",
-        "consent": "I authorize this payment as my first top-up."
+        "consent": "I authorize today's payment for my plan and any extras I've added.",
+        "extraLine": "Extra · {{name}}"
       },
       "progress": {
         "authorize": "Authorizing your payment…",

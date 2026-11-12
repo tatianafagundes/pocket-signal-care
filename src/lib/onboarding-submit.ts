@@ -19,8 +19,9 @@ import type { TenantId } from "@/lib/tenant-rules";
  * or order. If authorize fails we stop before touching CPR. (Matches "authorize at the order" in
  * the dossiê and design-review B-items.)
  *
- * THE THREE MONEY MOMENTS (dossiê newLine §4): authorize → capture → credit. The first top-up is
- * the plan price (same money, no separate free-amount step). Money is minor units + EUR.
+ * THE THREE MONEY MOMENTS (dossiê newLine §4): authorize → capture → credit. What is paid today
+ * is the plan price PLUS any extras ticked on Review; only the plan price is credited as the first
+ * top-up (extras are order items, not balance). Money is minor units + EUR.
  *
  * IDEMPOTENT RETRY — "Don't pay again" (Req 7.3): every durable resource and every money
  * milestone is persisted via `patch` the instant its seam returns, and REUSED on a retry rather
@@ -66,6 +67,8 @@ interface SubmitDeps {
   onStep: (step: SubmitStep) => void;
   /** First top-up amount = the plan price, in minor units (euro cents). */
   planPriceMinor: number;
+  /** Sum of the ticked extras, in minor units. Paid today with the plan; never credited. */
+  extrasMinor?: number;
   /** Opaque (mock) payment-method token. Never a PAN; never persisted. */
   methodToken: string;
 }
@@ -79,6 +82,7 @@ export async function runOnboardingSubmit({
   patch,
   onStep,
   planPriceMinor,
+  extrasMinor = 0,
   methodToken,
 }: SubmitDeps): Promise<string> {
   const { tenant, selectedOfferId, selectedAddOnIds, simType, email, givenName, familyName } =
@@ -92,15 +96,19 @@ export async function runOnboardingSubmit({
   if (!Number.isInteger(planPriceMinor) || planPriceMinor <= 0) {
     throw new Error("onboarding-submit: planPriceMinor must be a positive integer (minor units)");
   }
+  if (!Number.isInteger(extrasMinor) || extrasMinor < 0) {
+    throw new Error("onboarding-submit: extrasMinor must be a non-negative integer (minor units)");
+  }
 
-  // 1. Authorize FIRST — reserve the plan price on the tokenized method, no charge yet. Reuse an
+  // 1. Authorize FIRST — reserve plan + extras (what is paid today) on the tokenized method, no
+  //    charge yet. Reuse an
   //    existing authorizationRef on retry (never authorize the card twice).
   let authorizationRef = state.authorizationRef;
   if (!authorizationRef) {
     onStep("authorize");
     const auth = await api.authorizePayment({
       customerId: state.customerId ?? `pending:${email}`,
-      amountMinor: planPriceMinor,
+      amountMinor: planPriceMinor + extrasMinor,
       methodToken,
     });
     authorizationRef = auth.authorizationRef;

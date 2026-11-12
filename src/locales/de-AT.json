@@ -313,9 +313,10 @@
         "heading": "Zahlung",
         "firstTopUp": "Tarif · erste Aufladung",
         "authorizedToday": "Heute autorisiert",
-        "authorizeNote": "Was du heute autorisierst, wird dein erstes Guthaben. Wir belasten es erst, wenn dein Tarif bereit ist.",
+        "authorizeNote": "Dein Tarifpreis wird dein erstes Guthaben, Extras werden mit deinem Tarif aktiviert. Wir belasten deine Karte erst, wenn dein Tarif bereit ist.",
         "cardLabel": "Kartennummer",
-        "consent": "Ich autorisiere diese Zahlung als meine erste Aufladung."
+        "consent": "Ich autorisiere die heutige Zahlung für meinen Tarif und alle hinzugefügten Extras.",
+        "extraLine": "Extra · {{name}}"
       },
       "progress": {
         "authorize": "Deine Zahlung wird autorisiert…",

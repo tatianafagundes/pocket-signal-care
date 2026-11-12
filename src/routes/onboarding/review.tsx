@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
 import { formatMsisdn, formatPrice, offerPriceLabel } from "@/lib/format";
 import { runOnboardingSubmit, type SubmitStep } from "@/lib/onboarding-submit";
+import { onboardingTodayTotal } from "@/lib/onboarding-total";
 
 /*
  * Turn the (mock) entered card number into an opaque method token. In the real flow a PSP SDK
@@ -88,6 +89,10 @@ function ReviewPage() {
     queryKey: ["add-ons", tenant],
     queryFn: () => api.listAddOns(tenant),
   });
+  // What is paid today: plan + ticked extras. Rebuilt at render from the catalogue (same B1 rule).
+  const today = offer
+    ? onboardingTodayTotal(offer, addOnsQuery.data, state.selectedAddOnIds)
+    : null;
 
   function toggleAddOn(offerId: string, checked: boolean) {
     if (busy) return;
@@ -103,6 +108,9 @@ function ReviewPage() {
     // is read from it, so an unresolvable offer (deleted between plan and review) would otherwise
     // activate for €0. Gating on `offer` here disables Confirm until the price is known.
     offer != null &&
+    // Every ticked extra must resolve too, or today's total would be understated.
+    today != null &&
+    !today.unresolved &&
     state.reservedMsisdn != null &&
     state.email != null &&
     state.givenName != null &&
@@ -119,7 +127,7 @@ function ReviewPage() {
       // the looked-up offer so a plan change upstream can't leave a stale amount. The `complete`
       // guard already disables Place order when the offer is unresolvable; this is the money-boundary
       // backstop so a 0/absent price can NEVER reach authorize/topUp (silent €0 activation).
-      if (!offer || offer.priceMinor <= 0) {
+      if (!offer || !today || today.unresolved || offer.priceMinor <= 0) {
         throw new SeamFailure({
           code: "onboarding.review.priceUnavailable",
           category: "unknown",
@@ -136,6 +144,7 @@ function ReviewPage() {
         patch,
         onStep: (step) => setBusyStep(step),
         planPriceMinor,
+        extrasMinor: today.extrasMinor,
         methodToken,
       });
       // Auto-login: the activation created this customer, so start their session NOW — before the
@@ -271,8 +280,9 @@ function ReviewPage() {
             </section>
           ) : null}
 
-          {/* Payment block. Each money line DECLARES its nature; the screen never SUMS — it reads
-              the plan price and labels it. "Authorized today" is a reservation, not a charge. */}
+          {/* Payment block. Each money line declares its nature; the total comes from the pure
+              onboardingTodayTotal rule (plan + ticked extras). "Authorized today" is a reservation,
+              not a charge. */}
           <section className="mt-6 border-t border-hairline pt-5" aria-labelledby="pay-heading">
             <h2 id="pay-heading" className="type-title text-text-primary">
               {t("onboarding.review.payment.heading", "Payment")}
@@ -287,12 +297,24 @@ function ReviewPage() {
                   {offer ? formatPrice(offer.priceMinor, offer.currency, locale) : "—"}
                 </dd>
               </div>
-              <div className="flex items-baseline justify-between gap-2">
+              {today?.extras.map((extra) => (
+                <div key={extra.offerId} className="flex items-baseline justify-between gap-2">
+                  <dt className="type-body text-text-secondary">
+                    {t("onboarding.review.payment.extraLine", "Extra · {{name}}", {
+                      name: extra.name,
+                    })}
+                  </dt>
+                  <dd className="type-body text-text-primary tabular-nums">
+                    {formatPrice(extra.priceMinor, extra.currency, locale)}
+                  </dd>
+                </div>
+              ))}
+              <div className="flex items-baseline justify-between gap-2 border-t border-hairline pt-2">
                 <dt className="type-body font-medium text-text-primary">
                   {t("onboarding.review.payment.authorizedToday", "Authorized today")}
                 </dt>
                 <dd className="type-body font-medium text-text-primary tabular-nums">
-                  {offer ? formatPrice(offer.priceMinor, offer.currency, locale) : "—"}
+                  {offer && today ? formatPrice(today.totalMinor, offer.currency, locale) : "—"}
                 </dd>
               </div>
             </dl>
@@ -300,7 +322,7 @@ function ReviewPage() {
             <p className="mt-2 type-caption text-text-secondary">
               {t(
                 "onboarding.review.payment.authorizeNote",
-                "What you authorize today becomes your first balance. We only charge it when your plan is ready.",
+                "Your plan price becomes your first balance, and extras switch on with your plan. We only charge your card when your plan is ready.",
               )}
             </p>
 
@@ -342,7 +364,7 @@ function ReviewPage() {
               <Label htmlFor="pay-consent" className="type-caption text-text-secondary font-normal">
                 {t(
                   "onboarding.review.payment.consent",
-                  "I authorize this payment as my first top-up.",
+                  "I authorize today's payment for my plan and any extras I've added.",
                 )}
               </Label>
             </div>

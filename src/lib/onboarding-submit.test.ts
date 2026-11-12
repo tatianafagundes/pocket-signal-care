@@ -158,6 +158,24 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     expect(mockApi.addItem).toHaveBeenCalledTimes(4);
   });
 
+  it("should authorize plan plus extras today but credit only the plan price", async () => {
+    await runOnboardingSubmit({
+      ...deps(completeState({ selectedAddOnIds: ["drei-addon-1gb"] }), [], []),
+      extrasMinor: 500,
+    });
+    expect(mockApi.authorizePayment).toHaveBeenCalledWith(
+      expect.objectContaining({ amountMinor: 1500 }),
+    );
+    expect(mockApi.topUp).toHaveBeenCalledWith({ customerId: "cust-1", amountMinor: 1000 });
+  });
+
+  it("should refuse a negative extras amount", async () => {
+    await expect(
+      runOnboardingSubmit({ ...deps(completeState(), [], []), extrasMinor: -1 }),
+    ).rejects.toThrow();
+    expect(mockApi.authorizePayment).not.toHaveBeenCalled();
+  });
+
   it("reuses party and customer on retry (never recreates durable resources)", async () => {
     const steps: SubmitStep[] = [];
     await runOnboardingSubmit(
