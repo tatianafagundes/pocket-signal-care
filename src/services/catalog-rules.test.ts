@@ -6,9 +6,9 @@ import type { Offer } from "@/services/model";
 const offer: Offer = {
   offerId: "o1",
   tenantId: "drei",
-  name: "Prepaid 10 GB",
-  dataAmount: "10 GB",
-  priceMinor: 1499,
+  name: "up",
+  dataAmount: "15 GB",
+  priceMinor: 1490,
   currency: "EUR",
   validityDays: 30,
   recommended: true,

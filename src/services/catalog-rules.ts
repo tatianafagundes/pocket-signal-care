@@ -46,6 +46,9 @@ export function qualifyOffer(facts: QualifyFacts): QualifyResult {
     return { result: "qualified" };
   }
   if (facts.balanceMinor != null && facts.offer.priceMinor > facts.balanceMinor) {
+    // TODO(Fase 8): a real ECM returns "alternate" here with alternativeOfferId populated from
+    // the TMF679 alternateProductOfferingProposal (a cheaper offer within balance). The mock
+    // stays "unqualified" — it does not synthesise alternatives.
     return { result: "unqualified", reasonKey: "offer.ineligible.insufficientBalance" };
   }
   return { result: "qualified" };

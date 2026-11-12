@@ -96,13 +96,34 @@ describe("recommendation-rules.recommend", () => {
     expect(r?.reason).toBe("assist.reason.default");
   });
 
-  it("never suggests an add-on", () => {
-    const r = recommend(ans({ watchesVideo: true, travelsEu: true }), plans);
-    expect(r?.offerId).not.toBe("p-addon");
+  it("falls back to the first plan when no tier matches and none is recommended", () => {
+    // starter + unlimited only, none recommended; a video-only answer targets "standard" → miss.
+    const noStandard = plans
+      .filter((o) => o.category === "starter" || o.category === "unlimited")
+      .map((o) => ({ ...o, recommended: false }));
+    const r = recommend(ans({ watchesVideo: true, travelsEu: false }), noStandard);
+    expect(r?.offerId).toBe(noStandard[0].offerId); // plans[0] fallback
+    expect(r?.reason).toBe("assist.reason.default");
   });
 
-  it("returns null when there are no plans", () => {
+  it("never suggests an add-on, even when the grid is add-ons plus one plan", () => {
+    // Every behavioural branch must land on the single plan, never the add-ons.
+    const grid = [plans[3], { ...plans[3], offerId: "p-addon-2" }, plans[0]];
+    for (const a of [
+      ans({ watchesVideo: true, travelsEu: true }),
+      ans({ watchesVideo: true }),
+      ans({ heavyApps: true }),
+      ans({ watchesVideo: false, travelsEu: false, heavyApps: false }),
+    ]) {
+      const r = recommend(a, grid);
+      expect(r?.offerId).toBe("p-starter");
+    }
+  });
+
+  it("returns null when the grid has no plans (only add-ons)", () => {
     expect(recommend(ans({}), [])).toBeNull();
-    expect(recommend(ans({}), [plans[3]])).toBeNull(); // only an add-on
+    expect(recommend(ans({ watchesVideo: true, travelsEu: true }), [plans[3]])).toBeNull();
+    // two add-ons, still null — the positive plan filter excludes every add-on.
+    expect(recommend(ans({}), [plans[3], { ...plans[3], offerId: "p-addon-2" }])).toBeNull();
   });
 });

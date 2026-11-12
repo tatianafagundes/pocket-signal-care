@@ -63,8 +63,9 @@ function fallbackOffer(plans: Offer[]): Offer | undefined {
  * plan matches the chosen tier, so the result is always a real offer the grid contains.
  */
 export function recommend(answers: AssistAnswers, offers: Offer[]): Recommendation | null {
-  // Only consider plans, never add-ons.
-  const plans = offers.filter((o) => o.kind !== "addon");
+  // Only consider plans, never add-ons. Positive test (kind absent or "plan") so a future
+  // non-plan kind is excluded by default rather than slipping into a suggestion.
+  const plans = offers.filter((o) => o.kind == null || o.kind === "plan");
   if (plans.length === 0) return null;
 
   const { tier, reason } = tierFor(answers);

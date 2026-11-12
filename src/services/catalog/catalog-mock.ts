@@ -61,7 +61,7 @@ const OFFERS: Record<TenantId, Offer[]> = {
       autoRenew: true,
       euRoaming: true,
       network: "5G",
-      category: "standard",
+      category: "premium",
       recommended: false,
     },
     {
@@ -156,11 +156,13 @@ function allOffers(tenantId: TenantId): Offer[] {
 export function createCatalogMock(): CatalogDriver {
   return {
     listOffers(tenantId: TenantId) {
-      // Onboarding grid = plans only. Return copies so a caller can't mutate the seed.
+      // Onboarding grid = plans only. A plan is kind "plan" or absent (a normal plan);
+      // positive test so a new non-plan kind is excluded by default. Return copies so a
+      // caller can't mutate the seed.
       return withMock("catalog.listOffers", () =>
         ok(
           allOffers(tenantId)
-            .filter((o) => o.kind !== "addon")
+            .filter((o) => o.kind == null || o.kind === "plan")
             .map((o) => ({ ...o })),
         ),
       );

@@ -18,6 +18,17 @@ describe("catalog seam (mock)", () => {
     if (dreigo.ok) expect(dreigo.data.every((o) => o.tenantId === "dreigo")).toBe(true);
   });
 
+  it("excludes add-ons from the onboarding grid (plans only)", async () => {
+    // The Drei grid seeds two add-ons (drei-addon-1gb, drei-addon-eu-1gb); listOffers must not
+    // return them — the grid is plans only.
+    const drei = await listOffers("drei");
+    expect(drei.ok).toBe(true);
+    if (drei.ok) {
+      expect(drei.data.every((o) => o.kind !== "addon")).toBe(true);
+      expect(drei.data.some((o) => o.offerId === "drei-addon-1gb")).toBe(false);
+    }
+  });
+
   it("rejects an invalid tenant (validation, never throws)", async () => {
     const r = await listOffers("acme");
     expect(r.ok).toBe(false);

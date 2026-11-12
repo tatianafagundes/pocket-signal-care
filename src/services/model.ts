@@ -104,10 +104,16 @@ export interface Offer {
   network?: "4G" | "5G";
   /** True for an unlimited-data plan (dataAmount is then a label like "Unlimited"). */
   unlimitedData?: boolean;
-  /** What kind of catalogue item this is. Absent = a normal plan. */
+  /*
+   * What kind of catalogue item this is. Absent = a normal plan.
+   * NOTE: this is the CATALOGUE kind ("addon", no hyphen) and is a different domain from
+   * `Product.kind` ("add-on", with a hyphen), which is the INSTALLED-BASE kind (TMF637).
+   * An Offer is something you can buy; a Product is something already provisioned. The two
+   * unions are deliberately distinct — do not unify them.
+   */
   kind?: "plan" | "addon";
-  /** Tier, used by the recommendation rule (not hardcoded offer ids). */
-  category?: "starter" | "standard" | "unlimited" | "data-addon";
+  /** Tier, used by the recommendation rule (not hardcoded offer ids). One plan per tier per tenant. */
+  category?: "starter" | "standard" | "premium" | "unlimited" | "data-addon";
 }
 
 /*
