@@ -51,15 +51,33 @@
       "back": "Back",
       "continue": "Continue"
     },
+    "error": {
+      "generic": "Something went wrong. Please try again.",
+      "retry": "Try again"
+    },
     "welcome": {
-      "title": "Welcome",
+      "title": "Welcome to {{brand}}",
       "subtitle": "Go from visitor to active prepaid customer in a few clear steps.",
-      "body": "Pick a plan, create your account, get a number, and confirm — you can go back any time."
+      "body": "Pick a plan, create your account, get a number, and confirm — you can go back any time.",
+      "cta": "See plans"
     },
     "plan": {
       "title": "Choose a plan",
       "subtitle": "Pick the plan that fits how you use your phone.",
-      "placeholder": "The plan grid will appear here."
+      "placeholder": "The plan grid will appear here.",
+      "loadError": "We couldn't load the plans.",
+      "empty": "No plans are available right now.",
+      "retry": "Try again",
+      "recommended": "Recommended",
+      "priceRecurring": "{{price}} every {{days}} days · auto-renews",
+      "priceOnce": "{{price}} every {{days}} days",
+      "priceNoValidity": "{{price}}",
+      "euRoaming": "EU roaming included",
+      "network5g": "5G",
+      "network4g": "4G",
+      "ineligible": {
+        "offer.ineligible.insufficientBalance": "Top up first — this plan costs more than your balance."
+      }
     },
     "account": {
       "title": "Create your account",

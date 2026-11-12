@@ -16,6 +16,7 @@ import { Route as MyPlanRouteImport } from './routes/my-plan'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TopUpRouteImport } from './routes/top-up'
+import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding/account'
 import { Route as OnboardingDetailsRouteImport } from './routes/onboarding/details'
 import { Route as OnboardingNumberRouteImport } from './routes/onboarding/number'
@@ -58,6 +59,11 @@ const TopUpRoute = TopUpRouteImport.update({
   id: '/top-up',
   path: '/top-up',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRoute,
 } as any)
 const OnboardingAccountRoute = OnboardingAccountRouteImport.update({
   id: '/account',
@@ -110,13 +116,13 @@ export interface FileRoutesByFullPath {
   '/onboarding/review': typeof OnboardingReviewRoute
   '/onboarding/success': typeof OnboardingSuccessRoute
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
+  '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/add-ons': typeof AddOnsRoute
   '/my-plan': typeof MyPlanRoute
-  '/onboarding': typeof OnboardingRouteWithChildren
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
@@ -126,6 +132,7 @@ export interface FileRoutesByTo {
   '/onboarding/review': typeof OnboardingReviewRoute
   '/onboarding/success': typeof OnboardingSuccessRoute
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
+  '/onboarding': typeof OnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +150,7 @@ export interface FileRoutesById {
   '/onboarding/review': typeof OnboardingReviewRoute
   '/onboarding/success': typeof OnboardingSuccessRoute
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
+  '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,13 +169,13 @@ export interface FileRouteTypes {
     | '/onboarding/review'
     | '/onboarding/success'
     | '/onboarding/welcome'
+    | '/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
     | '/add-ons'
     | '/my-plan'
-    | '/onboarding'
     | '/support'
     | '/top-up'
     | '/onboarding/account'
@@ -177,6 +185,7 @@ export interface FileRouteTypes {
     | '/onboarding/review'
     | '/onboarding/success'
     | '/onboarding/welcome'
+    | '/onboarding'
   id:
     | '__root__'
     | '/'
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/onboarding/review'
     | '/onboarding/success'
     | '/onboarding/welcome'
+    | '/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TopUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding/': {
+      id: '/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof OnboardingIndexRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/onboarding/account': {
       id: '/onboarding/account'
       path: '/account'
@@ -316,6 +333,7 @@ interface OnboardingRouteChildren {
   OnboardingReviewRoute: typeof OnboardingReviewRoute
   OnboardingSuccessRoute: typeof OnboardingSuccessRoute
   OnboardingWelcomeRoute: typeof OnboardingWelcomeRoute
+  OnboardingIndexRoute: typeof OnboardingIndexRoute
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
@@ -326,6 +344,7 @@ const OnboardingRouteChildren: OnboardingRouteChildren = {
   OnboardingReviewRoute: OnboardingReviewRoute,
   OnboardingSuccessRoute: OnboardingSuccessRoute,
   OnboardingWelcomeRoute: OnboardingWelcomeRoute,
+  OnboardingIndexRoute: OnboardingIndexRoute,
 }
 
 const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(

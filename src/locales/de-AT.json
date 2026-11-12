@@ -51,15 +51,33 @@
       "back": "Zurück",
       "continue": "Weiter"
     },
+    "error": {
+      "generic": "Etwas ist schiefgelaufen. Bitte versuch es erneut.",
+      "retry": "Erneut versuchen"
+    },
     "welcome": {
-      "title": "Willkommen",
+      "title": "Willkommen bei {{brand}}",
       "subtitle": "In wenigen klaren Schritten vom Besuch zum aktiven Prepaid-Kunden.",
-      "body": "Tarif wählen, Konto erstellen, Nummer sichern und bestätigen — du kannst jederzeit zurück."
+      "body": "Tarif wählen, Konto erstellen, Nummer sichern und bestätigen — du kannst jederzeit zurück.",
+      "cta": "Tarife ansehen"
     },
     "plan": {
       "title": "Tarif wählen",
       "subtitle": "Wähl den Tarif, der zu deiner Handynutzung passt.",
-      "placeholder": "Die Tarifübersicht erscheint hier."
+      "placeholder": "Die Tarifübersicht erscheint hier.",
+      "loadError": "Wir konnten die Tarife nicht laden.",
+      "empty": "Zurzeit sind keine Tarife verfügbar.",
+      "retry": "Erneut versuchen",
+      "recommended": "Empfohlen",
+      "priceRecurring": "{{price}} alle {{days}} Tage · verlängert sich automatisch",
+      "priceOnce": "{{price}} alle {{days}} Tage",
+      "priceNoValidity": "{{price}}",
+      "euRoaming": "EU-Roaming inklusive",
+      "network5g": "5G",
+      "network4g": "4G",
+      "ineligible": {
+        "offer.ineligible.insufficientBalance": "Lad zuerst auf — dieser Tarif kostet mehr als dein Guthaben."
+      }
     },
     "account": {
       "title": "Konto erstellen",

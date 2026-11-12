@@ -10,6 +10,8 @@ import type { Locale } from "@/lib/tenant-rules";
  * means every screen formats money the same way, and a future currency/locale change is one edit.
  */
 
+import type { Offer } from "@/services/model";
+
 /** Map the app's i18next Locale to a BCP-47 tag Intl understands. "de-AT" is already valid. */
 function bcp47(locale: Locale): string {
   return locale === "de-AT" ? "de-AT" : "en-US";
@@ -24,4 +26,34 @@ export function formatPrice(amountMinor: number, currency: string, locale: Local
     style: "currency",
     currency,
   }).format(amountMinor / 100);
+}
+
+/*
+ * Price label descriptor (Spec Fase 5 / Req 7; review finding B4). A price must state its nature:
+ * a prepaid "up" plan is a RECURRING charge every N days, not a one-off, and the review/plan step
+ * must say so at the point of choice/confirmation. This returns the i18n KEY and interpolation
+ * ARGS (the formatted price + validity) so the component renders it through `t()` in the active
+ * locale — the pure decision of which phrasing applies lives here and is testable.
+ *
+ *  - recurring (autoRenew + validityDays): "€14.90 every 30 days · auto-renews"
+ *  - fixed cycle (validityDays, no autoRenew): "€14.90 every 30 days"
+ *  - no validity (e.g. an add-on): just the price
+ */
+export interface PriceLabel {
+  key:
+    | "onboarding.plan.priceRecurring"
+    | "onboarding.plan.priceOnce"
+    | "onboarding.plan.priceNoValidity";
+  args: { price: string; days?: number };
+}
+
+export function offerPriceLabel(offer: Offer, locale: Locale): PriceLabel {
+  const price = formatPrice(offer.priceMinor, offer.currency, locale);
+  if (offer.validityDays == null) {
+    return { key: "onboarding.plan.priceNoValidity", args: { price } };
+  }
+  if (offer.autoRenew === true) {
+    return { key: "onboarding.plan.priceRecurring", args: { price, days: offer.validityDays } };
+  }
+  return { key: "onboarding.plan.priceOnce", args: { price, days: offer.validityDays } };
 }
