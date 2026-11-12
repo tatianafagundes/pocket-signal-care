@@ -86,6 +86,12 @@ export async function runOnboardingSubmit({
   if (!selectedOfferId || !email || !givenName || !familyName) {
     throw new Error("onboarding-submit: called with incomplete state");
   }
+  // Money boundary: a non-positive price must never reach authorize/topUp. The review screen
+  // already gates Confirm on a resolved offer; this is the reusable-function backstop so NO caller
+  // can silently activate a line for €0 (see Fase 7.4 review).
+  if (!Number.isInteger(planPriceMinor) || planPriceMinor <= 0) {
+    throw new Error("onboarding-submit: planPriceMinor must be a positive integer (minor units)");
+  }
 
   // 1. Authorize FIRST — reserve the plan price on the tokenized method, no charge yet. Reuse an
   //    existing authorizationRef on retry (never authorize the card twice).
@@ -168,23 +174,26 @@ export async function runOnboardingSubmit({
     onStep("submitOrder");
     const submitted = await api.submitOrder({
       cartId,
-      ...(addressId ? { addressId } : {}),
-      ...(simType ? { simType } : {}),
+      addressId: addressId ?? undefined,
+      simType: simType ?? undefined,
     });
     orderId = submitted.orderId;
     patch({ orderId });
   }
 
-  // 6. Capture — charge the authorization at the milestone (mock: synchronous post-submit). Skip
-  //    if already captured (never charge twice).
+  // 6. Capture — charge the authorization at the milestone (mock: synchronous post-submit). The
+  //    guard reads the PERSISTED `state.captured` at call time (not a local): this function is
+  //    linear and never mutates `state`, so on a retry the persisted flag is what decides whether
+  //    capture is skipped — that's what makes "never charge twice" hold across attempts.
   if (!state.captured) {
     onStep("capture");
     await api.capturePayment({ authorizationRef });
     patch({ captured: true });
   }
 
-  // 7. Credit — the first top-up lands on the prepaid balance (the plan price). Skip if already
-  //    credited (never credit twice).
+  // 7. Credit — the first top-up lands on the prepaid balance (the plan price). Same persisted-flag
+  //    guard as capture (reads `state.credited`): a retry after credit already ran skips it, so the
+  //    balance is never credited twice.
   if (!state.credited) {
     onStep("credit");
     await api.topUp({ customerId, amountMinor: planPriceMinor });

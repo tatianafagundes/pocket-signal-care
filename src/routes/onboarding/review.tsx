@@ -68,6 +68,10 @@ function ReviewPage() {
 
   const complete =
     state.selectedOfferId != null &&
+    // The offer must RESOLVE from the catalog, not just be selected: the plan price (first top-up)
+    // is read from it, so an unresolvable offer (deleted between plan and review) would otherwise
+    // activate for €0. Gating on `offer` here disables Confirm until the price is known.
+    offer != null &&
     state.reservedMsisdn != null &&
     state.email != null &&
     state.givenName != null &&
@@ -77,8 +81,18 @@ function ReviewPage() {
     setTerminalError(null);
     try {
       // The plan price is the first top-up (same money, no separate amount step). Read fresh from
-      // the looked-up offer so a plan change upstream can't leave a stale amount.
-      const planPriceMinor = offer?.priceMinor ?? 0;
+      // the looked-up offer so a plan change upstream can't leave a stale amount. The `complete`
+      // guard already disables Confirm when the offer is unresolvable; this is the money-boundary
+      // backstop so a 0/absent price can NEVER reach authorize/topUp (silent €0 activation).
+      if (!offer || offer.priceMinor <= 0) {
+        throw new SeamFailure({
+          code: "onboarding.review.priceUnavailable",
+          category: "unknown",
+          retryable: false,
+          customerFacing: { key: "onboarding.review.terminalError" },
+        });
+      }
+      const planPriceMinor = offer.priceMinor;
       // MOCK payment token. Fase 7.5 replaces this with the token the payment step collects from
       // the (tokenized) card form; it is NEVER a PAN and is never stored in state. "4242" authorizes
       // in the payment mock; a token containing "4000" would decline.

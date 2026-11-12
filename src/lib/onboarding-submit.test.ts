@@ -255,4 +255,18 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
       runOnboardingSubmit(deps(completeState({ selectedOfferId: null }), [], [])),
     ).rejects.toThrow();
   });
+
+  it("refuses a non-positive plan price — never authorizes a €0 activation", async () => {
+    await expect(
+      runOnboardingSubmit({
+        state: completeState(),
+        patch: () => {},
+        onStep: () => {},
+        planPriceMinor: 0,
+        methodToken: "tok-visa-4242",
+      }),
+    ).rejects.toThrow();
+    // Nothing was authorized — the guard runs before any seam call.
+    expect(mockApi.authorizePayment).not.toHaveBeenCalled();
+  });
 });
