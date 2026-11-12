@@ -45,6 +45,11 @@ function Page() {
         <Button asChild className="mt-4 w-full">
           <Link to="/onboarding">{t("pages.home.onboarding.cta", "Start onboarding")}</Link>
         </Button>
+        <p className="mt-3 text-center type-caption text-text-secondary">
+          <Link to="/login" className="focus-ring rounded-control text-accent-ink">
+            {t("login.haveAccount", "Already have an account? Sign in")}
+          </Link>
+        </p>
       </section>
     </PageShell>
   );

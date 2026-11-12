@@ -1,17 +1,27 @@
+import { useSession } from "@/hooks/use-session";
+import { useTenant } from "@/hooks/use-tenant";
 import type { TenantId } from "@/lib/tenant-rules";
 
 /*
- * Current customer resolution. (demo scope)
+ * Current customer resolution — the single place that answers "whose data do we show?".
  *
- * The app does not yet have a real authenticated session — onboarding creates a customer and then
- * resets, and `my-plan` is still a placeholder, so there is no persisted "who is logged in". For
- * screens that need an existing customer (the add-ons route, which qualifies offers against the
- * customer's balance), we resolve the seeded DEMO customer for the active tenant.
+ * When there is a signed-in session (after onboarding auto-login, or a login), it is that
+ * session's customerId. Otherwise it falls back to the seeded DEMO customer for the active tenant,
+ * so the data screens still have something to show in the demo before anyone signs in.
  *
- * This is the SINGLE place that decision lives. When a real session exists (Fase 8 — the login
- * route + a session store), replace the body here with the session's customerId and every caller
- * is correct without change. Do not scatter `demo-${tenant}` through the UI.
+ * This hook is the ONE swap point. Do not scatter `demo-${tenant}` or read the session directly in
+ * screens — call this. When a real IdP replaces the mock (Fase 8), the session already carries the
+ * real customerId and this needs no change.
  */
-export function currentCustomerId(tenant: TenantId): string {
+
+/** The demo customer seeded per tenant (charging-mock / order-mock). */
+function demoCustomerId(tenant: TenantId): string {
   return `demo-${tenant}`;
+}
+
+/** The current customer id: the session's when signed in, else the demo customer for the tenant. */
+export function useCurrentCustomerId(): string {
+  const { session } = useSession();
+  const { tenant } = useTenant();
+  return session?.customerId ?? demoCustomerId(tenant);
 }

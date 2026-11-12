@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useSyncOnboardingStep } from "@/hooks/use-sync-onboarding-step";
 import { useOnboarding } from "@/hooks/use-onboarding";
+import { useSession } from "@/hooks/use-session";
 import { useTenant } from "@/hooks/use-tenant";
 import { WizardPage } from "@/components/onboarding/wizard-page";
 import { WizardNav } from "@/components/onboarding/wizard-nav";
@@ -36,6 +37,7 @@ function ReviewPage() {
   const { t } = useLocalizedTranslation();
   const { tenant, locale } = useTenant();
   const { state, patch } = useOnboarding();
+  const { setSession } = useSession();
   const navigate = useNavigate();
   useSyncOnboardingStep("review");
 
@@ -78,6 +80,17 @@ function ReviewPage() {
         state,
         patch,
         onStep: (step) => setBusyStep(step),
+      });
+      // Auto-login: the activation created this customer, so start their session NOW — before the
+      // onboarding reset on the success screen discards the wizard state. The session is a separate
+      // store, so reset() still clears the wizard (the "don't resurrect a completed flow" invariant
+      // holds) while the customer stays signed in. origin "mock" matches the mock auth driver.
+      setSession({
+        customerId,
+        email: state.email ?? "",
+        tenantId: tenant,
+        givenName: state.givenName,
+        origin: "mock",
       });
       // Orchestration announced each step (incl. submitOrder) already; now the finishing phase.
       setBusyStep("finalizing");

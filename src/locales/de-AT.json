@@ -3,6 +3,23 @@
     "name": "whitelabel",
     "tagline": "Dein Prepaid-Handy, ganz nach dir"
   },
+  "login": {
+    "title": "Anmelden",
+    "subtitle": "Willkommen zurück — meld dich an, um deinen Tarif zu verwalten.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "emailInvalid": "Gib eine gültige E-Mail-Adresse ein.",
+    "passwordRequired": "Gib dein Passwort ein.",
+    "submit": "Anmelden",
+    "demoNote": "Demo: jede gültige E-Mail und jedes Passwort melden dich beim Beispielkonto an.",
+    "noAccount": "Neu hier? Konto erstellen",
+    "haveAccount": "Schon ein Konto? Anmelden"
+  },
+  "account": {
+    "signedInAs": "Angemeldet als {{email}}",
+    "signOut": "Abmelden",
+    "menuLabel": "Kontomenü"
+  },
   "tenant": {
     "notFound": "„{{requested}}“ konnten wir nicht finden. Wir zeigen stattdessen Drei.",
     "goToDrei": "Zu Drei wechseln",
@@ -28,7 +45,15 @@
     },
     "myPlan": {
       "title": "Mein Tarif",
-      "subtitle": "Deine Tarifdetails erscheinen hier in Kürze."
+      "subtitle": "Dein Tarif, Guthaben und Produkte.",
+      "loadError": "Wir konnten deinen Tarif nicht laden.",
+      "retry": "Erneut versuchen",
+      "balanceLabel": "Guthaben",
+      "balanceEmpty": "Noch kein Guthaben — lad zum ersten Mal auf.",
+      "productsLabel": "Deine Produkte",
+      "noProducts": "Noch keine Produkte in deinem Tarif.",
+      "statusActive": "Aktiv",
+      "statusPending": "Ausstehend"
     },
     "topUp": {
       "title": "Aufladen",

@@ -17,6 +17,7 @@ import "@/i18n";
 import { AppHeader } from "@/components/app-header";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { TenantProvider } from "@/components/tenant-provider";
+import { SessionProvider } from "@/components/session-provider";
 import { TenantNotFoundBanner } from "@/components/tenant-not-found-banner";
 
 function NotFoundComponent() {
@@ -142,13 +143,16 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* TenantProvider resolves the brand from the URL, sets <html data-brand>, syncs locale. */}
       <TenantProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <div className="min-h-screen bg-background">
-          <AppHeader />
-          <TenantNotFoundBanner />
-          <Outlet />
-          {!inOnboarding && <BottomTabBar />}
-        </div>
+        {/* SessionProvider: the signed-in customer, per-tenant, under Tenant + inside QueryClient. */}
+        <SessionProvider>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <div className="min-h-screen bg-background">
+            <AppHeader />
+            <TenantNotFoundBanner />
+            <Outlet />
+            {!inOnboarding && <BottomTabBar />}
+          </div>
+        </SessionProvider>
       </TenantProvider>
     </QueryClientProvider>
   );

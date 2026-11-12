@@ -8,7 +8,7 @@ import { AddOnCard } from "@/components/add-ons/add-on-card";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
-import { currentCustomerId } from "@/lib/current-customer";
+import { useCurrentCustomerId } from "@/lib/current-customer";
 import type { Offer } from "@/services/model";
 import type { QualifyResult } from "@/services/catalog-rules";
 
@@ -37,7 +37,7 @@ interface AddOnWithQualify {
 function Page() {
   const { t } = useLocalizedTranslation();
   const { tenant } = useTenant();
-  const customerId = currentCustomerId(tenant);
+  const customerId = useCurrentCustomerId();
 
   // Fetch the add-ons, then qualify each against the current customer's balance (TMF679). One
   // query keeps the list and its qualifications consistent (no flicker of cards without a state).

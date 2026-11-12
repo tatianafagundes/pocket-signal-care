@@ -3,6 +3,23 @@
     "name": "whitelabel",
     "tagline": "Your prepaid mobile, your way"
   },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Welcome back — sign in to manage your plan.",
+    "email": "Email",
+    "password": "Password",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordRequired": "Enter your password.",
+    "submit": "Sign in",
+    "demoNote": "Demo: any valid email and password sign you in to the sample account.",
+    "noAccount": "New here? Create an account",
+    "haveAccount": "Already have an account? Sign in"
+  },
+  "account": {
+    "signedInAs": "Signed in as {{email}}",
+    "signOut": "Sign out",
+    "menuLabel": "Account menu"
+  },
   "tenant": {
     "notFound": "We couldn't find \"{{requested}}\". Showing Drei instead.",
     "goToDrei": "Go to Drei",
@@ -28,7 +45,15 @@
     },
     "myPlan": {
       "title": "My plan",
-      "subtitle": "Your plan details will appear here soon."
+      "subtitle": "Your plan, balance and products.",
+      "loadError": "We couldn't load your plan.",
+      "retry": "Try again",
+      "balanceLabel": "Balance",
+      "balanceEmpty": "No balance yet — make your first top up.",
+      "productsLabel": "Your products",
+      "noProducts": "No products on your plan yet.",
+      "statusActive": "Active",
+      "statusPending": "Pending"
     },
     "topUp": {
       "title": "Top up",

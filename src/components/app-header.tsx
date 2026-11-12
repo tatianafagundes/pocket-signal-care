@@ -1,5 +1,18 @@
+import { User } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+
 import { useTenant } from "@/hooks/use-tenant";
+import { useSession } from "@/hooks/use-session";
+import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { LanguageSelector } from "@/components/language-selector";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { tenantLogo } from "@/lib/tenant-rules";
 
 /*
@@ -16,6 +29,9 @@ import { tenantLogo } from "@/lib/tenant-rules";
  */
 export function AppHeader() {
   const { tenant, tenantName } = useTenant();
+  const { session, signOut } = useSession();
+  const { t } = useLocalizedTranslation();
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-40 border-b border-hairline bg-surface">
@@ -26,7 +42,35 @@ export function AppHeader() {
           className="h-8 w-auto"
           // The logo is the accessible brand name; decorative wrapper not needed.
         />
-        <LanguageSelector />
+        <div className="flex items-center gap-1">
+          <LanguageSelector />
+          {/* The account menu appears only when signed in. Its distinct value over the Account
+              tab is Sign out; the tab is the route to the account screen. */}
+          {session ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={t("account.menuLabel", "Account menu")}
+                className="focus-ring inline-flex min-h-11 min-w-11 items-center justify-center rounded-pill text-text-secondary hover:text-text-primary"
+              >
+                <User className="size-5" aria-hidden="true" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="max-w-[240px] truncate">
+                  {t("account.signedInAs", "Signed in as {{email}}", { email: session.email })}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() => {
+                    signOut();
+                    void navigate({ to: "/" });
+                  }}
+                >
+                  {t("account.signOut", "Sign out")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+        </div>
       </div>
     </header>
   );

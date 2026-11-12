@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AddOnsRouteImport } from './routes/add-ons'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MyPlanRouteImport } from './routes/my-plan'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as SupportRouteImport } from './routes/support'
@@ -38,6 +39,11 @@ const AccountRoute = AccountRouteImport.update({
 const AddOnsRoute = AddOnsRouteImport.update({
   id: '/add-ons',
   path: '/add-ons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyPlanRoute = MyPlanRouteImport.update({
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/add-ons': typeof AddOnsRoute
+  '/login': typeof LoginRoute
   '/my-plan': typeof MyPlanRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/support': typeof SupportRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/add-ons': typeof AddOnsRoute
+  '/login': typeof LoginRoute
   '/my-plan': typeof MyPlanRoute
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/add-ons': typeof AddOnsRoute
+  '/login': typeof LoginRoute
   '/my-plan': typeof MyPlanRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/support': typeof SupportRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/add-ons'
+    | '/login'
     | '/my-plan'
     | '/onboarding'
     | '/support'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/add-ons'
+    | '/login'
     | '/my-plan'
     | '/support'
     | '/top-up'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/add-ons'
+    | '/login'
     | '/my-plan'
     | '/onboarding'
     | '/support'
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AddOnsRoute: typeof AddOnsRoute
+  LoginRoute: typeof LoginRoute
   MyPlanRoute: typeof MyPlanRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   SupportRoute: typeof SupportRoute
@@ -236,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/add-ons'
       fullPath: '/add-ons'
       preLoaderRoute: typeof AddOnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-plan': {
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AddOnsRoute: AddOnsRoute,
+  LoginRoute: LoginRoute,
   MyPlanRoute: MyPlanRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   SupportRoute: SupportRoute,
