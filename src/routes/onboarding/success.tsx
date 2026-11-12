@@ -119,6 +119,7 @@ function MoneyTimeline({ simType }: { simType: SimChoice | null }) {
       <ol className="mt-3 grid gap-3">
         <TimelineRow
           done
+          stateLabel={t("onboarding.success.money.stateDone", "Done")}
           label={t("onboarding.success.money.authorized", "Authorized")}
           detail={t(
             "onboarding.success.money.authorizedDetail",
@@ -126,10 +127,12 @@ function MoneyTimeline({ simType }: { simType: SimChoice | null }) {
           )}
         />
         <TimelineRow
+          stateLabel={t("onboarding.success.money.stateUpcoming", "Upcoming")}
           label={chargedWhen}
           detail={t("onboarding.success.money.chargedDetail", "You're not charged until then.")}
         />
         <TimelineRow
+          stateLabel={t("onboarding.success.money.stateUpcoming", "Upcoming")}
           label={t("onboarding.success.money.added", "Added when your line is active")}
           detail={t(
             "onboarding.success.money.addedDetail",
@@ -141,7 +144,17 @@ function MoneyTimeline({ simType }: { simType: SimChoice | null }) {
   );
 }
 
-function TimelineRow({ done, label, detail }: { done?: boolean; label: string; detail: string }) {
+function TimelineRow({
+  done,
+  stateLabel,
+  label,
+  detail,
+}: {
+  done?: boolean;
+  stateLabel: string;
+  label: string;
+  detail: string;
+}) {
   return (
     <li className="flex items-start gap-3">
       <span
@@ -156,6 +169,8 @@ function TimelineRow({ done, label, detail }: { done?: boolean; label: string; d
         {done ? <Check className="h-3 w-3" /> : null}
       </span>
       <span className="min-w-0">
+        {/* State conveyed to AT in words, not by the (aria-hidden) check/colour alone — WCAG 1.3.1/1.4.1. */}
+        <span className="sr-only">{stateLabel}: </span>
         <span className="type-body text-text-primary">{label}</span>
         <span className="mt-0.5 block type-caption text-text-secondary">{detail}</span>
       </span>
@@ -253,7 +268,24 @@ function EsimSection({ esimProfileId }: { esimProfileId: string | null }) {
     );
   }
 
-  // ready: show the activation code + the three install paths.
+  // A deleted profile is a dead end here (the mock never returns it at this point, but be honest if
+  // a real SM-DP+ ever does): treat it like a failure — contact support, don't offer install steps.
+  if (lifecycle === "deleted") {
+    return (
+      <EsimShell>
+        <p className="type-body text-text-secondary">
+          {t(
+            "onboarding.success.esim.failed",
+            "We couldn't load your eSIM yet. Check My plan in a moment, or contact support.",
+          )}
+        </p>
+      </EsimShell>
+    );
+  }
+
+  // ready (also downloaded/installed): show ONLY the install paths the screen actually delivers —
+  // a tappable install link (when the profile has one) and the manual activation code. No QR is
+  // rendered, so no QR is promised (we don't ship a QR component in this mock).
   return (
     <EsimShell>
       <p className="type-body text-text-secondary">
@@ -262,27 +294,27 @@ function EsimSection({ esimProfileId }: { esimProfileId: string | null }) {
           "Install your eSIM on this device. Choose whichever is easiest:",
         )}
       </p>
-      <ol className="mt-3 grid gap-2">
-        <li className="type-caption text-text-primary">
-          {t(
-            "onboarding.success.esim.pathUniversal",
-            "1. Tap the install link we emailed you, on this phone.",
-          )}
-        </li>
-        <li className="type-caption text-text-primary">
-          {t("onboarding.success.esim.pathQr", "2. Scan the QR code from another device.")}
-        </li>
+      <ul className="mt-3 grid gap-2">
+        {profile.installUrl ? (
+          <li className="type-caption text-text-primary">
+            {t("onboarding.success.esim.pathLink", "On this phone, tap to install:")}{" "}
+            <a href={profile.installUrl} className="focus-ring break-all text-accent-ink underline">
+              {t("onboarding.success.esim.pathLinkCta", "Install eSIM")}
+            </a>
+          </li>
+        ) : null}
         <li className="type-caption text-text-primary">
           {t(
             "onboarding.success.esim.pathManual",
-            "3. Enter the activation code manually in your phone's eSIM settings.",
+            "Or enter the activation code below in your phone's eSIM settings.",
           )}
         </li>
-      </ol>
+      </ul>
       <div className="mt-3">
         <p className="type-caption text-text-secondary">
           {t("onboarding.success.esim.codeLabel", "Activation code")}
         </p>
+        {/* Selectable text IS the manual install path; accent-ink on accent-tint passes AA. */}
         <code className="mt-1 block break-all rounded-card bg-accent-tint px-3 py-2 type-caption text-accent-ink">
           {profile.activationCode}
         </code>

@@ -3,7 +3,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
-import { workingStepsFor, type OnboardingStep } from "@/lib/onboarding-context";
+import { workingStepsFor, TENANT_OFFERS_ESIM, type OnboardingStep } from "@/lib/onboarding-context";
 
 /*
  * WizardPage (Fuon). The frame every onboarding step renders into. It mirrors PageShell's 390px
@@ -26,8 +26,9 @@ interface WizardPageProps {
   title: string;
   subtitle: string;
   /*
-   * Does this tenant offer eSIM? Controls whether `/sim` is a step (dossiê R-2). Default true
-   * (both demo brands offer eSIM). A route that knows the catalogue can pass false to drop `/sim`.
+   * Does this tenant offer eSIM? Controls whether `/sim` is a step (dossiê R-2). Defaults to the
+   * shared TENANT_OFFERS_ESIM — the SAME truth the step guard reads — so chrome and guard agree.
+   * A route that knows the catalogue can still pass false to drop `/sim`.
    */
   offersEsim?: boolean;
   children?: ReactNode;
@@ -37,7 +38,7 @@ export function WizardPage({
   step,
   title,
   subtitle,
-  offersEsim = true,
+  offersEsim = TENANT_OFFERS_ESIM,
   children,
 }: WizardPageProps) {
   const { t } = useLocalizedTranslation();

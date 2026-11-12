@@ -3,7 +3,11 @@ import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/
 
 import { OnboardingProvider } from "@/components/onboarding-provider";
 import { useOnboarding } from "@/hooks/use-onboarding";
-import { ONBOARDING_STEPS, type OnboardingStep } from "@/lib/onboarding-context";
+import {
+  ONBOARDING_STEPS,
+  TENANT_OFFERS_ESIM,
+  type OnboardingStep,
+} from "@/lib/onboarding-context";
 import { resolveOnboardingStep } from "@/lib/onboarding-guard";
 
 /*
@@ -37,7 +41,9 @@ function StepGuard() {
     if (!(ONBOARDING_STEPS as readonly string[]).includes(segment)) return;
     const target = segment as OnboardingStep;
     if (target === "success") return;
-    const allowed = resolveOnboardingStep(target, state);
+    // Pass the same offersEsim truth WizardPage uses, so the guard gates /sim/delivery exactly as
+    // the chrome shows them (no accidental reliance on the parameter default).
+    const allowed = resolveOnboardingStep(target, state, TENANT_OFFERS_ESIM);
     if (allowed !== target) {
       void navigate({ to: `/onboarding/${allowed}`, replace: true });
     }

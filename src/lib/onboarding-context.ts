@@ -33,6 +33,15 @@ export const ONBOARDING_STEPS = [
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
+/*
+ * Whether the active tenant/catalogue offers eSIM at all. Today both demo brands do, so this is a
+ * constant — but it is the SINGLE source both the step guard (resolveOnboardingStep) and the chrome
+ * (WizardPage) read, so they can never disagree about whether `/sim` exists. When a real
+ * `offersEsim=false` tenant appears, derive this from the catalogue/tenant config in ONE place.
+ * TODO(Fase 8): resolve from the catalogue (an offer with no eSIM in any simTypes) or tenant rules.
+ */
+export const TENANT_OFFERS_ESIM = true;
+
 /**
  * All possible working steps, excluding the terminal "success" screen — the SUPERSET. Since Fase 7,
  * two of these are CONDITIONAL: `sim` shows only when the tenant offers eSIM, and `delivery` shows

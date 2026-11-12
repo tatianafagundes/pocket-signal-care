@@ -249,7 +249,7 @@
         "addressOutsideDeliveryArea": "An diese Adresse können wir keine physische SIM schicken. Prüf sie oder wähl stattdessen eine eSIM."
       },
       "payment": {
-        "cardDeclined": "Deine Karte wurde abgelehnt. Prüf die Nummer oder versuch eine andere Karte."
+        "cardDeclined": "Deine Karte wurde abgelehnt. Versuch eine andere Karte."
       }
     },
     "details": {
@@ -306,10 +306,8 @@
       "account": "Konto",
       "name": "Name",
       "change": "Ändern",
-      "confirm": "Bestätigen und aktivieren",
       "placeOrder": "Bestellung aufgeben",
       "incomplete": "Gib deine Karte ein und autorisier die Zahlung, um die Bestellung aufzugeben.",
-      "balanceNote": "Du startest ohne Guthaben — lad jederzeit auf, um deinen Tarif zu nutzen.",
       "payment": {
         "heading": "Zahlung",
         "firstTopUp": "Tarif · erste Aufladung",
@@ -339,11 +337,12 @@
       "title": "Alles erledigt, {{name}}",
       "titleNoName": "Alles erledigt",
       "subtitle": "Dein Tarif ist aktiv.",
-      "balanceEmpty": "Du hast noch kein Guthaben — lad zum ersten Mal auf, um deinen Tarif zu nutzen.",
       "topUp": "Jetzt aufladen",
       "later": "Vielleicht später",
       "money": {
         "heading": "Deine erste Aufladung",
+        "stateDone": "Erledigt",
+        "stateUpcoming": "Steht noch aus",
         "authorized": "Autorisiert",
         "authorizedDetail": "Wir haben deine erste Aufladung reserviert.",
         "chargedPhysical": "Belastet, sobald deine SIM verschickt wird",
@@ -355,9 +354,9 @@
       "esim": {
         "heading": "Deine eSIM",
         "readyIntro": "Installier deine eSIM auf diesem Gerät. Wähl, was am einfachsten ist:",
-        "pathUniversal": "1. Tipp auf diesem Handy auf den Installationslink, den wir dir per E-Mail geschickt haben.",
-        "pathQr": "2. Scann den QR-Code von einem anderen Gerät.",
-        "pathManual": "3. Gib den Aktivierungscode manuell in den eSIM-Einstellungen deines Handys ein.",
+        "pathLink": "Tipp auf diesem Handy zum Installieren:",
+        "pathLinkCta": "eSIM installieren",
+        "pathManual": "Oder gib den Aktivierungscode unten in den eSIM-Einstellungen deines Handys ein.",
         "codeLabel": "Aktivierungscode",
         "requested": "Deine eSIM wird vorbereitet — wir schicken dir die Installationsdetails in Kürze per E-Mail.",
         "failed": "Wir konnten deine eSIM noch nicht laden. Schau gleich unter „Mein Tarif“ nach oder kontaktier den Support.",

@@ -249,7 +249,7 @@
         "addressOutsideDeliveryArea": "We can't ship a physical SIM to that address. Check it, or choose an eSIM instead."
       },
       "payment": {
-        "cardDeclined": "Your card was declined. Check the number or try a different card."
+        "cardDeclined": "Your card was declined. Try another card."
       }
     },
     "details": {
@@ -306,10 +306,8 @@
       "account": "Account",
       "name": "Name",
       "change": "Change",
-      "confirm": "Confirm and activate",
       "placeOrder": "Place order",
       "incomplete": "Enter your card and authorize the payment to place your order.",
-      "balanceNote": "You start with no balance — top up any time to use your plan.",
       "payment": {
         "heading": "Payment",
         "firstTopUp": "Plan · first top-up",
@@ -339,11 +337,12 @@
       "title": "You're all set, {{name}}",
       "titleNoName": "You're all set",
       "subtitle": "Your plan is active.",
-      "balanceEmpty": "You have no balance yet — make your first top up to start using your plan.",
       "topUp": "Top up now",
       "later": "Maybe later",
       "money": {
         "heading": "Your first top-up",
+        "stateDone": "Done",
+        "stateUpcoming": "Upcoming",
         "authorized": "Authorized",
         "authorizedDetail": "We've reserved your first top-up.",
         "chargedPhysical": "Charged when your SIM ships",
@@ -355,9 +354,9 @@
       "esim": {
         "heading": "Your eSIM",
         "readyIntro": "Install your eSIM on this device. Choose whichever is easiest:",
-        "pathUniversal": "1. Tap the install link we emailed you, on this phone.",
-        "pathQr": "2. Scan the QR code from another device.",
-        "pathManual": "3. Enter the activation code manually in your phone's eSIM settings.",
+        "pathLink": "On this phone, tap to install:",
+        "pathLinkCta": "Install eSIM",
+        "pathManual": "Or enter the activation code below in your phone's eSIM settings.",
         "codeLabel": "Activation code",
         "requested": "Your eSIM is being prepared — we'll email the install details shortly.",
         "failed": "We couldn't load your eSIM yet. Check My plan in a moment, or contact support.",

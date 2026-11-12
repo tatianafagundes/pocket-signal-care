@@ -326,7 +326,9 @@ function ReviewPage() {
           </section>
 
           {!complete ? (
-            <p className="mt-4 type-caption text-destructive" role="alert">
+            // Not role="alert": announcing "incomplete" assertively while the user is still typing
+            // the card is noise. The disabled Place-order button's hint is the single signal.
+            <p className="mt-4 type-caption text-destructive">
               {t(
                 "onboarding.review.incomplete",
                 "Enter your card and authorize the payment to place your order.",
