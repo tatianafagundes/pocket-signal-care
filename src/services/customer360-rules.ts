@@ -40,7 +40,14 @@ export interface Customer360Parts {
 export function composeCustomer360(parts: Customer360Parts): Customer360 {
   // offerId -> Offer, so the installed-base join is O(1) per product. A product whose offerId has
   // no catalogue entry (the SIM PO) resolves to null — never an error, never a raw id downstream.
-  const offerById = new Map<string, Offer>((parts.offers ?? []).map((o) => [o.offerId, o]));
+  const offers = parts.offers ?? [];
+  const offerById = new Map<string, Offer>(offers.map((o) => [o.offerId, o]));
+  // A duplicate offerId across the catalogue (e.g. a plan and add-on sharing an id, or a versioning
+  // slip) would silently last-writer-win and mis-join a product. The real ECM shouldn't produce
+  // this, but warn in dev so a bad catalogue is caught rather than quietly showing the wrong offer.
+  if (import.meta.env.DEV && offerById.size !== offers.length) {
+    console.warn("composeCustomer360: duplicate offerId in catalogue — join may be ambiguous");
+  }
 
   return {
     customer: parts.customer,

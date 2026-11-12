@@ -68,8 +68,8 @@ describe("cpr seam (mock driver)", () => {
       const r = await getCustomer360("demo-drei");
       expect(r.ok).toBe(true);
       if (r.ok) {
-        // The installed base is still there; it just isn't catalogue-enriched.
-        expect(r.data.installedBase.length).toBeGreaterThan(0);
+        // The installed base is still there (demo-drei: plan + sim); it just isn't enriched.
+        expect(r.data.installedBase).toHaveLength(2);
         expect(r.data.installedBase.every((p) => p.offer === null)).toBe(true);
       }
     });

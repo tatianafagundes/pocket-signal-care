@@ -94,7 +94,9 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
       listOffers(tenantId),
       listAddOns(tenantId),
     ]);
-    const installedBase = baseRes.ok ? baseRes.data : [];
+    // The RAW installed base (un-enriched Product[]); composeCustomer360 joins the catalogue onto
+    // it to produce the enriched EnrichedProduct[] on Customer360.installedBase.
+    const rawInstalledBase = baseRes.ok ? baseRes.data : [];
     const balance = balanceRes.ok ? balanceRes.data : null;
     // Interactions degrade gracefully like base/balance: a failed timeline must not blank the 360.
     const interactions = interactionsRes.ok ? interactionsRes.data : [];
@@ -110,7 +112,7 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
       data: composeCustomer360({
         customer: cpr.data.customer,
         party: cpr.data.party,
-        installedBase,
+        installedBase: rawInstalledBase,
         balance,
         interactions,
         offers,
