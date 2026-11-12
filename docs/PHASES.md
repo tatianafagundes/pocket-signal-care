@@ -403,3 +403,31 @@ perfil, nunca um segundo eSIM, mesma disciplina "Don't pay again" aplicada ao pr
 
 `api.ts` fia `createAddress/getAddress` e `requestEsimProfile/getEsimProfile`. 16 testes novos (184
 no total), build + lint verdes, paridade i18n intacta (telas vêm na 7.5).
+
+### Fase 7.4 — entregue: orquestração do submit (três tempos do dinheiro + idempotência)
+
+Commit `1645405`. A ativação pré-paga agora roda ponta a ponta pelos seams da 7.1–7.3, com a
+**idempotência do dinheiro** como invariante central (a regra "Don't pay again" do dossiê).
+
+**Sequência (autoriza primeiro, para que cartão recusado não crie nada a jusante):**
+`authorize` → `createParty` → `createCustomer` → (physical: `createAddress` TMF673 | eSIM:
+`requestEsimProfile`) → `createCart` → `addItem(plano, SIM, add-ons)` → `submitOrder({ addressId?,
+simType })` (captura o `orderId`) → `capture` (cobra no marco) → `topUp` (credita o primeiro
+top-up = preço do plano). São os **três tempos**: autoriza → captura → credita.
+
+**Idempotência:** `authorizationRef`, `partyId`, `customerId`, `addressId`, `esimProfileId` e
+`orderId` são persistidos via `patch` e **reusados no retry**; os flags `captured`/`credited` guardam
+os dois marcos de dinheiro; o bloco inteiro cart→submit é pulado quando já existe `orderId`. Um retry
+depois de falha no meio **não autoriza, submete, captura nem credita duas vezes** — há um teste
+"golden" que força falha no `topUp`, refaz, e confere que authorize/submit/capture rodaram uma vez e
+`topUp` duas (a 1ª recusada, a 2ª ok).
+
+**Order seam:** `submitOrder` passou a receber `{ cartId, addressId?, simType }`; o mock marca o
+produto SIM com o `simType` (My plan mostra "eSIM" vs "Físico") e registra o `addressId` do pedido
+(espelha TMF622). `addon-purchase` (Fase 6) passou a chamar `{ cartId }`. **Estado:** `OnboardingState`
+ganhou `esimProfileId/captured/credited` (init + revive estrito). **`review.tsx`** passa
+`planPriceMinor` (do offer) + um token de pagamento **MOCK** (`tok-visa-4242`); o token real coletado
+entra na 7.5. **i18n:** 5 chaves de progresso novas. 188 testes, build + lint verdes, paridade i18n.
+
+Dívida consciente: captura é síncrona no mock (marco real assíncrono = Fase 8); o token de pagamento
+é placeholder até a tela da 7.5; sem 3-D Secure/PSP real.
