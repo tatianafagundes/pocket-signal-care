@@ -86,10 +86,28 @@ export interface Offer {
   /** Price in minor units (euro cents). */
   priceMinor: number;
   currency: "EUR";
-  /** Validity in days (prepaid cycle). */
-  validityDays: number;
-  /** The one recommended offer per tenant is highlighted in the grid. */
-  recommended: boolean;
+  /** Validity in days (prepaid cycle). Optional: add-ons may have none. */
+  validityDays?: number;
+  /** The one recommended plan per tenant is highlighted in the grid. Read as `=== true`. */
+  recommended?: boolean;
+  /*
+   * Enrichment fields (Fase 5 — Drei "up"-style catalogue). All optional, so existing offers
+   * and tests are unaffected. These are a flattening of TMF620 ProductSpecCharacteristics — the
+   * real catalog-http maps them from `characteristic`/`productOfferingPrice` (see
+   * docs/contracts/tmf620-product-catalog.md). Mock values are a defensible placeholder, not
+   * official Drei prices.
+   */
+  /** Auto-renews each cycle (prepaid "up" plans). */
+  autoRenew?: boolean;
+  /** Includes EU roaming. */
+  euRoaming?: boolean;
+  network?: "4G" | "5G";
+  /** True for an unlimited-data plan (dataAmount is then a label like "Unlimited"). */
+  unlimitedData?: boolean;
+  /** What kind of catalogue item this is. Absent = a normal plan. */
+  kind?: "plan" | "addon";
+  /** Tier, used by the recommendation rule (not hardcoded offer ids). */
+  category?: "starter" | "standard" | "unlimited" | "data-addon";
 }
 
 /*

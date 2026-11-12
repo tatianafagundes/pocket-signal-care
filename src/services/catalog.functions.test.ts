@@ -24,10 +24,10 @@ describe("catalog seam (mock)", () => {
     if (!r.ok) expect(r.error.category).toBe("validation");
   });
 
-  it("qualifies an offer as eligible during onboarding (no customer)", async () => {
-    const r = await qualifyOffer("drei-plan-10gb", { tenantId: "drei" });
+  it("qualifies an offer during onboarding (no customer)", async () => {
+    const r = await qualifyOffer("drei-up", { tenantId: "drei" });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.data.eligible).toBe(true);
+    if (r.ok) expect(r.data.result).toBe("qualified");
   });
 
   it("fails qualify for an unknown offer", async () => {
@@ -36,15 +36,15 @@ describe("catalog seam (mock)", () => {
     if (!r.ok) expect(r.error.code).toBe("catalog.offer.notFound");
   });
 
-  it("marks an offer ineligible when an existing customer's balance is below the price", async () => {
-    // demo-dreigo is seeded with €15.00 (1500c); the 20 GB offer costs €19.99 (1999c) > balance.
-    const r = await qualifyOffer("dreigo-data-20gb", {
+  it("marks an offer unqualified when an existing customer's balance is below the price", async () => {
+    // demo-dreigo is seeded with €15.00 (1500c); Go 20 costs €17.90 (1790c) > balance.
+    const r = await qualifyOffer("dreigo-go-20", {
       tenantId: "dreigo",
       customerId: "demo-dreigo",
     });
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.data.eligible).toBe(false);
+      expect(r.data.result).toBe("unqualified");
       expect(r.data.reasonKey).toBe("offer.ineligible.insufficientBalance");
     }
   });

@@ -28,8 +28,8 @@ let seeded = false;
 // (catalog/catalog-mock.ts), so a "your plan" screen can link the installed-base product back
 // to its catalogue offer. These must stay in sync with the catalog seed per tenant.
 const DEMO_PLAN_OFFER: Record<TenantId, { offerId: string; name: string }> = {
-  drei: { offerId: "drei-plan-10gb", name: "Prepaid 10 GB" },
-  dreigo: { offerId: "dreigo-data-8gb", name: "Go 8 GB" },
+  drei: { offerId: "drei-up", name: "up" },
+  dreigo: { offerId: "dreigo-go-8", name: "Go 8" },
 };
 
 function seed(): void {

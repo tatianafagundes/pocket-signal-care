@@ -1,11 +1,15 @@
 import type { Offer } from "@/services/model";
 
 /*
- * Catalog eligibility — a PURE rule. (Spec Fase 4.2)
+ * Catalog qualification — a PURE rule. (Spec Fase 4.2 / Fase 5 TMF679 alignment)
  *
- * Whether an offer can be bought in a given context. Kept pure so the eligibility reason the
- * UI shows (aria-disabled + visible reason) is testable without a backend. No I/O, no throw.
- * The mock catalog driver and (later) the real ECM both call this to decide qualify results.
+ * Whether an offer can be bought in a given context. Kept pure so the eligibility reason the UI
+ * shows (aria-disabled + visible reason) is testable without a backend. No I/O, no throw.
+ *
+ * The result follows the real TMF679 Product Offering Qualification shape (see
+ * docs/contracts/tmf679-po-qualification.md), not a bare boolean: qualified | unqualified |
+ * alternate. The mock catalog driver and (later) the real ECM both return this shape, so the UI
+ * (which only ever sees QualifyResult) doesn't change when the backend goes real.
  */
 
 export interface QualifyFacts {
@@ -16,24 +20,33 @@ export interface QualifyFacts {
   balanceMinor?: number;
 }
 
+/** TMF679 qualificationItemResult: available / not available / not available but alternate exists. */
+export type QualificationResult = "qualified" | "unqualified" | "alternate";
+
 export interface QualifyResult {
-  eligible: boolean;
-  /** i18n key for the reason when not eligible — the UI shows it next to the disabled offer. */
+  result: QualificationResult;
+  /** i18n key for the reason when not qualified — the UI shows it next to the disabled offer. */
   reasonKey?: string;
+  /** When `result` is "alternate", the offer id to propose instead (TMF679 alternateProposal). */
+  alternativeOfferId?: string;
 }
 
 /**
- * Decide eligibility. Rules (demo-scope, deliberately small):
- *  - An onboarding bundle (no customer yet) is always eligible — it's the first purchase.
- *  - For an existing customer, an offer priced above the current balance is ineligible
+ * Decide qualification. Rules (demo-scope, deliberately small):
+ *  - An onboarding bundle (no customer yet) is always `qualified` — it's the first purchase.
+ *  - For an existing customer, an offer priced above the current balance is `unqualified`
  *    ("top up first"), since prepaid pays from balance.
+ *
+ * The `alternate` result (propose a cheaper offer) is part of the shape for the real TMF679 and
+ * the recommendation hook, but the mock rule does not synthesise alternatives — it returns
+ * `qualified` or `unqualified`. A real ECM would fill `alternativeOfferId`.
  */
 export function qualifyOffer(facts: QualifyFacts): QualifyResult {
   if (!facts.hasCustomer) {
-    return { eligible: true };
+    return { result: "qualified" };
   }
   if (facts.balanceMinor != null && facts.offer.priceMinor > facts.balanceMinor) {
-    return { eligible: false, reasonKey: "offer.ineligible.insufficientBalance" };
+    return { result: "unqualified", reasonKey: "offer.ineligible.insufficientBalance" };
   }
-  return { eligible: true };
+  return { result: "qualified" };
 }

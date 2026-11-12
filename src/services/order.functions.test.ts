@@ -25,7 +25,7 @@ describe("order seam (mock)", () => {
     expect(cart.ok).toBe(true);
     if (!cart.ok) return;
 
-    const added = await addItem({ cartId: cart.data.cartId, offerId: "dreigo-data-8gb" });
+    const added = await addItem({ cartId: cart.data.cartId, offerId: "dreigo-go-8" });
     expect(added.ok).toBe(true);
 
     const order = await submitOrder(cart.data.cartId);
@@ -36,7 +36,7 @@ describe("order seam (mock)", () => {
     expect(after.ok).toBe(true);
     if (after.ok) {
       expect(after.data.length).toBe(beforeCount + 1);
-      expect(after.data.some((p) => p.offerId === "dreigo-data-8gb")).toBe(true);
+      expect(after.data.some((p) => p.offerId === "dreigo-go-8")).toBe(true);
     }
   });
 

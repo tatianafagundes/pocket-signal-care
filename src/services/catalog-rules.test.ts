@@ -14,24 +14,24 @@ const offer: Offer = {
   recommended: true,
 };
 
-describe("catalog-rules.qualifyOffer", () => {
-  it("is eligible during onboarding (no customer yet)", () => {
-    expect(qualifyOffer({ offer, hasCustomer: false })).toEqual({ eligible: true });
+describe("catalog-rules.qualifyOffer (TMF679 tri-state)", () => {
+  it("is qualified during onboarding (no customer yet)", () => {
+    expect(qualifyOffer({ offer, hasCustomer: false })).toEqual({ result: "qualified" });
   });
 
-  it("is eligible for a customer whose balance covers the price", () => {
+  it("is qualified for a customer whose balance covers the price", () => {
     expect(qualifyOffer({ offer, hasCustomer: true, balanceMinor: 2000 })).toEqual({
-      eligible: true,
+      result: "qualified",
     });
   });
 
-  it("is ineligible for a customer whose balance is below the price, with a reason key", () => {
+  it("is unqualified for a customer whose balance is below the price, with a reason key", () => {
     const r = qualifyOffer({ offer, hasCustomer: true, balanceMinor: 500 });
-    expect(r.eligible).toBe(false);
+    expect(r.result).toBe("unqualified");
     expect(r.reasonKey).toBe("offer.ineligible.insufficientBalance");
   });
 
-  it("is eligible for a customer when balance is unknown (not enforced)", () => {
-    expect(qualifyOffer({ offer, hasCustomer: true })).toEqual({ eligible: true });
+  it("is qualified for a customer when balance is unknown (not enforced)", () => {
+    expect(qualifyOffer({ offer, hasCustomer: true })).toEqual({ result: "qualified" });
   });
 });
