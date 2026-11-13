@@ -10,10 +10,18 @@ the incremental plan. Nothing here changes runtime behaviour — the demo still 
 
 Anchors:
 - Collection (saved in-repo): `docs/contracts/postman/Multi-tenant-customer.postman_collection.json`
+- **Real response shapes** (from Glean/CPI docs, since the collection has none):
+  `docs/contracts/postman/response-shapes.md`
 - Seam layer + "wire a real system" playbook: `src/services/README.md`
 - CPR KB (endpoints, fields): `docs/contracts/dxp-customer-management-cpr.md`
 - xCAC KB (recharge journey orchestration): `docs/contracts/dxp-xcac-orchestration.md`
 - Charging KB (CBEV balance, OAuth2): `docs/contracts/cbev-charging.md`
+
+> **Cluster not reachable from our machine** — and we don't need it to build. The Postman
+> collection gives the request contracts; `response-shapes.md` gives the real response bodies
+> (extracted from the official CPI docs via Glean). The http drivers + mappers are built against
+> these contracts and a local fake server (plan step 1 below), behind the env flag, with mock as
+> fallback. Turning on the real cluster is a one-line env change for whoever has access later.
 
 ---
 
@@ -117,34 +125,49 @@ permanently from the product; neither is true here. Use an integration branch (e
 
 ## 5. Incremental plan (each step verifiable, mock stays default)
 
-0. **Save the collection in-repo + this doc.** ← done (this commit). Zero runtime change.
-1. **Connectivity spike (no app code).** From the dev machine, run the collection against the real
-   `{{CLUSTER_SERVER}}` + a real `{{tenantId}}`: get a token, create party→customer→contract,
-   recharge. Confirms the cluster is reachable and the prerequisites hold. Decides whether a BFF is
-   mandatory (CORS) before any UI wiring.
-2. **BFF/proxy decision & skeleton** (if the spike shows CORS/secret exposure): a server route that
-   holds the token, injects `X-Tenant-ID`, forwards to the cluster. The `*-http.ts` base URL then
-   points at the BFF, not the cluster.
-3. **Auth real** (everything depends on the token): Keycloak flow in `auth` + token injection in
-   `request()`.
+Cluster is not reachable, so we build against the contract (collection + response-shapes.md) and a
+local fake server — not a live cluster. Recharge follows the collection's path: `payment/v4/payment`
+then `xCACcore/.../customerInteraction` (monetaryRecharge). **JXC is out of scope** (the newer
+orchestrator; the collection uses xCACcore directly).
+
+0. **Save the collection + response shapes + this doc.** ← done. Zero runtime change.
+1. **Local fake server + contract tests (no cluster).** A small local HTTP server that answers the
+   collection's paths with the response shapes from `response-shapes.md`. Point `VITE_*_BASE_URL`
+   at it. Write contract tests asserting each driver builds the exact request (path, headers, body)
+   the collection sends, and parses the documented response. This is the dev/test environment for
+   the integration while the cluster is closed.
+2. **BFF/proxy** (the PWA can't call the cluster from the browser — CORS + token exposure): a
+   TanStack Start server route that holds the token server-side, injects `X-Tenant-ID`, forwards.
+   The `*-http.ts` base URL points at the BFF. (Also where the real cluster URL goes later.)
+3. **Auth real** (everything depends on the token): Keycloak `dxp-frontend` flow + token injection
+   in `request()`; refresh/expiry. CBEV uses OAuth2 client-credentials (different) — see KB.
 4. **CPR onboarding http** (`cpr-http.ts`): fix paths to `/customerManagement/v1/*`, complete
-   `createParty`/`createCustomer`, add `createContract`, map `getCustomerAndParty` →
-   `/customerview/{id}`; thread `communicationId` + the DXP `tenantId`. Validate each against the
-   collection's request/response shapes.
-5. **Recharge http** (`charging-http.ts` or a new `payment` seam): `runTopUp` → `payment/v4/payment`
-   + `xCACcore/.../monetaryRecharge`.
-6. **Flip env per seam** with mock as fallback; keep the demo path green throughout.
+   `createParty`/`createCustomer` (read `.id`), add `createContract` (read `.id`, carry
+   `communicationId`), map `getCustomerAndParty` → `/customerview/{id}`; thread the DXP `tenantId`
+   (brand→TEN… map). Parse the `{code,reason,message}` error envelope. Validate against the fake.
+5. **Recharge http**: `runTopUp` → POST `/payment/v4/payment` (capture first; read id +
+   authorizationCode) → POST `/xCACcore/v1/customerInteraction` monetaryRecharge (read
+   partyInteractionId). Keep the preview==backend + real-reference honesty locks.
+6. **Flip env per seam** with mock as fallback; keep the demo path green throughout. The real
+   cluster turns on via env (base URL + token + tenant map) by whoever has access.
 
 ---
 
 ## 6. Open questions for the customer
 
-1. Is `{{CLUSTER_SERVER}}` + a real `{{tenantId}}` reachable from our dev machine (network/VPN)?
-   Can we run the collection ourselves for the spike?
-2. Is the `contract` step mandatory before recharge for prepaid, and does the app need to create it
-   (vs. it existing already)?
-3. Confirm the recharge model: `payment/v4/payment` first, then `xCACcore/.../monetaryRecharge`,
-   with our authorize/capture mapping to "create payment".
-4. Which brand(s) map to which DXP `tenantId`(s)? (the `brand → TEN…` map in gap §1)
-5. For the user session, is Keycloak `dxp-frontend` the client we use, and is there a non-admin
-   user/flow (the collection uses `masteradmin`, which is an admin credential, not an end user)?
+Resolved:
+- **Cluster reachability:** NOT reachable from our machine → we build against the contract + a local
+  fake server; the real cluster is turned on later by whoever has access. (No longer a blocker.)
+- **Recharge model / JXC:** confirmed — follow the collection (`payment/v4/payment` →
+  `xCACcore/.../monetaryRecharge`), **ignore JXC**.
+
+Still open (needed before/at the matching plan step, not before coding starts):
+1. Is the `contract` step mandatory before recharge for prepaid, and does the app create it (vs. it
+   existing already)? (The collection creates it; recharge references `contractId`.)
+2. Which brand(s) map to which DXP `tenantId`(s)? — the `brand → TEN…` map (gap §1). Needed at
+   step 4; until then the fake server accepts any tenant.
+3. For the user session: Keycloak `dxp-frontend` client — and is there a non-admin end-user flow?
+   The collection uses `masteradmin` (an admin credential), which is fine for the service calls but
+   not for an end-user login. Needed at step 3.
+4. When the cluster opens: a real `{{CLUSTER_SERVER}}` + `{{tenantId}}` and a captured set of real
+   responses, so we can diff our fake's shapes against reality and adjust mappers if needed.
