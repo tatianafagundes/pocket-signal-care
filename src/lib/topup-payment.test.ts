@@ -1,0 +1,136 @@
+import { runTopUp } from "@/lib/topup-payment";
+import { emptyTopUpProgress, type TopUpProgress } from "@/lib/topup-progress";
+
+// Mock the api seam surface runTopUp calls.
+vi.mock("@/services/api", () => ({
+  api: {
+    authorizePayment: vi.fn(async () => ({
+      authorizationRef: "auth-1",
+      amountMinor: 2000,
+      currency: "EUR" as const,
+      status: "authorized" as const,
+    })),
+    capturePayment: vi.fn(async () => ({
+      authorizationRef: "auth-1",
+      amountMinor: 2000,
+      currency: "EUR" as const,
+      status: "captured" as const,
+    })),
+    topUp: vi.fn(async () => ({
+      amountMinor: 3240,
+      currency: "EUR" as const,
+      validUntil: "2026-12-15T00:00:00Z",
+    })),
+    getBalance: vi.fn(async () => ({
+      amountMinor: 3240,
+      currency: "EUR" as const,
+      validUntil: "2026-12-15T00:00:00Z",
+    })),
+  },
+}));
+
+import { api } from "@/services/api";
+
+const mockApi = api as unknown as Record<
+  "authorizePayment" | "capturePayment" | "topUp" | "getBalance",
+  ReturnType<typeof vi.fn>
+>;
+
+/** A patch that records every persisted progress snapshot (the sessionStorage write in prod). */
+function recordingPatch() {
+  const snapshots: TopUpProgress[] = [];
+  const patch = (next: TopUpProgress) => snapshots.push({ ...next });
+  return { snapshots, patch };
+}
+
+beforeEach(() => {
+  for (const fn of Object.values(mockApi)) fn.mockClear();
+});
+
+describe("runTopUp — three money moments, idempotent", () => {
+  it("happy path: authorize → capture → credit, each once, returns the new balance", async () => {
+    const { patch } = recordingPatch();
+    const balance = await runTopUp({
+      customerId: "cust-1",
+      amountMinor: 2000,
+      methodToken: "tok-visa-4242",
+      progress: emptyTopUpProgress(),
+      patch,
+    });
+
+    expect(mockApi.authorizePayment).toHaveBeenCalledTimes(1);
+    expect(mockApi.capturePayment).toHaveBeenCalledTimes(1);
+    expect(mockApi.topUp).toHaveBeenCalledTimes(1);
+    expect(mockApi.getBalance).not.toHaveBeenCalled();
+    expect(balance.amountMinor).toBe(3240);
+    expect(balance.validUntil).toBe("2026-12-15T00:00:00Z");
+  });
+
+  it("GOLDEN: a retry after the credit fails authorizes once, captures once, credits once", async () => {
+    // Attempt 1: topUp (credit) rejects once. authorize + capture succeed and persist.
+    mockApi.topUp.mockRejectedValueOnce(new Error("ecev down"));
+    const { snapshots, patch } = recordingPatch();
+    let progress = emptyTopUpProgress();
+    const apply = (next: TopUpProgress) => {
+      progress = next;
+      patch(next);
+    };
+
+    await expect(
+      runTopUp({ customerId: "c", amountMinor: 2000, methodToken: "tok", progress, patch: apply }),
+    ).rejects.toThrow("ecev down");
+
+    // After attempt 1: authorized + captured persisted, NOT credited.
+    expect(progress.authorizationRef).toBe("auth-1");
+    expect(progress.captured).toBe(true);
+    expect(progress.credited).toBe(false);
+
+    // Attempt 2: resume with the persisted progress. Only credit should run again.
+    await runTopUp({
+      customerId: "c",
+      amountMinor: 2000,
+      methodToken: "tok",
+      progress,
+      patch: apply,
+    });
+
+    expect(mockApi.authorizePayment).toHaveBeenCalledTimes(1); // NOT re-authorized
+    expect(mockApi.capturePayment).toHaveBeenCalledTimes(1); // NOT re-captured
+    expect(mockApi.topUp).toHaveBeenCalledTimes(2); // reject + ok
+    expect(progress.credited).toBe(true);
+    // The final persisted snapshot is fully done.
+    expect(snapshots.at(-1)).toMatchObject({ captured: true, credited: true });
+  });
+
+  it("resume after credit never re-credits — reads the current balance instead", async () => {
+    const already: TopUpProgress = { authorizationRef: "auth-1", captured: true, credited: true };
+    const { patch } = recordingPatch();
+    const balance = await runTopUp({
+      customerId: "cust-1",
+      amountMinor: 2000,
+      methodToken: "tok",
+      progress: already,
+      patch,
+    });
+
+    expect(mockApi.authorizePayment).not.toHaveBeenCalled();
+    expect(mockApi.capturePayment).not.toHaveBeenCalled();
+    expect(mockApi.topUp).not.toHaveBeenCalled(); // never credit twice
+    expect(mockApi.getBalance).toHaveBeenCalledTimes(1);
+    expect(balance.amountMinor).toBe(3240);
+  });
+
+  it("rejects a non-positive amount before any seam call (money boundary)", async () => {
+    const { patch } = recordingPatch();
+    await expect(
+      runTopUp({
+        customerId: "c",
+        amountMinor: 0,
+        methodToken: "tok",
+        progress: emptyTopUpProgress(),
+        patch,
+      }),
+    ).rejects.toThrow(/positive integer/);
+    expect(mockApi.authorizePayment).not.toHaveBeenCalled();
+  });
+});
