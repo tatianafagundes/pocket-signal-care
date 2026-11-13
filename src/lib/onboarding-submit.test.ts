@@ -16,6 +16,7 @@ vi.mock("@/services/api", () => ({
     })),
     createParty: vi.fn(async () => ({ partyId: "party-1" })),
     createCustomer: vi.fn(async () => ({ customerId: "cust-1" })),
+    createContract: vi.fn(async () => ({ contractId: "contract-1" })),
     createAddress: vi.fn(async () => ({
       addressId: "addr-1",
       address: {} as DeliveryAddress,
@@ -61,6 +62,7 @@ const mockApi = api as unknown as Record<
   | "authorizePayment"
   | "createParty"
   | "createCustomer"
+  | "createContract"
   | "createAddress"
   | "requestEsimProfile"
   | "createCart"
@@ -90,6 +92,8 @@ function completeState(over: Partial<OnboardingState> = {}): OnboardingState {
     email: "a@b.at",
     givenName: "Mia",
     familyName: "Berg",
+    // A real onboarding reserves the MSISDN before review, so the contract step always has it.
+    reservedMsisdn: "+4368140000001",
     ...over,
   };
 }
@@ -112,6 +116,7 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
       "authorize",
       "createParty",
       "createCustomer",
+      "createContract",
       "createCart",
       "addPlan",
       "addSim",
@@ -239,14 +244,24 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     expect(mockApi.authorizePayment).not.toHaveBeenCalled();
   });
 
-  it("reuses party and customer on retry (never recreates durable resources)", async () => {
+  it("reuses party, customer and contract on retry (never recreates durable resources)", async () => {
     const steps: SubmitStep[] = [];
     await runOnboardingSubmit(
-      deps(completeState({ authorizationRef: "auth-1", partyId: "p", customerId: "c" }), steps, []),
+      deps(
+        completeState({
+          authorizationRef: "auth-1",
+          partyId: "p",
+          customerId: "c",
+          contractId: "contract-existing",
+        }),
+        steps,
+        [],
+      ),
     );
     expect(mockApi.authorizePayment).not.toHaveBeenCalled();
     expect(mockApi.createParty).not.toHaveBeenCalled();
     expect(mockApi.createCustomer).not.toHaveBeenCalled();
+    expect(mockApi.createContract).not.toHaveBeenCalled();
     expect(steps).toEqual([
       "createCart",
       "addPlan",
@@ -266,6 +281,7 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
           authorizationRef: "auth-1",
           partyId: "p",
           customerId: "c",
+          contractId: "contract-existing",
           orderId: "order-existing",
         }),
         steps,
@@ -336,6 +352,7 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     expect(patches).toContainEqual({ authorizationRef: "auth-1" });
     expect(patches).toContainEqual({ partyId: "party-1" });
     expect(patches).toContainEqual({ customerId: "cust-1" });
+    expect(patches).toContainEqual({ contractId: "contract-1" });
     expect(patches).toContainEqual({ orderId: "order-1" });
     expect(patches).toContainEqual({ interactionId: "pi-1" });
     expect(patches).toContainEqual({ captured: true });
@@ -362,6 +379,7 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
           authorizationRef: "auth-1",
           partyId: "p",
           customerId: "c",
+          contractId: "contract-existing",
           orderId: "order-existing",
           interactionId: "pi-existing",
         }),
@@ -391,5 +409,48 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     ).rejects.toThrow();
     // Nothing was authorized — the guard runs before any seam call.
     expect(mockApi.authorizePayment).not.toHaveBeenCalled();
+  });
+
+  // The prepaid contract step (Task 3): position, idempotency, and the required-MSISDN precondition.
+  describe("contract step", () => {
+    it("creates the contract after the customer and before the order, keyed by the MSISDN", async () => {
+      const steps: SubmitStep[] = [];
+      await runOnboardingSubmit(
+        deps(completeState({ reservedMsisdn: "+4368140000009" }), steps, []),
+      );
+      // Position: right after createCustomer, right before the order block (createCart).
+      const iCustomer = steps.indexOf("createCustomer");
+      const iContract = steps.indexOf("createContract");
+      const iCart = steps.indexOf("createCart");
+      expect(iContract).toBe(iCustomer + 1);
+      expect(iContract).toBeLessThan(iCart);
+      // Carries the reserved MSISDN as communicationId.
+      expect(mockApi.createContract).toHaveBeenCalledWith({
+        tenantId: "drei",
+        customerId: "cust-1",
+        communicationId: "+4368140000009",
+        paymentContext: "PREPAID",
+      });
+    });
+
+    it("persists contractId so a retry skips the contract step (idempotent)", async () => {
+      const patches: Record<string, unknown>[] = [];
+      await runOnboardingSubmit(deps(completeState(), [], patches));
+      expect(patches).toContainEqual({ contractId: "contract-1" });
+
+      // Retry with contractId already present: the step is skipped, no second contract created.
+      const steps: SubmitStep[] = [];
+      await runOnboardingSubmit(deps(completeState({ contractId: "contract-1" }), steps, []));
+      expect(steps).not.toContain("createContract");
+      expect(mockApi.createContract).toHaveBeenCalledTimes(1); // only the first run
+    });
+
+    it("fails rather than create a contract with an empty communicationId (missing MSISDN)", async () => {
+      await expect(
+        runOnboardingSubmit(deps(completeState({ reservedMsisdn: null }), [], [])),
+      ).rejects.toThrow(/reserved MSISDN/i);
+      // The contract is never created with an empty key.
+      expect(mockApi.createContract).not.toHaveBeenCalled();
+    });
   });
 });

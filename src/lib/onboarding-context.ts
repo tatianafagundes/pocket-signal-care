@@ -118,6 +118,12 @@ export interface OnboardingState {
   /** Orchestration ids the submit step populates (CPR/order). */
   partyId: string | null;
   customerId: string | null;
+  /**
+   * Prepaid contract id (CPR), created after the customer and before the order. Persisted + reused
+   * on retry so a resumed submit never creates a second contract (same idempotency contract as
+   * partyId/customerId).
+   */
+  contractId: string | null;
   cartId: string | null;
   /*
    * Fase 7 money/order orchestration ids the submit fills in. BOTH must be persisted and REUSED

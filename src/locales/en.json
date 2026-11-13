@@ -656,6 +656,7 @@
         "authorize": "Authorizing your payment…",
         "createParty": "Creating your profile…",
         "createCustomer": "Setting up your account…",
+        "createContract": "Setting up your contract…",
         "createAddress": "Saving your delivery address…",
         "requestEsim": "Preparing your eSIM…",
         "createCart": "Preparing your order…",

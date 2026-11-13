@@ -9,7 +9,7 @@ import type { AllowanceGrant } from "@/services/charging/charging-driver";
  * Runs the prepaid activation against the seams, in this order:
  *
  *   authorize (reserve, no charge)
- *     → createParty → createCustomer
+ *     → createParty → createCustomer → createContract (prepaid, keyed by the reserved MSISDN)
  *     → if physical: createAddress (TMF673) | if eSIM: requestEsimProfile
  *     → createCart → addItem(plan) → addItem(SIM|eSIM) → addItem(add-ons)
  *     → submitOrder({ addressId?, simType })   (capture the orderId)
@@ -28,7 +28,7 @@ import type { AllowanceGrant } from "@/services/charging/charging-driver";
  * milestone is persisted via `patch` the instant its seam returns, and REUSED on a retry rather
  * than repeated:
  *   - authorizationRef : skip authorize if present
- *   - partyId / customerId : skip create if present
+ *   - partyId / customerId / contractId : skip create if present
  *   - addressId / esimProfileId : skip the provisioning call if present
  *   - orderId : skip the ENTIRE cart→submit block if present (the cart is ephemeral; once an
  *       order exists, rebuilding a cart would double line items and re-provision)
@@ -48,6 +48,7 @@ export type SubmitStep =
   | "authorize"
   | "createParty"
   | "createCustomer"
+  | "createContract"
   | "createAddress"
   | "requestEsim"
   | "createCart"
@@ -142,6 +143,28 @@ export async function runOnboardingSubmit({
     const customer = await api.createCustomer({ tenantId: tenant, partyId });
     customerId = customer.customerId;
     patch({ customerId });
+  }
+
+  // 3b. Contract (prepaid) — created AFTER the customer and BEFORE any order/fulfilment, so the
+  //     prepaid contract (keyed by the reserved MSISDN) exists for the order to attach to and for
+  //     the later recharge to reference. Idempotent: reuse state.contractId on retry (never create
+  //     a second contract). communicationId is REQUIRED — onboarding reserves the MSISDN before
+  //     review, so a missing one here is a broken precondition, not an expected path: fail rather
+  //     than create a contract with an empty communicationId (which keys on nothing).
+  let contractId = state.contractId;
+  if (!contractId) {
+    if (!state.reservedMsisdn) {
+      throw new Error("onboarding-submit: contract step reached with no reserved MSISDN");
+    }
+    onStep("createContract");
+    const contract = await api.createContract({
+      tenantId: tenant,
+      customerId,
+      communicationId: state.reservedMsisdn,
+      paymentContext: "PREPAID",
+    });
+    contractId = contract.contractId;
+    patch({ contractId });
   }
 
   // 4. Fulfilment resource for the chosen SIM form. Physical → a delivery address (TMF673);

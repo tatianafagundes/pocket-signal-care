@@ -656,6 +656,7 @@
         "authorize": "Deine Zahlung wird autorisiert…",
         "createParty": "Dein Profil wird erstellt…",
         "createCustomer": "Dein Konto wird eingerichtet…",
+        "createContract": "Dein Vertrag wird eingerichtet…",
         "createAddress": "Deine Lieferadresse wird gespeichert…",
         "requestEsim": "Deine eSIM wird vorbereitet…",
         "createCart": "Deine Bestellung wird vorbereitet…",
