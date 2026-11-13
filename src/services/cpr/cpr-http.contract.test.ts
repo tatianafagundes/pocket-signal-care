@@ -162,6 +162,31 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
     if (res.ok) expect(res.data).toEqual({ contractId: "contract-xyz" });
   });
 
+  it("resolves X-Tenant-ID per brand: dreigo → its own DXP tenant (not a constant)", async () => {
+    vi.stubEnv("VITE_CPR_TENANT_DREIGO", "TEN_FAKE_DREIGO");
+    const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { id: "p" })]);
+    await createCprHttp(fetchImpl).createParty({
+      tenantId: "dreigo",
+      givenName: "A",
+      familyName: "B",
+      email: "a@b.io",
+    });
+    // Proves resolveDxpTenant is per-brand — a constant header would make drei's test pass too.
+    expect(calls[0]!.headers["X-Tenant-ID"]).toBe("TEN_FAKE_DREIGO");
+  });
+
+  it("falls back to the TEN_FAKE placeholder when the brand's tenant env is unset", async () => {
+    vi.stubEnv("VITE_CPR_TENANT_DREIGO", ""); // unset → placeholder
+    const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { id: "p" })]);
+    await createCprHttp(fetchImpl).createParty({
+      tenantId: "dreigo",
+      givenName: "A",
+      familyName: "B",
+      email: "a@b.io",
+    });
+    expect(calls[0]!.headers["X-Tenant-ID"]).toBe("TEN_FAKE");
+  });
+
   it("getCustomerAndParty: GET /customerview/{id}, maps to { customer, party }", async () => {
     const view = {
       id: "cust-xyz",
@@ -278,6 +303,27 @@ describe("cpr-http contract — error mapping table (never throws)", () => {
       expect(res.error.code).toBe("cpr.http.badResponse");
       expect(res.error.category).toBe("unknown");
     }
+  });
+
+  it("non-JSON error body (.json() throws) → mapped by status alone (5xx → unavailable)", async () => {
+    // Exercises request()'s inner try/catch that keeps an empty envelope when the error body
+    // isn't JSON; mapHttpError then falls back to the HTTP status.
+    const badBody = {
+      ok: false,
+      status: 502,
+      json: async () => {
+        throw new Error("not json");
+      },
+    } as unknown as Response;
+    const { fetchImpl } = recordingFetch([badBody]);
+    const res = await createCprHttp(fetchImpl).createParty({
+      tenantId: "drei",
+      givenName: "A",
+      familyName: "B",
+      email: "a@b.io",
+    });
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.category).toBe("unavailable");
   });
 
   it("a thrown fetch (network error) → unavailable, never a crash", async () => {
