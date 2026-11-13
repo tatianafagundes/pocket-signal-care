@@ -209,6 +209,52 @@
         "seePlan": "Mein Tarif ansehen"
       }
     },
+    "autoTopUp": {
+      "title": "Automatische Aufladung",
+      "off": {
+        "title": "Automatische Aufladung ist aus",
+        "body": "Lade jedes Mal selbst auf, oder lass die App automatisch aufladen, wenn dein Guthaben zur Neige geht."
+      },
+      "howTitle": "So würde es funktionieren",
+      "row": {
+        "whenCaption": "Lädt auf, wenn",
+        "whenValue": "Guthaben unter {{amount}} fällt",
+        "amountCaption": "Betrag",
+        "amountValue": "{{amount}} pro Aufladung",
+        "payCaption": "Zahlt mit"
+      },
+      "method": {
+        "label": "Mastercard •••• 7310"
+      },
+      "notYet": {
+        "title": "Es wird noch nichts abgebucht.",
+        "body": "Du prüfst die erste Aufladung und gibst deine Zustimmung auf dem nächsten Bildschirm."
+      },
+      "setUp": "Automatische Aufladung einrichten",
+      "review": {
+        "firstTopUp": "Erste Aufladung",
+        "firstNow": "{{amount}} · heute",
+        "firstNone": "Nicht jetzt",
+        "then": "Danach",
+        "thenValue": "{{amount}}, wenn unter {{threshold}}",
+        "paysWith": "Zahlt mit",
+        "fee": "Gebühr",
+        "feeNone": "Keine",
+        "firstNowHint": "Dein Guthaben beträgt {{balance}}, unter {{threshold}}, daher erfolgt die erste Aufladung, sobald du dies einschaltest.",
+        "consent": "Ich autorisiere, {{method}} jedes Mal mit {{amount}} zu belasten, wenn mein Guthaben unter {{threshold}} fällt. Ich kann dies jederzeit unter Konto › Automatische Aufladung ausschalten.",
+        "notify": "Wir informieren dich per Benachrichtigung und SMS bei jeder Aufladung und wenn eine fehlschlägt.",
+        "turnOn": "Automatische Aufladung einschalten",
+        "turningOn": "Wird eingeschaltet…"
+      },
+      "result": {
+        "title": "Automatische Aufladung ist an",
+        "bodyCharged": "Wir haben jetzt {{amount}} aufgeladen und machen das automatisch, wenn dein Guthaben zur Neige geht.",
+        "bodyArmed": "Wir laden automatisch auf, wenn dein Guthaben unter {{threshold}} fällt.",
+        "rowReference": "Referenz",
+        "rowNewBalance": "Neues Guthaben",
+        "backHome": "Zurück zur Startseite"
+      }
+    },
     "addOns": {
       "title": "Zusatzpakete",
       "subtitle": "Erweitere deinen Tarif mit mehr Daten, Roaming oder Streaming.",

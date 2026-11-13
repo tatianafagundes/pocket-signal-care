@@ -209,6 +209,52 @@
         "seePlan": "See my plan"
       }
     },
+    "autoTopUp": {
+      "title": "Auto top-up",
+      "off": {
+        "title": "Auto top-up is off",
+        "body": "Top up by hand each time, or let the app top up for you when your balance runs low."
+      },
+      "howTitle": "How it would work",
+      "row": {
+        "whenCaption": "Tops up when",
+        "whenValue": "Balance falls below {{amount}}",
+        "amountCaption": "Amount",
+        "amountValue": "{{amount}} each time",
+        "payCaption": "Pays with"
+      },
+      "method": {
+        "label": "Mastercard •••• 7310"
+      },
+      "notYet": {
+        "title": "Nothing is charged yet.",
+        "body": "You review the first top-up and give your consent on the next screen."
+      },
+      "setUp": "Set up auto top-up",
+      "review": {
+        "firstTopUp": "First top-up",
+        "firstNow": "{{amount}} · today",
+        "firstNone": "Not now",
+        "then": "Then",
+        "thenValue": "{{amount}} when below {{threshold}}",
+        "paysWith": "Pays with",
+        "fee": "Fee",
+        "feeNone": "None",
+        "firstNowHint": "Your balance is {{balance}}, below {{threshold}}, so the first top-up happens as soon as you turn this on.",
+        "consent": "I authorize charging {{method}} {{amount}} each time my balance falls below {{threshold}}. I can turn this off at any time in Account › Auto top-up.",
+        "notify": "We tell you by notification and SMS each time a top-up happens and if one fails.",
+        "turnOn": "Turn on auto top-up",
+        "turningOn": "Turning on…"
+      },
+      "result": {
+        "title": "Auto top-up is on",
+        "bodyCharged": "We topped up {{amount}} now, and we'll do it automatically when your balance runs low.",
+        "bodyArmed": "We'll top up automatically when your balance falls below {{threshold}}.",
+        "rowReference": "Reference",
+        "rowNewBalance": "New balance",
+        "backHome": "Back to Home"
+      }
+    },
     "addOns": {
       "title": "Add-ons",
       "subtitle": "Boost your plan with extra data, roaming or streaming.",
