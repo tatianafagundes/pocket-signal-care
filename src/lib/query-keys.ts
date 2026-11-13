@@ -39,4 +39,6 @@ export const queryKeys = {
   msisdns: (tenant: TenantId) => ["msisdns", tenant] as const,
   /** A reserved eSIM profile by id (onboarding success). Id may be null while it resolves. */
   esimProfile: (esimProfileId: string | null) => ["esim-profile", esimProfileId] as const,
+  /** A customer's auto top-up config (the /auto-top-up screen). */
+  autoTopUp: (tenant: TenantId, customerId: string) => ["auto-top-up", tenant, customerId] as const,
 } as const;

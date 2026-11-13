@@ -8,6 +8,7 @@ import * as resource from "@/services/resource.functions";
 import * as auth from "@/services/auth.functions";
 import * as payment from "@/services/payment.functions";
 import * as logistics from "@/services/logistics.functions";
+import * as preferences from "@/services/preferences.functions";
 
 /*
  * api — the single port the UI uses. (Spec Fase 0.3 / 3.4)
@@ -109,4 +110,9 @@ export const api = {
   // Logistics seam (TMF673 Address Management, mock) — delivery address for a physical SIM.
   createAddress: (input: unknown) => unwrap(logistics.createAddress(input)),
   getAddress: (addressId: string) => unwrap(logistics.getAddress(addressId)),
+
+  // Preferences seam (auto top-up opt-in state, mock) — DXP auto-recharge config per customer.
+  getAutoTopUp: (customerId: string) => unwrap(preferences.getAutoTopUp(customerId)),
+  setAutoTopUp: (input: unknown) => unwrap(preferences.setAutoTopUp(input)),
+  disableAutoTopUp: (customerId: string) => unwrap(preferences.disableAutoTopUp(customerId)),
 };

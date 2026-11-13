@@ -78,6 +78,41 @@ export interface VoucherRedemption {
 }
 
 /**
+ * A saved payment method (demo surrogate). Auto top-up charges an unattended, stored instrument —
+ * unlike the manual top-up's inline one-off card. There is no real instrument vault here: this is
+ * the already-tokenized demo card, "saved" so the recurring charge has something to reference. The
+ * `methodToken` is the SAME opaque mock token the manual flow uses; the PAN is never stored.
+ */
+export interface SavedPaymentMethod {
+  /** Opaque (mock) payment-method token — never a PAN. Flows into runTopUp as the charge method. */
+  methodToken: string;
+  /** Display label, e.g. "Mastercard •••• 7310". */
+  methodLabel: string;
+}
+
+/**
+ * Auto top-up configuration (DXP auto-recharge opt-in state). When enabled, a top-up of
+ * `amountMinor` is charged to the saved method when the balance falls below `thresholdMinor`.
+ *
+ * HONESTY NOTES (see the auto-top-up debt doc): the real CBEV trigger is benefit/product EXPIRY,
+ * not a balance threshold (the threshold trigger is a documented capability whose integration isn't
+ * done) — the threshold here follows the Figma prototype. There is no scheduler in this mock, so
+ * the recurring charge is fired by an explicit demo control, not a clock. `consentAt` records the
+ * standing authorization (a minimal stand-in for the DXP Payment Agreement; not a TMF651 record).
+ */
+export interface AutoTopUpConfig {
+  enabled: boolean;
+  /** Charge when the balance falls below this (minor units, EUR). */
+  thresholdMinor: number;
+  /** How much to top up each time (minor units, EUR). */
+  amountMinor: number;
+  /** The saved method the recurring charge uses. */
+  method: SavedPaymentMethod;
+  /** ISO timestamp the standing authorization was given (set on enable, cleared on disable). */
+  consentAt?: string;
+}
+
+/**
  * A financial activity entry — the "recent activity / last top-ups" feed on the money axis. This is
  * a MONETARY event (a top-up, a refill charged from balance, an adjustment), distinct from a Party
  * Interaction (TMF683, the relationship/journey timeline on CPR). In real DMP Evolved this feed is a

@@ -9,7 +9,7 @@
 
 export type SeamDriver = "mock" | "http";
 export type SeamName =
-  "cpr" | "ecm" | "eoc" | "ecev" | "resource" | "auth" | "payment" | "logistics";
+  "cpr" | "ecm" | "eoc" | "ecev" | "resource" | "auth" | "payment" | "logistics" | "preferences";
 
 const ENV_KEY: Record<SeamName, string> = {
   cpr: "VITE_CPR_DRIVER",
@@ -20,6 +20,7 @@ const ENV_KEY: Record<SeamName, string> = {
   auth: "VITE_AUTH_DRIVER",
   payment: "VITE_PAYMENT_DRIVER",
   logistics: "VITE_LOGISTICS_DRIVER",
+  preferences: "VITE_PREFERENCES_DRIVER",
 };
 
 /** The driver for a seam. "mock" unless its env flag is explicitly "http". */
@@ -93,6 +94,7 @@ export function assertDriverConfig(): void {
     "auth",
     "payment",
     "logistics",
+    "preferences",
   ];
 
   for (const seam of seams) {
