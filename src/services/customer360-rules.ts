@@ -257,6 +257,38 @@ export function balanceState(c360: Customer360, now: Date = new Date()): Balance
   return "ok";
 }
 
+/**
+ * Days a top-up adds to the monetary balance's validity (CBEV FC34: a refill extends validity and
+ * recovers an expired balance). The SINGLE source of this rule — the charging mock credits the real
+ * balance with it, and the top-up screen previews the new balance with it, so the preview and the
+ * post-top-up balance always agree. 30 is a typical prepaid cycle; the real value is the recharge
+ * PO config (Fase 8). Pure.
+ */
+export const TOPUP_VALIDITY_EXTENSION_DAYS = 30;
+
+/**
+ * Preview the balance a top-up would produce, WITHOUT performing it — a PURE rule, no I/O. The
+ * top-up amount screen shows "New balance … · valid until …" from this; because it uses the exact
+ * same amount + validity-extension rule the charging seam applies on credit, the preview is honest
+ * (what you see is what you'll get). Validity extends from the later of now or the current
+ * validUntil (so a valid balance is pushed out, an expired/absent one is recovered from now),
+ * mirroring the mock's extendValidity. `now` is injectable for deterministic tests.
+ */
+export function projectedBalanceAfterTopUp(
+  c360: Customer360,
+  amountMinor: number,
+  now: Date = new Date(),
+): Balance {
+  const currentAmount = c360.balance?.amountMinor ?? 0;
+  const currentUntil = parseIso(c360.balance?.validUntil);
+  const base = currentUntil !== null ? Math.max(now.getTime(), currentUntil) : now.getTime();
+  return {
+    amountMinor: currentAmount + amountMinor,
+    currency: "EUR",
+    validUntil: new Date(base + TOPUP_VALIDITY_EXTENSION_DAYS * DAY_MS).toISOString(),
+  };
+}
+
 /** Add-ons on the installed base (catalogue-enriched), in installed-base order. Pure. */
 export function activeAddOns(c360: Customer360): EnrichedProduct[] {
   return c360.installedBase.filter((p) => p.kind === "add-on");

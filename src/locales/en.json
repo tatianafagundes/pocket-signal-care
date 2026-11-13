@@ -132,7 +132,23 @@
     },
     "topUp": {
       "title": "Top up",
-      "subtitle": "Soon you can top up in just a few taps."
+      "subtitle": "Add credit to your prepaid balance.",
+      "loading": "Loading your balance…",
+      "context": {
+        "balance": "Balance {{amount}} · valid until {{date}}",
+        "goesTo": "Top-up goes to {{msisdn}}"
+      },
+      "howMuch": "How much?",
+      "optionValidUntil": "Valid until {{date}}",
+      "method": {
+        "label": "Mastercard •••• 7310",
+        "expires": "Expires 03/29"
+      },
+      "summary": {
+        "newBalance": "New balance {{amount}}",
+        "validUntil": "Valid until {{date}}"
+      },
+      "pay": "Pay {{amount}}"
     },
     "addOns": {
       "title": "Add-ons",

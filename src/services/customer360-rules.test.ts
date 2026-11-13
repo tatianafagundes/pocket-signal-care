@@ -5,6 +5,8 @@ import {
   activityFeed,
   ACTIVITY_FEED_MAX,
   balanceState,
+  projectedBalanceAfterTopUp,
+  TOPUP_VALIDITY_EXTENSION_DAYS,
   bucketState,
   composeCustomer360,
   hasBalance,
@@ -567,6 +569,58 @@ describe("planRenewalVisible", () => {
         now,
       ),
     ).toBe(false);
+  });
+});
+
+describe("projectedBalanceAfterTopUp", () => {
+  const now = new Date("2026-03-01T00:00:00Z");
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it("adds the amount to the current balance", () => {
+    const c = composeCustomer360({
+      customer,
+      party,
+      installedBase: [],
+      balance: { amountMinor: 1240, currency: "EUR", validUntil: "2026-03-20T00:00:00Z" },
+    });
+    expect(projectedBalanceAfterTopUp(c, 2000, now).amountMinor).toBe(3240);
+  });
+
+  it("extends validity from the current validUntil when still valid (pushed out)", () => {
+    const validUntil = "2026-03-20T00:00:00Z"; // after `now`
+    const c = composeCustomer360({
+      customer,
+      party,
+      installedBase: [],
+      balance: { amountMinor: 1240, currency: "EUR", validUntil },
+    });
+    const projected = projectedBalanceAfterTopUp(c, 2000, now);
+    const expected = new Date(
+      Date.parse(validUntil) + TOPUP_VALIDITY_EXTENSION_DAYS * DAY,
+    ).toISOString();
+    expect(projected.validUntil).toBe(expected);
+  });
+
+  it("recovers from now when the balance is expired (validUntil in the past)", () => {
+    const c = composeCustomer360({
+      customer,
+      party,
+      installedBase: [],
+      balance: { amountMinor: 0, currency: "EUR", validUntil: "2026-02-01T00:00:00Z" }, // before `now`
+    });
+    const projected = projectedBalanceAfterTopUp(c, 500, now);
+    const expected = new Date(now.getTime() + TOPUP_VALIDITY_EXTENSION_DAYS * DAY).toISOString();
+    expect(projected.validUntil).toBe(expected);
+    expect(projected.amountMinor).toBe(500);
+  });
+
+  it("starts from now + extension when there is no balance record", () => {
+    const c = composeCustomer360({ customer, party, installedBase: [], balance: null });
+    const projected = projectedBalanceAfterTopUp(c, 1000, now);
+    expect(projected.amountMinor).toBe(1000);
+    expect(projected.validUntil).toBe(
+      new Date(now.getTime() + TOPUP_VALIDITY_EXTENSION_DAYS * DAY).toISOString(),
+    );
   });
 });
 

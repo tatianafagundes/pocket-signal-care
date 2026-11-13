@@ -1,6 +1,7 @@
 import { ok, err, seamError } from "@/services/seam-result";
 import type { ActivityItem, Balance, UsageBucket, UsageUnit } from "@/services/model";
 import type { TenantId } from "@/lib/tenant-rules";
+import { TOPUP_VALIDITY_EXTENSION_DAYS } from "@/services/customer360-rules";
 import { withMock } from "@/services/mock-support";
 import type { AllowanceGrant, ChargingDriver } from "@/services/charging/charging-driver";
 import {
@@ -46,14 +47,6 @@ function recordActivity(customerId: string, entry: Omit<ActivityItem, "activityI
 function isoFromNow(days: number): string {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }
-
-/**
- * Days a top-up adds to the monetary balance's validity. Grounded in CBEV "Monetary Balance
- * Validity Control" (FC34): a refill extends the balance's validity, and recovers it if already
- * expired. 30 is a typical prepaid cycle; the REAL extension is driven by the recharge PO config in
- * the catalogue, not a flat constant — this mock approximates it. (Fase 8: read from the PO.)
- */
-const TOPUP_VALIDITY_EXTENSION_DAYS = 30;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

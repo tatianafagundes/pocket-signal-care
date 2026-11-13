@@ -132,7 +132,23 @@
     },
     "topUp": {
       "title": "Aufladen",
-      "subtitle": "Bald lädst du dein Guthaben mit wenigen Tipps auf."
+      "subtitle": "Lade dein Prepaid-Guthaben auf.",
+      "loading": "Guthaben wird geladen…",
+      "context": {
+        "balance": "Guthaben {{amount}} · gültig bis {{date}}",
+        "goesTo": "Aufladung geht an {{msisdn}}"
+      },
+      "howMuch": "Wie viel?",
+      "optionValidUntil": "Gültig bis {{date}}",
+      "method": {
+        "label": "Mastercard •••• 7310",
+        "expires": "Gültig bis 03/29"
+      },
+      "summary": {
+        "newBalance": "Neues Guthaben {{amount}}",
+        "validUntil": "Gültig bis {{date}}"
+      },
+      "pay": "{{amount}} bezahlen"
     },
     "addOns": {
       "title": "Zusatzpakete",
