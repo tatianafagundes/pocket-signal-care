@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DemoStateSwitcher } from "@/components/demo/demo-state-switcher";
 import { RecentActivity } from "@/components/account/recent-activity";
 import { activityFeed } from "@/services/customer360-rules";
-import { api, SeamFailure } from "@/services/api";
+import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 
 export const Route = createFileRoute("/account")({
@@ -52,15 +52,7 @@ function Page() {
           </>
         ) : query.isError ? (
           <SeamErrorNotice
-            error={
-              query.error instanceof SeamFailure
-                ? query.error
-                : new SeamFailure({
-                    code: "cpr.getCustomer360",
-                    category: "unavailable",
-                    retryable: true,
-                  })
-            }
+            error={asSeamFailure(query.error, "cpr.getCustomer360")}
             onRetry={() => void query.refetch()}
           />
         ) : (

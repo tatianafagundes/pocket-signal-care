@@ -8,7 +8,7 @@ import { PageShell } from "@/components/page-shell";
 import { AddOnCard, type BuyStatus } from "@/components/add-ons/add-on-card";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, SeamFailure } from "@/services/api";
+import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import { useCurrentCustomerId } from "@/lib/current-customer";
 import { purchaseAddOn } from "@/lib/addon-purchase";
@@ -103,15 +103,7 @@ function Page() {
         </div>
       ) : query.isError ? (
         <SeamErrorNotice
-          error={
-            query.error instanceof SeamFailure
-              ? query.error
-              : new SeamFailure({
-                  code: "catalog.listAddOns",
-                  category: "unavailable",
-                  retryable: true,
-                })
-          }
+          error={asSeamFailure(query.error, "catalog.listAddOns")}
           onRetry={() => void query.refetch()}
         />
       ) : query.data.length === 0 ? (

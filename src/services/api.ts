@@ -44,6 +44,19 @@ async function unwrap<T>(r: Promise<SeamResult<T>>): Promise<T> {
   return result.data;
 }
 
+/**
+ * Normalise a caught/query error into a SeamFailure for the UI. An error that is already a
+ * SeamFailure (the common case — `api.*` throws them) passes through unchanged; anything else (a
+ * non-seam throw surfaced by react-query) is wrapped as a retryable `unavailable` failure tagged
+ * with the given seam `code`. Replaces the `error instanceof SeamFailure ? error : new SeamFailure(…)`
+ * block that was copy-pasted into every query's error branch.
+ */
+export function asSeamFailure(error: unknown, code: string): SeamFailure {
+  return error instanceof SeamFailure
+    ? error
+    : new SeamFailure({ code, category: "unavailable", retryable: true });
+}
+
 export const api = {
   // CPR seam (real-able)
   resolveTenant: (tenantId: string) => unwrap(cpr.resolveTenant(tenantId)),

@@ -12,7 +12,7 @@ import { WizardNav } from "@/components/onboarding/wizard-nav";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, SeamFailure } from "@/services/api";
+import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { SimChoice } from "@/services/model";
 
@@ -108,15 +108,7 @@ function SimPage() {
         </div>
       ) : offersQuery.isError ? (
         <SeamErrorNotice
-          error={
-            offersQuery.error instanceof SeamFailure
-              ? offersQuery.error
-              : new SeamFailure({
-                  code: "catalog.listOffers",
-                  category: "unavailable",
-                  retryable: true,
-                })
-          }
+          error={asSeamFailure(offersQuery.error, "catalog.listOffers")}
           onRetry={() => void offersQuery.refetch()}
         />
       ) : (

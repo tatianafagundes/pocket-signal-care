@@ -13,7 +13,7 @@ import { WizardNav } from "@/components/onboarding/wizard-nav";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api, SeamFailure } from "@/services/api";
+import { api, asSeamFailure, SeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import { formatMsisdn } from "@/lib/format";
 
@@ -102,15 +102,7 @@ function NumberPage() {
         </div>
       ) : numbersQuery.isError ? (
         <SeamErrorNotice
-          error={
-            numbersQuery.error instanceof SeamFailure
-              ? numbersQuery.error
-              : new SeamFailure({
-                  code: "resource.listAvailableMsisdn",
-                  category: "unavailable",
-                  retryable: true,
-                })
-          }
+          error={asSeamFailure(numbersQuery.error, "resource.listAvailableMsisdn")}
           onRetry={() => void numbersQuery.refetch()}
         />
       ) : numbersQuery.data.length === 0 ? (

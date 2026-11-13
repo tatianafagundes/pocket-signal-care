@@ -13,7 +13,7 @@ import { AllowanceRow } from "@/components/my-plan/allowance-row";
 import { CopyNumberButton } from "@/components/line/copy-number-button";
 import { LineStatusBadge } from "@/components/line/line-status-badge";
 import { StatusDot } from "@/components/status/status-dot";
-import { api, SeamFailure } from "@/services/api";
+import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import { formatPrice } from "@/lib/format";
 import { formatRelativeDays, formatShortDate } from "@/lib/format-date";
@@ -77,15 +77,7 @@ function Page() {
         </>
       ) : query.isError ? (
         <SeamErrorNotice
-          error={
-            query.error instanceof SeamFailure
-              ? query.error
-              : new SeamFailure({
-                  code: "cpr.getCustomer360",
-                  category: "unavailable",
-                  retryable: true,
-                })
-          }
+          error={asSeamFailure(query.error, "cpr.getCustomer360")}
           onRetry={() => void query.refetch()}
         />
       ) : (

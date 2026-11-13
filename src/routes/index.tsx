@@ -16,7 +16,7 @@ import { SuspendedNotice } from "@/components/home/suspended-notice";
 import { AddDataCard } from "@/components/home/add-data-card";
 import { UsageSummaryCard } from "@/components/home/usage-summary-card";
 import { PlanSummaryCard } from "@/components/home/plan-summary-card";
-import { api, SeamFailure } from "@/services/api";
+import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import {
   balanceState,
@@ -104,15 +104,7 @@ function HomeDashboard() {
         <HomeSkeleton loadingLabel={t("pages.home.loading", "Loading your home…")} />
       ) : query.isError ? (
         <SeamErrorNotice
-          error={
-            query.error instanceof SeamFailure
-              ? query.error
-              : new SeamFailure({
-                  code: "cpr.getCustomer360",
-                  category: "unavailable",
-                  retryable: true,
-                })
-          }
+          error={asSeamFailure(query.error, "cpr.getCustomer360")}
           onRetry={() => void query.refetch()}
         />
       ) : (
