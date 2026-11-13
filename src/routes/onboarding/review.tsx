@@ -388,7 +388,14 @@ function ReviewPage() {
               })
             }
             onContinue={() => void confirm()}
-            continueLabel={t("onboarding.review.placeOrder", "Place order")}
+            // Activation runs a dozen sequential seams (~several seconds). Show the live step on the
+            // button so the wait reads as progress, not a frozen screen (the sr-only status already
+            // announces it to AT; this makes it visible too).
+            continueLabel={
+              busyStep
+                ? t(`onboarding.review.progress.${busyStep}`, "Activating…")
+                : t("onboarding.review.placeOrder", "Place order")
+            }
             continueDisabled={!complete}
             busy={busy}
           />
