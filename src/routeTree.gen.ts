@@ -15,6 +15,7 @@ import { Route as AddOnsRouteImport } from './routes/add-ons'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MyPlanRouteImport } from './routes/my-plan'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TopUpRouteImport } from './routes/top-up'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
@@ -56,6 +57,11 @@ const MyPlanRoute = MyPlanRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedeemRoute = RedeemRouteImport.update({
+  id: '/redeem',
+  path: '/redeem',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/my-plan': typeof MyPlanRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/redeem': typeof RedeemRoute
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/add-ons': typeof AddOnsRoute
   '/login': typeof LoginRoute
   '/my-plan': typeof MyPlanRoute
+  '/redeem': typeof RedeemRoute
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/my-plan': typeof MyPlanRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/redeem': typeof RedeemRoute
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
   '/onboarding/account': typeof OnboardingAccountRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/my-plan'
     | '/onboarding'
+    | '/redeem'
     | '/support'
     | '/top-up'
     | '/onboarding/account'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/add-ons'
     | '/login'
     | '/my-plan'
+    | '/redeem'
     | '/support'
     | '/top-up'
     | '/onboarding/account'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/my-plan'
     | '/onboarding'
+    | '/redeem'
     | '/support'
     | '/top-up'
     | '/onboarding/account'
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MyPlanRoute: typeof MyPlanRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
+  RedeemRoute: typeof RedeemRoute
   SupportRoute: typeof SupportRoute
   TopUpRoute: typeof TopUpRoute
 }
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redeem': {
+      id: '/redeem'
+      path: '/redeem'
+      fullPath: '/redeem'
+      preLoaderRoute: typeof RedeemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -420,6 +440,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MyPlanRoute: MyPlanRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
+  RedeemRoute: RedeemRoute,
   SupportRoute: SupportRoute,
   TopUpRoute: TopUpRoute,
 }

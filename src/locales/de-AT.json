@@ -179,6 +179,23 @@
         "getHelp": "Hilfe erhalten"
       }
     },
+    "redeem": {
+      "title": "Gutschein einlösen",
+      "loading": "Guthaben wird geladen…",
+      "context": {
+        "balance": "Guthaben {{amount}} · gültig bis {{date}}",
+        "goesTo": "Der Gutschein geht an {{msisdn}}"
+      },
+      "codeLabel": "Gutscheincode",
+      "hintValue": "Ein Gutschein fügt seinen Wert zu Ihrem Guthaben hinzu; ab €20 wird die Gültigkeit außerdem auf 30 Tage ab heute gesetzt.",
+      "hintCode": "Der Code hat 12 Ziffern. Sie finden ihn auf dem Gutschein oder in der zugehörigen E-Mail.",
+      "submit": "Zum Guthaben hinzufügen",
+      "redeeming": "Wird hinzugefügt…",
+      "success": {
+        "title": "Gutschein hinzugefügt",
+        "body": "Ihr neues Guthaben beträgt {{amount}}, gültig bis {{date}}."
+      }
+    },
     "addOns": {
       "title": "Zusatzpakete",
       "subtitle": "Erweitere deinen Tarif mit mehr Daten, Roaming oder Streaming.",

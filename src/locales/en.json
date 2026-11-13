@@ -179,6 +179,23 @@
         "getHelp": "Get help"
       }
     },
+    "redeem": {
+      "title": "Add a voucher",
+      "loading": "Loading your balance…",
+      "context": {
+        "balance": "Balance {{amount}} · valid until {{date}}",
+        "goesTo": "The voucher goes to {{msisdn}}"
+      },
+      "codeLabel": "Voucher code",
+      "hintValue": "A voucher adds its value to your balance; €20 or more also sets the validity to 30 days from today.",
+      "hintCode": "The code has 12 digits. Find it on the voucher or in the email it came with.",
+      "submit": "Add to balance",
+      "redeeming": "Adding to balance…",
+      "success": {
+        "title": "Voucher added",
+        "body": "Your new balance is {{amount}}, valid until {{date}}."
+      }
+    },
     "addOns": {
       "title": "Add-ons",
       "subtitle": "Boost your plan with extra data, roaming or streaming.",
