@@ -242,6 +242,10 @@ real map is a follow-up.
   fake. Real auth + BFF (token server-side) is a later spec (Phase D). Recorded as debt.
 - **D-customerview-shape:** `getCustomerAndParty` maps `/customerview/{id}`; if the shape is awkward,
   fall back to customer+party GETs. Resolve during implementation, document the choice.
+- **D-360-tenant-on-http:** `CprDriver.getCustomerAndParty(customerId)` carries no tenant and the
+  customerview body carries none (pinned by `X-Tenant-ID`). On http we stamp `tenantId` from the
+  active brand (`VITE_CPR_ACTIVE_BRAND`, default `drei`) — correct for a single-brand build. A true
+  multi-brand CPR read would thread the tenant through the driver signature. Debt.
 - **D-recharge-later:** payment + monetaryRecharge (and the authorize/capture vs one-POST-capture
   reconciliation) are OUT of scope here; separate spec. Contract created here is what recharge will
   reference.

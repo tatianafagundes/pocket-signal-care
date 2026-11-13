@@ -6,7 +6,8 @@ import type {
   CreateContractInput,
   CreateInteractionInput,
 } from "@/schemas/cpr";
-import type { TenantId } from "@/lib/tenant-rules";
+import { DEFAULT_TENANT, isTenantId, type TenantId } from "@/lib/tenant-rules";
+import type { CustomerStatus } from "@/services/model";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 
 /*
@@ -57,6 +58,17 @@ function resolveDxpTenant(brand: TenantId): string {
   const key = `VITE_CPR_TENANT_${brand.toUpperCase()}`;
   const value = import.meta.env[key] as string | undefined;
   return value && value !== "" ? value : "TEN_FAKE";
+}
+
+/**
+ * The brand this app build acts as, for reads whose interface carries no tenant
+ * (getCustomerAndParty). One app build = one brand, so VITE_CPR_ACTIVE_BRAND (validated) names it;
+ * default to DEFAULT_TENANT. A true multi-brand CPR read would thread the tenant through the
+ * driver signature — recorded as D-360-tenant-on-http.
+ */
+function activeBrand(): TenantId {
+  const raw = import.meta.env["VITE_CPR_ACTIVE_BRAND"] as string | undefined;
+  return isTenantId(raw) ? raw : DEFAULT_TENANT;
 }
 
 /** The DXP error envelope — every non-2xx CPR response carries this shape. */
@@ -184,11 +196,26 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
         (json) => fromTmfContractCreate(json),
       );
     },
-    async getCustomerAndParty(
-      _customerId: string,
-    ): Promise<SeamResult<{ customer: Customer; party: Party }>> {
-      // GET /customerManagement/v1/customerview/{id}. Implemented in Task 5 (shape captured first).
-      return notConfigured<{ customer: Customer; party: Party }>();
+    async getCustomerAndParty(customerId: string) {
+      // GET the composite customerview (customer + engaged party in one call). The prepaid shape
+      // was captured from the fake into response-shapes.md (Task 5.1); the mapper reads only what
+      // the domain needs.
+      //
+      // TENANT: the CprDriver.getCustomerAndParty(customerId) signature carries NO tenant, and the
+      // customerview body carries none either (it's pinned by X-Tenant-ID). So on http we resolve
+      // the header + stamp customer.tenantId from the configured single-brand context
+      // (VITE_CPR_ACTIVE_BRAND, default "drei"). This is correct for a single-brand deployment
+      // (one app build = one brand) and is the honest limit of this interface: a true multi-brand
+      // CPR read would need the tenant threaded through the signature — recorded as a debt
+      // (D-360-tenant-on-http). getCustomer360's cross-tenant check still holds: it compares this
+      // stamped tenant to expectedTenant.
+      const brand = activeBrand();
+      return request(
+        brand,
+        `/customerManagement/v1/customerview/${customerId}`,
+        { method: "GET" },
+        (json) => fromTmfCustomerView(json, brand),
+      );
     },
     async createInteraction(_input: CreateInteractionInput): Promise<SeamResult<PartyInteraction>> {
       // Real TMF683 POST /partyInteraction — out of scope for this spec (later spec).
@@ -267,4 +294,77 @@ function fromTmfContractCreate(json: unknown): { contractId: string } {
   const id = (json as { id?: string } | null)?.id;
   if (!id) throw new Error("CPR contract create: missing id in response");
   return { contractId: id };
+}
+
+/* ---- customerview types (only the fields the mapper reads) ---- */
+interface TmfStatus {
+  status?: string;
+}
+interface TmfContactMedium {
+  contactMediumType?: string;
+  contactMediumValue?: { value?: string; purpose?: string }[];
+}
+interface TmfPartyView {
+  id?: string;
+  partyNames?: { givenName?: string; familyName?: string }[];
+  contactMedia?: TmfContactMedium[];
+}
+interface TmfCustomerView {
+  id?: string;
+  statuses?: TmfStatus[];
+  engagedParty?: TmfPartyView;
+}
+
+/** Collapse the DXP customer `statuses[]` to the domain CustomerStatus. */
+function customerStatusFrom(statuses: TmfStatus[] | undefined): CustomerStatus {
+  const latest = statuses?.[statuses.length - 1]?.status;
+  if (latest === "CustomerActive") return "active";
+  if (latest === "CustomerSuspended") return "suspended";
+  // CustomerCreated and anything unknown are "pending" — a created-but-not-active prepaid line.
+  return "pending";
+}
+
+/** Read the first contactMedium of a given type (e.g. EmailContact) → its value. */
+function contactValue(media: TmfContactMedium[] | undefined, type: string): string | undefined {
+  const medium = media?.find((m) => m.contactMediumType === type);
+  return medium?.contactMediumValue?.[0]?.value;
+}
+
+/**
+ * DXP customerview -> domain { customer, party }. Throws (→ cpr.http.badResponse) if the ids or the
+ * email are missing, since the 360 cannot render a customer without them. `tenantId` is stamped
+ * from the active brand (the view carries none; see getCustomerAndParty).
+ */
+function fromTmfCustomerView(json: unknown, brand: TenantId): { customer: Customer; party: Party } {
+  const view = (json ?? {}) as TmfCustomerView;
+  const customerId = view.id;
+  const party = view.engagedParty;
+  const partyId = party?.id;
+  if (!customerId || !partyId) {
+    throw new Error("CPR customerview: missing customer id or engaged party id");
+  }
+  const name = party?.partyNames?.[0];
+  const email = contactValue(party?.contactMedia, "EmailContact");
+  if (!email) throw new Error("CPR customerview: missing email contact medium");
+  const msisdn = contactValue(party?.contactMedia, "PhoneContact");
+  return {
+    customer: {
+      customerId,
+      tenantId: brand,
+      partyId,
+      status: customerStatusFrom(view.statuses),
+      // The view has no explicit createdAt; the domain requires one. Use "now" as a safe default —
+      // the 360 shows the customer, not this timestamp, and the real GET customer carries the
+      // status validFor if a precise date is ever needed.
+      createdAt: new Date().toISOString(),
+    },
+    party: {
+      partyId,
+      tenantId: brand,
+      givenName: name?.givenName ?? "",
+      familyName: name?.familyName ?? "",
+      email,
+      ...(msisdn ? { msisdn } : {}),
+    },
+  };
 }

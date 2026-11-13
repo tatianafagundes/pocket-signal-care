@@ -49,6 +49,40 @@ GET /customerManagement/v1/customer/{id}:
   "characteristics": [{ "name": "...", "value": "..." }], "engagedPartyType": "Individual" }
 ```
 
+## GET /customerManagement/v1/customerview/{id}  — captured from the fake (Task 5.1)
+
+The CPI doc's customerview sample is large and postpaid-flavored; the collection has none. So this
+is the **prepaid shape captured from our fake** (`tools/cpr-fake`), confirmed 2026-11-13, which the
+`fromTmfCustomerView` mapper is written against. When the real cluster is reachable, re-capture and
+reconcile (the real one carries more fields; the mapper reads only what the domain needs).
+```json
+{
+  "id": "cust-fake-0002",
+  "statuses": [{ "status": "CustomerCreated", "reason": "created", "validFor": { "start": "…Z" } }],
+  "customerType": "Residential",
+  "engagedParty": {
+    "id": "party-fake-0001",
+    "type": "Individual",
+    "partyNames": [{ "givenName": "Ada", "familyName": "Lovelace" }],
+    "contactMedia": [
+      { "contactMediumType": "EmailContact", "contactMediumValue": [{ "value": "ada@x.io", "purpose": "EmailContact" }] },
+      { "contactMediumType": "PhoneContact", "contactMediumValue": [{ "value": "+4368…", "purpose": "Telephone" }] }
+    ],
+    "statuses": [{ "status": "PartyActive", "reason": "created", "validFor": { "start": "…Z" } }]
+  },
+  "contracts": [{ "id": "contract-fake-0003", "customerId": "cust-fake-0002", "communicationId": "+4368…", "paymentContext": "PREPAID", "statuses": [{ "status": "ContractActive", … }] }]
+}
+```
+→ `fromTmfCustomerView` maps to domain `{ customer, party }`:
+- `customer.customerId` = `id`; `customer.status` collapses `statuses[].status` (`CustomerActive`→`active`,
+  else `pending`); `customer.partyId` = `engagedParty.id`; `customer.tenantId` = the brand the call
+  was made for (customerview has no tenant — it's pinned by the X-Tenant-ID header).
+- `party.partyId` = `engagedParty.id`; `givenName`/`familyName` from `partyNames[0]`; `email` from
+  the `EmailContact` contactMedium; `msisdn?` from the `PhoneContact` (Telephone) if present.
+- `contracts[]` is NOT mapped here (the domain `{customer, party}` has no contract field yet;
+  it's the write-only mock state's read counterpart — surfacing the contract in the 360 is a
+  later concern).
+
 ## POST /customerManagement/v1/contract
 Request: `{ customerId, communicationId, paymentContext:"PREPAID", agreementDocumentNumber, statuses:[{status:"ContractActive",validFor:{start}}], externalId, … }`.
 **Response (create): the id** (collection reads `responseData.id`).
