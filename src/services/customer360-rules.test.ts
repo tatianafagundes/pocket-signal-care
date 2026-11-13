@@ -16,6 +16,7 @@ import {
   primaryDataBucket,
   primaryPlan,
   planRenewsAt,
+  planRenewalVisible,
   renewalShortfall,
 } from "@/services/customer360-rules";
 import type { Balance, Customer, Offer, Party, Product, UsageBucket } from "@/services/model";
@@ -511,6 +512,50 @@ describe("balanceState", () => {
         now,
       ),
     ).toBe("ok");
+  });
+});
+
+describe("planRenewalVisible", () => {
+  // A renewal date comes from the plan's data-cycle bucket end (or balance validity).
+  const withRenewal = (over: Partial<Parameters<typeof composeCustomer360>[0]> = {}) =>
+    composeCustomer360({
+      customer,
+      party,
+      installedBase: [plan],
+      balance,
+      usage: [
+        {
+          bucketId: "b",
+          type: "data",
+          unlimited: false,
+          offerId: "o-plan",
+          validFor: { end: "2026-12-08T00:00:00Z" },
+        },
+      ],
+      ...over,
+    });
+  const now = new Date("2026-11-13T00:00:00Z");
+
+  it("is true for an active line with a renewal date", () => {
+    expect(planRenewalVisible(withRenewal({}), now)).toBe(true);
+  });
+  it("is false when the line is suspended (it is not renewing — the finding)", () => {
+    expect(
+      planRenewalVisible(withRenewal({ customer: { ...customer, status: "suspended" } }), now),
+    ).toBe(false);
+  });
+  it("is false when the plan is still pending (a Pending badge shows instead)", () => {
+    expect(
+      planRenewalVisible(withRenewal({ installedBase: [{ ...plan, status: "pending" }] }), now),
+    ).toBe(false);
+  });
+  it("is false when there is no renewal date to show", () => {
+    expect(
+      planRenewalVisible(
+        composeCustomer360({ customer, party, installedBase: [plan], balance: null }),
+        now,
+      ),
+    ).toBe(false);
   });
 });
 

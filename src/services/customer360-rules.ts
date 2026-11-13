@@ -287,6 +287,18 @@ export function renewalWhen(c360: Customer360, now: Date = new Date()): RenewalW
   return { iso, days, relative: days >= 0 && days <= RELATIVE_RENEWAL_MAX_DAYS };
 }
 
+/**
+ * Whether the Home Plan card should show its "Renews … / automatically from your balance" lines.
+ * False when the line is suspended (it is not renewing — the suspended notice explains that), when
+ * the plan is still pending (it shows a Pending badge instead), or when there is no renewal date.
+ * A suspended, €0 line claiming it renews automatically was the Customer-360 review finding. Pure.
+ */
+export function planRenewalVisible(c360: Customer360, now: Date = new Date()): boolean {
+  if (lineStatus(c360) === "suspended") return false;
+  if (primaryPlan(c360)?.status === "pending") return false;
+  return renewalWhen(c360, now) !== null;
+}
+
 /** Home "Add data" prompt: shown only when the primary data allowance is low or used up. */
 export type HomeDataPrompt = "low" | "depleted" | null;
 

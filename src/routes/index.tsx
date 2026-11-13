@@ -23,6 +23,7 @@ import {
   homeNotice,
   lineSimType,
   lineStatus,
+  planRenewalVisible,
   primaryDataBucket,
   primaryPlan,
   renewalCovered,
@@ -135,7 +136,12 @@ function HomeDashboard() {
           {/* Data + Plan — the usage axis summary and the plan summary, side by side. */}
           <div className="grid grid-cols-2 gap-3">
             <UsageSummaryCard bucket={dataBucket} />
-            <PlanSummaryCard plan={primaryPlan(query.data)} when={when} locale={locale} />
+            <PlanSummaryCard
+              plan={primaryPlan(query.data)}
+              when={when}
+              showRenewal={planRenewalVisible(query.data)}
+              locale={locale}
+            />
           </div>
 
           {/* Add data — only when data is low or used up; the way out sits next to the problem. */}

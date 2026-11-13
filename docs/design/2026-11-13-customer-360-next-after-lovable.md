@@ -90,3 +90,26 @@ Account demo switcher drives each state. **Console was clean** (no runtime error
 `bun run dev`, then:
 `python3 ~/.kiro/skills/ui-capture/tools/capture.py --url http://localhost:8080 --roteiro docs/design/roteiro-captura.json --out docs/design/capturas/r2 --temas claro --larguras desktop --full --diff docs/design/capturas/r1`
 (`--diff` flags any state that moved vs r1 — pixel regression gate for the next UI change.)
+
+---
+
+## Finding #1 fixed — suspended line no longer claims auto-renewal (2026-11-13)
+
+The suspended Plan card dropped the misleading "Renews … · Automatically, from your balance" lines.
+- New pure rule `planRenewalVisible(c360)` in `customer360-rules.ts`: false when suspended, false
+  when the plan is still pending (a Pending badge shows instead), false when there is no renewal
+  date. 4 unit tests.
+- `PlanSummaryCard` takes a `showRenewal` prop (the rule's result) and gates both renewal lines on
+  it; Home passes `planRenewalVisible(data)`.
+- Proven with a `--diff` re-capture (round r2 vs r1): only `04-home-suspended` changed semantically
+  (the two lines removed); the healthy Home's ~600px diff was subpixel ring/text rasterization
+  noise, not a content change. 317 tests green, build/tsc/lint clean.
+
+Known test gap (accepted): the regression gate is the pure-rule unit tests plus the visual diff;
+there is no DOM test asserting the component consumes `showRenewal` (a full TanStack-router render
+fought jsdom). If the JSX guard were deleted, unit tests would stay green — the visual round would
+catch it. Revisit if a lightweight router-render helper is added for component tests.
+
+Still open from the capture review: the empty/expired-balance case (not suspended) still shows the
+renewal line though the balance won't cover it — deliberately left, since the shortfall `renewal`
+notice already covers that; reconsider if it reads as contradictory.

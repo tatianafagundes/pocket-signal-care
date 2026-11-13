@@ -21,10 +21,16 @@ export interface PlanSummaryCardProps {
   plan: EnrichedProduct | null;
   /** When the plan next renews; shown instead of a repeated "Active" badge. */
   when: RenewalWhen | null;
+  /**
+   * Whether to show the "Renews … / automatically from your balance" lines — the decision is the
+   * pure `planRenewalVisible` rule (false for a suspended line, so it doesn't falsely claim it
+   * renews). A still-pending plan shows a Pending badge regardless of this flag.
+   */
+  showRenewal: boolean;
   locale: Locale;
 }
 
-export function PlanSummaryCard({ plan, when, locale }: PlanSummaryCardProps) {
+export function PlanSummaryCard({ plan, when, showRenewal, locale }: PlanSummaryCardProps) {
   const { t } = useLocalizedTranslation();
 
   const head = (
@@ -52,7 +58,7 @@ export function PlanSummaryCard({ plan, when, locale }: PlanSummaryCardProps) {
               {formatPrice(plan.offer.priceMinor, plan.offer.currency, locale)}
             </p>
           ) : null}
-          {plan.status !== "pending" && when ? (
+          {showRenewal && when ? (
             <p className="mt-3 type-body-sm text-text-primary">
               {when.relative
                 ? t("pages.home.plan.renewsIn", "Renews {{when}}", {
@@ -70,7 +76,7 @@ export function PlanSummaryCard({ plan, when, locale }: PlanSummaryCardProps) {
                 {t("pages.myPlan.statusPending", "Pending")}
               </Badge>
             </div>
-          ) : plan.offer?.autoRenew && when ? (
+          ) : showRenewal && plan.offer?.autoRenew && when ? (
             <p className="mt-0.5 type-caption text-text-secondary">
               {t("pages.home.plan.autoRenew", "Automatically, from your balance")}
             </p>
