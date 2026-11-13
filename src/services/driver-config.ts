@@ -80,6 +80,56 @@ function warnConfig(detail: Record<string, unknown>): void {
   console.warn(JSON.stringify({ kind: "config-warning", ...detail }));
 }
 
+/** Hosts the client-token CPR http driver is allowed to reach (local fake only). */
+const LOCAL_CPR_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+
+/**
+ * R-F9 safety rail: refuse a non-localhost VITE_CPR_BASE_URL while the token is a client VITE var.
+ * Throws so a real token can never be pointed at a real host before the BFF exists. An unparseable
+ * URL is also refused (fail closed). Called only when CPR is on the http driver.
+ */
+function assertCprBaseUrlIsLocal(): void {
+  const raw = (import.meta.env["VITE_CPR_BASE_URL"] as string | undefined) ?? "";
+  let host: string;
+  try {
+    host = new URL(raw).hostname;
+  } catch {
+    throw new Error(
+      `VITE_CPR_BASE_URL is not a valid URL ("${raw}"). The CPR http driver only targets a local ` +
+        `fake until the BFF exists; set it to http://127.0.0.1:<port>.`,
+    );
+  }
+  if (!LOCAL_CPR_HOSTS.has(host)) {
+    throw new Error(
+      `VITE_CPR_BASE_URL host "${host}" is not local. VITE_CPR_TOKEN ships to the client, so the ` +
+        `CPR http driver must target ONLY a local fake (localhost/127.0.0.1) until auth moves ` +
+        `server-side (BFF). Point it at the fake, or keep VITE_CPR_DRIVER=mock.`,
+    );
+  }
+}
+
+/**
+ * D1 warning: getCustomerAndParty stamps the DXP tenant from VITE_CPR_ACTIVE_BRAND, and
+ * getCustomer360 rejects a 360 whose tenant ≠ the route brand. If the active brand is absent or
+ * invalid while CPR is http, every 360 may be rejected as notFound — a silent-at-boot,
+ * fails-at-runtime misconfig. Warn (don't throw: the default brand is a valid single-brand state).
+ */
+function warnCprActiveBrand(): void {
+  if (driverFor("cpr") !== "http") return;
+  const brand = import.meta.env["VITE_CPR_ACTIVE_BRAND"] as string | undefined;
+  const valid = brand === "drei" || brand === "dreigo";
+  if (!valid) {
+    warnConfig({
+      seam: "cpr",
+      message:
+        "VITE_CPR_ACTIVE_BRAND is unset/invalid while CPR is http — getCustomerAndParty will stamp " +
+        "the default brand, and getCustomer360 may reject every 360 as notFound if the build's " +
+        "brand differs. Set VITE_CPR_ACTIVE_BRAND to the build's brand.",
+      envKey: "VITE_CPR_ACTIVE_BRAND",
+    });
+  }
+}
+
 /**
  * Validate driver configuration at startup. Throws on an incoherent http config; warns (never
  * throws) when a prod build leaves a real-able seam on mock. Safe to call in any environment.
@@ -115,6 +165,14 @@ export function assertDriverConfig(): void {
       }
     }
 
+    // 1b. CPR safety rail (R-F9): the CPR token ships to the client (VITE_CPR_TOKEN). Until the
+    //     BFF terminates auth server-side, the http driver must target ONLY a local fake — refuse
+    //     a non-localhost base URL so nobody points the client-token driver at a real host. Hard
+    //     failure: a real token + a real host is the exact mistake this guards against.
+    if (seam === "cpr" && driver === "http") {
+      assertCprBaseUrlIsLocal();
+    }
+
     // 2. Prod-readiness: a real-able seam still on mock in a prod build → warn (not auth; that
     //    seam hard-fails in authDriverOrThrow).
     if (import.meta.env.PROD && driver === "mock" && PROD_SHOULD_BE_HTTP.includes(seam)) {
@@ -125,4 +183,8 @@ export function assertDriverConfig(): void {
       });
     }
   }
+
+  // 3. CPR active-brand sanity (D1) — warn if http but the brand that stamps the 360 tenant is
+  //    unset/invalid. After the loop so it runs once, regardless of seam order.
+  warnCprActiveBrand();
 }

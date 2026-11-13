@@ -62,11 +62,58 @@ describe("driver-config.assertDriverConfig (boot fail-fast)", () => {
     expect(() => assertDriverConfig()).toThrow(/VITE_CPR_BASE_URL/);
   });
 
-  it("passes when CPR is http AND its config is present", () => {
+  it("passes when CPR is http AND its config is present (local fake base URL)", () => {
     vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_BASE_URL", "https://cpr.example");
+    vi.stubEnv("VITE_CPR_BASE_URL", "http://127.0.0.1:8787");
     vi.stubEnv("VITE_CPR_TOKEN", "tok");
     expect(() => assertDriverConfig()).not.toThrow();
+  });
+
+  it("R-F9: THROWS when CPR is http with a NON-localhost base URL (client token safety rail)", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_BASE_URL", "https://cpr.real.example");
+    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    // The client token must never reach a real host until the BFF exists.
+    expect(() => assertDriverConfig()).toThrow(/not local/i);
+  });
+
+  it("R-F9: accepts localhost and ::1, rejects an unparseable base URL", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    vi.stubEnv("VITE_CPR_BASE_URL", "http://localhost:8787");
+    expect(() => assertDriverConfig()).not.toThrow();
+    vi.stubEnv("VITE_CPR_BASE_URL", "not-a-url");
+    expect(() => assertDriverConfig()).toThrow(/not a valid URL/i);
+  });
+
+  it("D1: WARNS when CPR is http but VITE_CPR_ACTIVE_BRAND is unset/invalid", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_BASE_URL", "http://127.0.0.1:8787");
+    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    vi.stubEnv("VITE_CPR_ACTIVE_BRAND", ""); // unset
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      assertDriverConfig();
+      const warned = warn.mock.calls.some((c) => String(c[0]).includes("VITE_CPR_ACTIVE_BRAND"));
+      expect(warned).toBe(true);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("D1: does NOT warn when the active brand is valid", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_BASE_URL", "http://127.0.0.1:8787");
+    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    vi.stubEnv("VITE_CPR_ACTIVE_BRAND", "dreigo");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      assertDriverConfig();
+      const warned = warn.mock.calls.some((c) => String(c[0]).includes("VITE_CPR_ACTIVE_BRAND"));
+      expect(warned).toBe(false);
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it("WARNS (does not throw) when a real-able seam is on mock in a PROD build", () => {
