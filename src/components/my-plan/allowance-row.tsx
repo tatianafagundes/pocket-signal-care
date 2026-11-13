@@ -1,0 +1,78 @@
+import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
+import { useTenant } from "@/hooks/use-tenant";
+import { Progress } from "@/components/ui/progress";
+import { bucketState } from "@/services/customer360-rules";
+import { consumedFraction, formatQuantity, unitOf } from "@/lib/usage-format";
+import type { BucketState, UsageBucket } from "@/services/model";
+
+const BAR_TONE: Record<BucketState, string> = {
+  ok: "bg-accent-brand",
+  low: "bg-warning",
+  depleted: "bg-danger",
+  expired: "bg-hairline",
+  pending: "bg-hairline",
+};
+
+/**
+ * One allowance on My plan: name, "x of y left" (the authoritative text a screen reader reads),
+ * a thin used-bar matching the Home ring, and a state word when attention is needed.
+ */
+export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
+  const { t } = useLocalizedTranslation();
+  const { locale } = useTenant();
+  const state = bucketState(bucket);
+  const unit = (() => {
+    switch (unitOf(bucket)) {
+      case "GB":
+        return t("usage.unit.gb", "GB");
+      case "min":
+        return t("usage.unit.min", "min");
+      case "sms":
+        return t("usage.unit.sms", "SMS");
+      default:
+        return "";
+    }
+  })();
+
+  const amount = bucket.unlimited
+    ? t("pages.myPlan.unlimited", "Ilimitado")
+    : bucket.remaining && bucket.total
+      ? t("pages.myPlan.left", "{{remaining}} de {{total}} restantes", {
+          remaining: `${formatQuantity(bucket.remaining.value, locale)} ${unit}`,
+          total: `${formatQuantity(bucket.total.value, locale)} ${unit}`,
+        })
+      : "";
+
+  const stateWord =
+    state === "low"
+      ? t("usage.state.low", "Acabando")
+      : state === "depleted"
+        ? t("usage.state.depleted", "Esgotado")
+        : state === "expired"
+          ? t("usage.state.expired", "Expirado")
+          : state === "pending"
+            ? t("usage.state.pending", "Ainda não começou")
+            : null;
+  const stateTone =
+    state === "depleted" ? "text-danger" : state === "low" ? "text-warning" : "text-text-secondary";
+
+  return (
+    <li className="rounded-card border border-hairline bg-surface p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="type-body text-text-primary">
+          {t(`pages.myPlan.type.${bucket.type}`, bucket.type)}
+        </span>
+        <span className="type-body-sm text-text-secondary tabular-nums">{amount}</span>
+      </div>
+      {!bucket.unlimited && bucket.total ? (
+        <Progress
+          value={Math.round(consumedFraction(bucket) * 100)}
+          aria-hidden="true"
+          className="mt-2 h-1.5 bg-hairline"
+          indicatorClassName={BAR_TONE[state]}
+        />
+      ) : null}
+      {stateWord ? <p className={`mt-1.5 type-caption ${stateTone}`}>{stateWord}</p> : null}
+    </li>
+  );
+}

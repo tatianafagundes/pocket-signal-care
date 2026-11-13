@@ -50,6 +50,22 @@ function seed(): void {
       createdAt: "2026-01-15T10:00:00Z",
     };
     store.set(customerId, { party, customer });
+    // A second demo line per tenant in the suspended state, so the 360 can show it.
+    const suspendedId = `${customerId}-suspended`;
+    store.set(suspendedId, {
+      party: {
+        ...party,
+        partyId: `${partyId}-suspended`,
+        email: `alex.suspended@${tenantId}.example`,
+        msisdn: tenantId === "drei" ? "+4368120000009" : "+4368120000008",
+      },
+      customer: {
+        ...customer,
+        customerId: suspendedId,
+        partyId: `${partyId}-suspended`,
+        status: "suspended",
+      },
+    });
     // The demo customer onboarded once — seed the matching Party Interaction so the 360 timeline
     // has the same history a freshly onboarded customer gets (a completed onboarding interaction).
     interactions.set(customerId, [

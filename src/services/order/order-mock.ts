@@ -39,26 +39,30 @@ function seed(): void {
   seeded = true;
   const tenants: TenantId[] = ["drei", "dreigo"];
   for (const tenantId of tenants) {
-    const customerId = `demo-${tenantId}`;
-    const plan = DEMO_PLAN_OFFER[tenantId];
-    installedBase.set(customerId, [
-      {
-        productId: `${customerId}-plan`,
-        offerId: plan.offerId,
-        name: plan.name,
-        kind: "plan",
-        status: "active",
-      },
-      {
-        // The SIM is a provisioning artifact (a SIM product order), NOT a catalogue offer — it
-        // has no entry in the catalog. Its offerId marks it as a PO ("-sim-po"), not a catalog id.
-        productId: `${customerId}-sim`,
-        offerId: `${tenantId}-sim-po`,
-        name: "SIM",
-        kind: "sim",
-        status: "active",
-      },
-    ]);
+    // demo-<tenant> is the healthy demo line; demo-<tenant>-suspended exercises the suspended state.
+    for (const customerId of [`demo-${tenantId}`, `demo-${tenantId}-suspended`]) {
+      const plan = DEMO_PLAN_OFFER[tenantId];
+      installedBase.set(customerId, [
+        {
+          productId: `${customerId}-plan`,
+          offerId: plan.offerId,
+          name: plan.name,
+          kind: "plan",
+          status: "active",
+        },
+        {
+          // The SIM is a provisioning artifact (a SIM product order), NOT a catalogue offer — it
+          // has no entry in the catalog. Its offerId marks it as a PO ("-sim-po"), not a catalog id.
+          productId: `${customerId}-sim`,
+          offerId: `${tenantId}-sim-po`,
+          name: "SIM",
+          kind: "sim",
+          status: "active",
+          // Drei's demo line is an eSIM, DreiGo's a physical SIM — so both labels are exercised.
+          simType: tenantId === "drei" ? "esim" : "physical",
+        },
+      ]);
+    }
   }
 }
 

@@ -6,10 +6,13 @@ import type { UsageBucket, UsageUnit } from "@/services/model";
  * ring and the card read the same figures.
  */
 
-/** Short numeric label for a quantity value: trims trailing zeros ("3.80" → "3.8", "10.0" → "10"). */
-export function formatQuantity(value: number): string {
-  // One decimal is enough for GB; voice/SMS are whole. Round to 1dp then drop a trailing ".0".
+/**
+ * Short numeric label for a quantity value, at most one decimal with trailing zeros dropped
+ * ("3.80" → "3.8", "10.0" → "10"). With a locale, the decimal mark follows it ("1,8" in de-AT).
+ */
+export function formatQuantity(value: number, locale?: string): string {
   const rounded = Math.round(value * 10) / 10;
+  if (locale) return new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(rounded);
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 

@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  activeAddOns,
+  balanceState,
   bucketState,
   composeCustomer360,
   hasBalance,
+  lineStatus,
   LOW_REMAINING_RATIO,
   primaryDataBucket,
   primaryPlan,
@@ -444,5 +447,43 @@ describe("planRenewsAt", () => {
   });
   it("should return null when nothing is known", () => {
     expect(planRenewsAt(composeCustomer360({ ...base, balance: null }))).toBeNull();
+  });
+});
+
+describe("lineStatus", () => {
+  const base = { party, installedBase: [plan], balance };
+  it("should be suspended when the customer is suspended", () => {
+    expect(lineStatus(composeCustomer360({ ...base, customer: { ...customer, status: "suspended" } }))).toBe("suspended");
+  });
+  it("should be pending when the plan is still pending", () => {
+    const c = composeCustomer360({ ...base, customer, installedBase: [{ ...plan, status: "pending" }] });
+    expect(lineStatus(c)).toBe("pending");
+  });
+  it("should be active when customer and plan are active", () => {
+    expect(lineStatus(composeCustomer360({ ...base, customer }))).toBe("active");
+  });
+});
+
+describe("balanceState", () => {
+  const now = new Date("2026-11-13T00:00:00Z");
+  const make = (b: Balance | null) => composeCustomer360({ customer, party, installedBase: [], balance: b });
+  it("should be none when there is no balance record", () => {
+    expect(balanceState(make(null), now)).toBe("none");
+  });
+  it("should be empty when the balance is zero", () => {
+    expect(balanceState(make({ amountMinor: 0, currency: "EUR" }), now)).toBe("empty");
+  });
+  it("should be expired when validUntil is in the past, even with money left", () => {
+    expect(balanceState(make({ amountMinor: 500, currency: "EUR", validUntil: "2026-11-01T00:00:00Z" }), now)).toBe("expired");
+  });
+  it("should be ok when there is money and it is still valid", () => {
+    expect(balanceState(make({ amountMinor: 500, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" }), now)).toBe("ok");
+  });
+});
+
+describe("activeAddOns", () => {
+  it("should list only add-ons from the installed base", () => {
+    const c = composeCustomer360({ customer, party, installedBase: [sim, plan, addon], balance });
+    expect(activeAddOns(c).map((p) => p.productId)).toEqual(["pr-ao"]);
   });
 });

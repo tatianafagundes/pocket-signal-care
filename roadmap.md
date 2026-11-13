@@ -1,9 +1,11 @@
 # Roadmap
 - [x] Onboarding review fixes (step guard, plan cards, step order, number format, success top-up)
-- [x] Onboarding: plan "good for" lines (wording awaiting user approval)
+- [x] Onboarding: plan "good for" lines (kept; wording can still be tweaked)
 - [ ] Onboarding: "keep my current number" option
 - [x] Onboarding: merge name with email/password; show/hide password
 - [ ] Full-app review (saved in .lovable/plan/full-app-ui-review-saved-for-later.md)
 - [x] Customer 360: number + renewal notice on Home; renewal date; all allowances on My plan
+- [x] Customer 360 step 2: line status (suspended/pending), balance states, low-data word, My plan reorganized with bars, add-ons and line
+- [ ] Customer 360: "see a demo" entry for visitors on Home
 - [ ] Top up, Add-ons, Account, Support pages (step 3 of next-steps plan)
 - [ ] Remember language after reload; native German review

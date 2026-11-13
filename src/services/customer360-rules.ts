@@ -205,3 +205,35 @@ export function planRenewsAt(c360: Customer360): string | null {
   )?.validFor?.end;
   return cycle ?? c360.balance?.validUntil ?? null;
 }
+
+/** Display status of the line: suspended wins, then pending (customer or plan), else active. */
+export type LineStatus = "active" | "pending" | "suspended";
+
+/** The line's status as one word for the UI. Pure. */
+export function lineStatus(c360: Customer360): LineStatus {
+  if (c360.customer.status === "suspended") return "suspended";
+  if (c360.customer.status === "pending") return "pending";
+  if (primaryPlan(c360)?.status === "pending") return "pending";
+  return "active";
+}
+
+/** Display state of the prepaid balance. */
+export type BalanceState = "none" | "expired" | "empty" | "ok";
+
+/**
+ * Balance state, first match wins: none (no record yet) → expired (validUntil in the past) →
+ * empty (zero or less) → ok. `now` is injectable for deterministic tests. Pure.
+ */
+export function balanceState(c360: Customer360, now: Date = new Date()): BalanceState {
+  const b = c360.balance;
+  if (b == null) return "none";
+  const until = parseIso(b.validUntil);
+  if (until !== null && until < now.getTime()) return "expired";
+  if (b.amountMinor <= 0) return "empty";
+  return "ok";
+}
+
+/** Add-ons on the installed base (catalogue-enriched), in installed-base order. Pure. */
+export function activeAddOns(c360: Customer360): EnrichedProduct[] {
+  return c360.installedBase.filter((p) => p.kind === "add-on");
+}

@@ -57,12 +57,14 @@
         "none": "Keine Daten übrig",
         "unlimited": "Unbegrenzt",
         "empty": "Noch kein Datenvolumen.",
-        "cardAria": "Datenvolumen — Mein Tarif öffnen"
+        "cardAria": "Datenvolumen — Mein Tarif öffnen",
+        "low": "Fast aufgebraucht: noch {{amount}}"
       },
       "plan": {
         "title": "Tarif",
         "empty": "Noch kein Tarif.",
-        "cardAria": "Ihr Tarif — Mein Tarif öffnen"
+        "cardAria": "Ihr Tarif — Mein Tarif öffnen",
+        "renews": "Verlängert sich am {{date}}"
       },
       "addOns": {
         "subtitle": "Mehr Daten, Roaming oder Anrufe — vom Guthaben bezahlt."
@@ -78,12 +80,22 @@
         "copied": "Nummer kopiert",
         "active": "Aktiv",
         "esim": "eSIM",
-        "physical": "SIM"
+        "physical": "SIM",
+        "suspended": "Gesperrt",
+        "pending": "Ausstehend",
+        "suspendedTitle": "Dein Anschluss ist gesperrt",
+        "suspendedBody": "Telefonie und Daten sind gerade pausiert. Unser Team hilft dir, ihn wieder freizuschalten.",
+        "suspendedCta": "Hilfe holen"
+      },
+      "balance": {
+        "emptyTitle": "Kein Guthaben",
+        "emptyBody": "Lade auf, um deinen Anschluss weiter zu nutzen.",
+        "expired": "Abgelaufen am {{date}}"
       }
     },
     "myPlan": {
       "title": "Mein Tarif",
-      "subtitle": "Dein Tarif, Guthaben und Produkte.",
+      "subtitle": "Was dein Tarif enthält und wann er sich verlängert.",
       "loadError": "Wir konnten deinen Tarif nicht laden.",
       "retry": "Erneut versuchen",
       "loading": "Dein Tarif wird geladen…",
@@ -109,7 +121,13 @@
         "sms": "SMS",
         "roaming": "EU-Roaming-Daten"
       },
-      "noAllowances": "Noch keine Inklusivleistungen."
+      "noAllowances": "Noch keine Inklusivleistungen.",
+      "pricePerCycle": "{{price}} alle {{days}} Tage",
+      "noPlan": "Du hast noch keinen aktiven Tarif.",
+      "addOnsLabel": "Aktive Extras",
+      "noAddOns": "Keine aktiven Extras.",
+      "seeAddOns": "Extras ansehen",
+      "lineLabel": "Dein Anschluss"
     },
     "topUp": {
       "title": "Aufladen",
@@ -495,7 +513,9 @@
     },
     "state": {
       "expired": "Abgelaufen",
-      "pending": "Noch nicht aktiv"
+      "pending": "Noch nicht aktiv",
+      "low": "Fast aufgebraucht",
+      "depleted": "Aufgebraucht"
     },
     "ring": {
       "aria": "{{consumed}} von {{total}} {{unit}} verbraucht"

@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Copy, PackagePlus } from "lucide-react";
-import { toast } from "sonner";
+import { PackagePlus } from "lucide-react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
@@ -11,18 +10,21 @@ import { PageShell } from "@/components/page-shell";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { BalanceCard } from "@/components/home/balance-card";
+import { LineHeader } from "@/components/home/line-header";
+import { RenewalNotice } from "@/components/home/renewal-notice";
 import { UsageSummaryCard } from "@/components/home/usage-summary-card";
 import { PlanSummaryCard } from "@/components/home/plan-summary-card";
 import { api, SeamFailure } from "@/services/api";
 import {
+  balanceState,
   lineSimType,
+  lineStatus,
   planRenewsAt,
   primaryDataBucket,
   primaryPlan,
   renewalShortfall,
 } from "@/services/customer360-rules";
-import { formatMsisdn, formatPrice } from "@/lib/format";
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -85,74 +87,32 @@ function HomeDashboard() {
           <LineHeader
             msisdn={query.data.party.msisdn}
             simType={lineSimType(query.data)}
-            active={query.data.customer.status === "active"}
+            status={lineStatus(query.data)}
           />
 
-          {/* Renewal notice — only when the balance does not cover the next plan renewal.
-              Warning tint, icon + words (never colour alone), one action with the exact amount. */}
           {renewalShortfall(query.data) > 0 ? (
-            <div className="flex items-start gap-3 rounded-control bg-warning-tint px-4 py-3">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden="true" />
-              <div className="min-w-0 flex-1">
-                <p className="type-body-sm-strong text-text-primary">
-                  {planRenewsAt(query.data)
-                    ? t("pages.home.renewal.titleDated", "Recarregue {{amount}} para renovar {{plan}} em {{date}}", {
-                        amount: formatPrice(renewalShortfall(query.data), "EUR", locale),
-                        plan: primaryPlan(query.data)?.offer?.name ?? "",
-                        date: formatDate(planRenewsAt(query.data) ?? "", locale),
-                      })
-                    : t("pages.home.renewal.title", "Recarregue {{amount}} para renovar {{plan}}", {
-                        amount: formatPrice(renewalShortfall(query.data), "EUR", locale),
-                        plan: primaryPlan(query.data)?.offer?.name ?? "",
-                      })}
-                </p>
-                <p className="mt-0.5 type-body-sm text-text-secondary">
-                  {t("pages.home.renewal.body", "Seu saldo ainda não cobre a próxima renovação.")}
-                </p>
-              </div>
-              <Link
-                to="/top-up"
-                className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
-              >
-                {t("pages.home.renewal.cta", "Recarregar {{amount}}", {
-                  amount: formatPrice(renewalShortfall(query.data), "EUR", locale),
-                })}
-              </Link>
-            </div>
+            <RenewalNotice
+              shortfallMinor={renewalShortfall(query.data)}
+              planName={primaryPlan(query.data)?.offer?.name ?? primaryPlan(query.data)?.name ?? ""}
+              renewsAt={planRenewsAt(query.data)}
+              locale={locale}
+            />
           ) : null}
 
-          {/* Balance card — the money axis. */}
-          <section className="rounded-card border border-hairline bg-surface p-4">
-            <h2 className="type-caption text-text-secondary">
-              {t("pages.myPlan.balanceLabel", "Balance")}
-            </h2>
-            {query.data.balance ? (
-              <>
-                <p className="mt-1 type-display-number text-text-primary">
-                  {formatPrice(query.data.balance.amountMinor, query.data.balance.currency, locale)}
-                </p>
-                {query.data.balance.validUntil ? (
-                  <p className="mt-1 type-body-sm text-text-secondary">
-                    {t("pages.home.validUntil", "Valid until {{date}}", {
-                      date: formatDate(query.data.balance.validUntil, locale),
-                    })}
-                  </p>
-                ) : null}
-              </>
-            ) : (
-              <p className="mt-1 type-body-sm text-text-secondary">
-                {t("pages.myPlan.balanceEmpty", "No balance yet — make your first top up.")}
-              </p>
-            )}
-            <Button asChild className="mt-4 min-h-11 w-full">
-              <Link to="/top-up">{t("nav.topUp", "Top up")}</Link>
-            </Button>
-          </section>
+          <BalanceCard
+            balance={query.data.balance}
+            state={balanceState(query.data)}
+            locale={locale}
+          />
 
           {/* Data + Plan — the usage axis summary and the plan summary, side by side. */}
           <div className="grid grid-cols-2 gap-3">
             <UsageSummaryCard bucket={primaryDataBucket(query.data)} />
-            <PlanSummaryCard plan={primaryPlan(query.data)} locale={locale} />
+            <PlanSummaryCard
+              plan={primaryPlan(query.data)}
+              renewsAt={planRenewsAt(query.data)}
+              locale={locale}
+            />
           </div>
 
           {/* Add-ons entry. */}
@@ -178,53 +138,6 @@ function HomeDashboard() {
         </div>
       )}
     </PageShell>
-  );
-}
-
-/** Line identity: formatted number (tap to copy) + status and SIM form, as words. */
-function LineHeader({
-  msisdn,
-  simType,
-  active,
-}: {
-  msisdn: string | undefined;
-  simType: "esim" | "physical" | null | undefined;
-  active: boolean;
-}) {
-  const { t } = useLocalizedTranslation();
-  if (!msisdn) return null;
-  const pretty = formatMsisdn(msisdn);
-  const status = [
-    active ? t("pages.home.line.active", "Ativa") : null,
-    simType === "esim"
-      ? t("pages.home.line.esim", "eSIM")
-      : simType === "physical"
-        ? t("pages.home.line.physical", "SIM")
-        : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <button
-        type="button"
-        className="focus-ring flex min-h-11 items-center gap-2 rounded-pill type-body-strong tabular-nums text-text-primary"
-        aria-label={`${t("pages.home.line.copy", "Copiar número")}: ${pretty}`}
-        onClick={() => {
-          void navigator.clipboard?.writeText(msisdn).then(() =>
-            toast.success(t("pages.home.line.copied", "Número copiado")),
-          );
-        }}
-      >
-        {pretty}
-        <Copy className="size-4 text-text-tertiary" aria-hidden="true" />
-      </button>
-      {status ? (
-        <span className="rounded-pill bg-success-tint px-3 py-1 type-caption text-success">
-          {status}
-        </span>
-      ) : null}
-    </div>
   );
 }
 
@@ -278,11 +191,4 @@ function OnboardingEntry() {
       </section>
     </PageShell>
   );
-}
-
-/** Localized date for the balance validity (e.g. "Nov 8, 2026"). */
-function formatDate(iso: string, locale: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
 }

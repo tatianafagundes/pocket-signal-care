@@ -33,6 +33,7 @@ function seed(): void {
   for (const tenantId of tenants) {
     const customerId = `demo-${tenantId}`;
     balances.set(customerId, 1500); // €15.00 starting balance
+    balances.set(`${customerId}-suspended`, 0); // the suspended demo line has run out of credit
     // Plan offer id the demo customer onboarded on — correlates the seeded buckets to the plan
     // (= DMP productOfferingId). drei → "drei-up"; dreigo → "dreigo-go-8".
     const planOfferId = tenantId === "drei" ? "drei-up" : "dreigo-go-8";

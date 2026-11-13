@@ -57,12 +57,14 @@
         "none": "No data left",
         "unlimited": "Unlimited",
         "empty": "No data allowance yet.",
-        "cardAria": "Data allowance — open My plan"
+        "cardAria": "Data allowance — open My plan",
+        "low": "Running low: {{amount}} left"
       },
       "plan": {
         "title": "Plan",
         "empty": "No plan yet.",
-        "cardAria": "Your plan — open My plan"
+        "cardAria": "Your plan — open My plan",
+        "renews": "Renews {{date}}"
       },
       "addOns": {
         "subtitle": "Extra data, roaming or calls — paid from your balance."
@@ -78,12 +80,22 @@
         "copied": "Number copied",
         "active": "Active",
         "esim": "eSIM",
-        "physical": "SIM"
+        "physical": "SIM",
+        "suspended": "Suspended",
+        "pending": "Pending",
+        "suspendedTitle": "Your line is suspended",
+        "suspendedBody": "Calls and data are paused for now. Our team can help you get it back.",
+        "suspendedCta": "Get help"
+      },
+      "balance": {
+        "emptyTitle": "No balance",
+        "emptyBody": "Top up to keep using your line.",
+        "expired": "Expired on {{date}}"
       }
     },
     "myPlan": {
       "title": "My plan",
-      "subtitle": "Your plan, balance and products.",
+      "subtitle": "What your plan includes and when it renews.",
       "loadError": "We couldn't load your plan.",
       "retry": "Try again",
       "loading": "Loading your plan…",
@@ -109,7 +121,13 @@
         "sms": "Texts",
         "roaming": "EU roaming data"
       },
-      "noAllowances": "No allowances on your line yet."
+      "noAllowances": "No allowances on your line yet.",
+      "pricePerCycle": "{{price}} every {{days}} days",
+      "noPlan": "You don't have an active plan yet.",
+      "addOnsLabel": "Active add-ons",
+      "noAddOns": "No active add-ons.",
+      "seeAddOns": "See add-ons",
+      "lineLabel": "Your line"
     },
     "topUp": {
       "title": "Top up",
@@ -495,7 +513,9 @@
     },
     "state": {
       "expired": "Expired",
-      "pending": "Not started yet"
+      "pending": "Not started yet",
+      "low": "Running low",
+      "depleted": "Used up"
     },
     "ring": {
       "aria": "{{consumed}} of {{total}} {{unit}} used"

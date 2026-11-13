@@ -17,6 +17,11 @@ if (!i18n.isInitialized) {
     supportedLngs: ["en", "de-AT"],
     interpolation: { escapeValue: false },
   });
+} else {
+  // Hot update: the i18next singleton survives module re-evaluation, so refresh its strings —
+  // otherwise the dev server keeps rendering old copy and the page hydrates with a mismatch.
+  i18n.addResourceBundle("en", "translation", en, true, true);
+  i18n.addResourceBundle("de-AT", "translation", deAT, true, true);
 }
 
 export { i18n };

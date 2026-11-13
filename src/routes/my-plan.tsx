@@ -4,22 +4,32 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { useCurrentCustomerId } from "@/lib/current-customer";
+import type { Locale } from "@/lib/tenant-rules";
+import type { Customer360 } from "@/services/model";
 import { PageShell } from "@/components/page-shell";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { AllowanceRow } from "@/components/my-plan/allowance-row";
+import { CopyNumberButton } from "@/components/line/copy-number-button";
+import { LineStatusBadge } from "@/components/line/line-status-badge";
 import { api, SeamFailure } from "@/services/api";
-import { formatMsisdn, formatPrice } from "@/lib/format";
-import { planRenewsAt } from "@/services/customer360-rules";
-import type { UsageBucket } from "@/services/model";
+import { formatPrice } from "@/lib/format";
+import { formatShortDate } from "@/lib/format-date";
+import {
+  activeAddOns,
+  lineSimType,
+  lineStatus,
+  planRenewsAt,
+  primaryPlan,
+} from "@/services/customer360-rules";
 
 export const Route = createFileRoute("/my-plan")({
   head: () => ({
     meta: [
       { title: "My plan — whitelabel" },
-      { name: "description", content: "Your plan, balance and products." },
+      { name: "description", content: "What your plan includes and when it renews." },
       { property: "og:title", content: "My plan — whitelabel" },
-      { property: "og:description", content: "Your plan, balance and products." },
+      { property: "og:description", content: "What your plan includes and when it renews." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -39,17 +49,18 @@ function Page() {
 
   return (
     <PageShell
-      title={t("pages.myPlan.title", "My plan")}
-      subtitle={t("pages.myPlan.subtitle", "Your plan, balance and products.")}
+      title={t("pages.myPlan.title", "Meu plano")}
+      subtitle={t("pages.myPlan.subtitle", "O que seu plano inclui e quando renova.")}
+      flush
     >
       {query.isPending ? (
         <>
           <p className="sr-only" role="status">
-            {t("pages.myPlan.loading", "Loading your plan…")}
+            {t("pages.myPlan.loading", "Carregando seu plano…")}
           </p>
           <div className="grid gap-3" aria-hidden="true">
-            <Skeleton className="h-16 w-full" />
             <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-40 w-full" />
           </div>
         </>
       ) : query.isError ? (
@@ -66,145 +77,133 @@ function Page() {
           onRetry={() => void query.refetch()}
         />
       ) : (
-        <div className="grid gap-5">
-          {/* Balance — null for a brand-new prepaid customer; show the top-up prompt, never €0.00. */}
-          <section>
-            <h2 className="type-caption text-text-secondary">
-              {t("pages.myPlan.balanceLabel", "Balance")}
-            </h2>
-            {query.data.balance ? (
-              <p className="type-title text-text-primary tabular-nums">
-                {formatPrice(query.data.balance.amountMinor, query.data.balance.currency, locale)}
-              </p>
-            ) : (
-              <p className="mt-1 type-body text-text-secondary">
-                {t("pages.myPlan.balanceEmpty", "No balance yet — make your first top up.")}
-              </p>
-            )}
-          </section>
-
-          {query.data.party.msisdn ? (
-            <section>
-              <h2 className="type-caption text-text-secondary">
-                {t("pages.myPlan.number", "Seu número")}
-              </h2>
-              <p className="type-body-strong text-text-primary tabular-nums">
-                {formatMsisdn(query.data.party.msisdn)}
-              </p>
-            </section>
-          ) : null}
-
-          {/* Allowances — every bucket (data, calls, texts, EU roaming), words not colour. */}
-          <section>
-            <h2 className="type-caption text-text-secondary">
-              {t("pages.myPlan.allowancesLabel", "Franquias")}
-            </h2>
-            {planRenewsAt(query.data) ? (
-              <p className="mt-0.5 type-body-sm text-text-secondary">
-                {t("pages.myPlan.renewsOn", "Renova em {{date}}", {
-                  date: new Date(planRenewsAt(query.data) ?? "").toLocaleDateString(locale, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  }),
-                })}
-              </p>
-            ) : null}
-            {query.data.usage.length === 0 ? (
-              <p className="mt-1 type-body text-text-secondary">
-                {t("pages.myPlan.noAllowances", "Ainda não há franquias na sua linha.")}
-              </p>
-            ) : (
-              <ul className="mt-2 grid gap-2">
-                {query.data.usage.map((b) => (
-                  <li
-                    key={b.bucketId}
-                    className="flex items-center justify-between gap-2 rounded-card border border-hairline bg-surface p-3"
-                  >
-                    <span className="type-body text-text-primary">
-                      {t(`pages.myPlan.type.${b.type}`, b.type)}
-                    </span>
-                    <span className="type-body-sm text-text-secondary tabular-nums">
-                      {allowanceText(b, (k, f, o) => t(k, f, o ?? {}))}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {query.data.usage.some((b) => b.type === "roaming") ? (
-              <p className="mt-2 type-caption text-text-secondary">
-                {t("pages.myPlan.fairUse", "Roaming na UE conforme política de uso justo.")}
-              </p>
-            ) : null}
-          </section>
-
-          {/* Installed base — the plan + SIM + any add-ons provisioned on the customer. */}
-          <section>
-            <h2 className="type-caption text-text-secondary">
-              {t("pages.myPlan.productsLabel", "Your products")}
-            </h2>
-            {query.data.installedBase.length === 0 ? (
-              <p className="mt-1 type-body text-text-secondary">
-                {t("pages.myPlan.noProducts", "No products on your plan yet.")}
-              </p>
-            ) : (
-              <ul className="mt-2 grid gap-2">
-                {query.data.installedBase.map((product) => (
-                  <li
-                    key={product.productId}
-                    className="flex items-center justify-between gap-2 rounded-card border border-hairline bg-surface p-3"
-                  >
-                    <span className="min-w-0">
-                      {/* Catalogue name (ECM join) when the product resolves to an offer; falls
-                          back to the product's own name for non-catalogue items (the SIM PO). */}
-                      <span className="type-body text-text-primary">
-                        {product.offer?.name ?? product.name}
-                      </span>
-                      {/* Price from the catalogue, when known — a plain fact, not a CTA. */}
-                      {product.offer ? (
-                        <span className="mt-0.5 block type-caption text-text-secondary">
-                          {formatPrice(product.offer.priceMinor, product.offer.currency, locale)}
-                        </span>
-                      ) : null}
-                      {/* SIM form (Fase 7.5): the proof the /sim choice had an effect. */}
-                      {product.kind === "sim" && product.simType ? (
-                        <span className="mt-0.5 block type-caption text-text-secondary">
-                          {product.simType === "esim"
-                            ? t("pages.myPlan.simType.esim", "eSIM")
-                            : t("pages.myPlan.simType.physical", "Physical SIM")}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="type-caption text-text-secondary">
-                      {product.status === "active"
-                        ? t("pages.myPlan.statusActive", "Active")
-                        : t("pages.myPlan.statusPending", "Pending")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <Button asChild variant="outline" className="min-h-11 w-full">
-            <Link to="/top-up">{t("nav.topUp", "Top up")}</Link>
-          </Button>
-        </div>
+        <PlanDetail data={query.data} locale={locale} />
       )}
     </PageShell>
   );
 }
 
-function allowanceText(
-  b: UsageBucket,
-  t: (key: string, fallback: string, opts?: Record<string, string>) => string,
-): string {
-  if (b.unlimited) return t("pages.myPlan.unlimited", "Ilimitado");
-  if (!b.remaining || !b.total) return "";
-  const fmt = (q: { value: number; unit: string }) =>
-    q.unit === "GB" ? `${q.value} GB` : q.unit === "min" ? `${q.value} min` : `${q.value} SMS`;
-  return t("pages.myPlan.left", "{{remaining}} de {{total}} restantes", {
-    remaining: fmt(b.remaining),
-    total: fmt(b.total),
-  });
+function PlanDetail({ data, locale }: { data: Customer360; locale: Locale }) {
+  const { t } = useLocalizedTranslation();
+  const plan = primaryPlan(data);
+  const renewsAt = planRenewsAt(data);
+  const addOns = activeAddOns(data);
+  const status = lineStatus(data);
+
+  return (
+    <div className="grid gap-6">
+      {/* Plan — leads the page: name, price per cycle, renewal, status (once). */}
+      <section className="rounded-card border border-hairline bg-surface p-4">
+        {plan ? (
+          <>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="type-heading text-text-primary">{plan.offer?.name ?? plan.name}</h2>
+              <LineStatusBadge status={status} />
+            </div>
+            {plan.offer ? (
+              <p className="mt-1 type-body text-text-secondary tabular-nums">
+                {plan.offer.validityDays
+                  ? t("pages.myPlan.pricePerCycle", "{{price}} a cada {{days}} dias", {
+                      price: formatPrice(plan.offer.priceMinor, plan.offer.currency, locale),
+                      days: String(plan.offer.validityDays),
+                    })
+                  : formatPrice(plan.offer.priceMinor, plan.offer.currency, locale)}
+              </p>
+            ) : null}
+            {renewsAt ? (
+              <p className="mt-1 type-body-sm text-text-secondary">
+                {t("pages.myPlan.renewsOn", "Renova em {{date}}", {
+                  date: formatShortDate(renewsAt, locale),
+                })}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="type-body text-text-secondary">
+            {t("pages.myPlan.noPlan", "Você ainda não tem um plano ativo.")}
+          </p>
+        )}
+      </section>
+
+      {/* Allowances — every bucket (data, calls, texts, EU roaming): text first, bar as support. */}
+      <section aria-labelledby="my-plan-allowances">
+        <h2 id="my-plan-allowances" className="type-caption text-text-secondary">
+          {t("pages.myPlan.allowancesLabel", "Franquias")}
+        </h2>
+        {data.usage.length === 0 ? (
+          <p className="mt-1 type-body text-text-secondary">
+            {t("pages.myPlan.noAllowances", "Ainda não há franquias na sua linha.")}
+          </p>
+        ) : (
+          <ul className="mt-2 grid gap-2">
+            {data.usage.map((b) => (
+              <AllowanceRow key={b.bucketId} bucket={b} />
+            ))}
+          </ul>
+        )}
+        {data.usage.some((b) => b.type === "roaming") ? (
+          <p className="mt-2 type-caption text-text-secondary">
+            {t("pages.myPlan.fairUse", "Roaming na UE conforme política de uso justo.")}
+          </p>
+        ) : null}
+      </section>
+
+      {/* Active add-ons — empty state invites a look at the catalogue. */}
+      <section aria-labelledby="my-plan-addons">
+        <h2 id="my-plan-addons" className="type-caption text-text-secondary">
+          {t("pages.myPlan.addOnsLabel", "Extras ativos")}
+        </h2>
+        {addOns.length === 0 ? (
+          <div className="mt-2 flex items-center justify-between gap-3 rounded-card border border-hairline bg-surface p-3">
+            <p className="type-body-sm text-text-secondary">
+              {t("pages.myPlan.noAddOns", "Nenhum extra ativo.")}
+            </p>
+            <Link
+              to="/add-ons"
+              className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
+            >
+              {t("pages.myPlan.seeAddOns", "Ver extras")}
+            </Link>
+          </div>
+        ) : (
+          <ul className="mt-2 grid gap-2">
+            {addOns.map((p) => (
+              <li
+                key={p.productId}
+                className="flex items-center justify-between gap-2 rounded-card border border-hairline bg-surface p-3"
+              >
+                <span className="type-body text-text-primary">{p.offer?.name ?? p.name}</span>
+                {p.status === "pending" ? (
+                  <span className="type-caption text-warning">
+                    {t("pages.myPlan.statusPending", "Pendente")}
+                  </span>
+                ) : p.offer ? (
+                  <span className="type-body-sm text-text-secondary tabular-nums">
+                    {formatPrice(p.offer.priceMinor, p.offer.currency, locale)}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Your line — number (tap to copy) and SIM form. */}
+      <section aria-labelledby="my-plan-line">
+        <h2 id="my-plan-line" className="type-caption text-text-secondary">
+          {t("pages.myPlan.lineLabel", "Sua linha")}
+        </h2>
+        <div className="mt-2 grid gap-1 rounded-card border border-hairline bg-surface px-3 py-1">
+          {data.party.msisdn ? <CopyNumberButton msisdn={data.party.msisdn} /> : null}
+          {lineSimType(data) ? (
+            <p className="pb-2 type-body-sm text-text-secondary">
+              {lineSimType(data) === "esim"
+                ? t("pages.myPlan.simType.esim", "eSIM")
+                : t("pages.myPlan.simType.physical", "SIM físico")}
+            </p>
+          ) : null}
+        </div>
+      </section>
+    </div>
+  );
 }

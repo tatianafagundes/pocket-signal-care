@@ -5,6 +5,7 @@ import type { UsageBucket } from "@/services/model";
 import { bucketState } from "@/services/customer360-rules";
 import { consumedFraction, consumedValue, formatQuantity, unitOf } from "@/lib/usage-format";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
+import { useTenant } from "@/hooks/use-tenant";
 import { DataRing } from "@/components/usage/data-ring";
 
 /*
@@ -22,6 +23,7 @@ export interface UsageSummaryCardProps {
 
 export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
   const { t } = useLocalizedTranslation();
+  const { locale } = useTenant();
 
   const head = (
     <div className="flex items-center gap-1">
@@ -76,8 +78,8 @@ export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
     } else {
       const remaining = bucket.remaining?.value ?? 0;
       const consumed = consumedValue(bucket) ?? 0;
-      const remainingLabel = `${formatQuantity(remaining)} ${unit}`;
-      const consumedLabel = `${formatQuantity(consumed)} ${unit}`;
+      const remainingLabel = `${formatQuantity(remaining, locale)} ${unit}`;
+      const consumedLabel = `${formatQuantity(consumed, locale)} ${unit}`;
 
       // State word + colour for the "left" line (never colour alone).
       const leftTone =
@@ -89,7 +91,9 @@ export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
       const leftText =
         state === "depleted"
           ? t("pages.home.data.none", "No data left")
-          : t("pages.home.data.left", "{{amount}} left", { amount: remainingLabel });
+          : state === "low"
+            ? t("pages.home.data.low", "Acabando: {{amount}} restantes", { amount: remainingLabel })
+            : t("pages.home.data.left", "{{amount}} left", { amount: remainingLabel });
 
       // Announce only when attention is needed; ok is silent.
       if (state === "low") {
@@ -109,8 +113,8 @@ export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
               centreValue={consumedLabel}
               centreCaption={t("pages.home.data.used", "used")}
               ariaLabel={t("usage.ring.aria", "{{consumed}} of {{total}} {{unit}} used", {
-                consumed: formatQuantity(consumed),
-                total: formatQuantity(bucket.total?.value ?? 0),
+                consumed: formatQuantity(consumed, locale),
+                total: formatQuantity(bucket.total?.value ?? 0, locale),
                 unit,
               })}
             />
