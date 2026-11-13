@@ -8,6 +8,7 @@ import type { Customer360 } from "@/services/model";
 import {
   partyInputSchema,
   customerInputSchema,
+  createContractSchema,
   customerIdSchema,
   tenantIdSchema,
   createInteractionSchema,
@@ -67,6 +68,19 @@ export function createCustomer(input: unknown) {
   }
   return runWrite({ tenantId: parsed.data.tenantId }, "cpr.createCustomer", () =>
     driver.createCustomer(parsed.data),
+  );
+}
+
+export function createContract(input: unknown) {
+  const parsed = createContractSchema.safeParse(input);
+  if (!parsed.success) {
+    return Promise.resolve<SeamResult<never>>({
+      ok: false,
+      error: seamError("cpr.contract.invalid", "validation", "fixInput"),
+    });
+  }
+  return runWrite({ tenantId: parsed.data.tenantId }, "cpr.createContract", () =>
+    driver.createContract(parsed.data),
   );
 }
 

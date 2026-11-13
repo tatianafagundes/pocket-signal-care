@@ -4,6 +4,7 @@ import {
   resolveTenant,
   createParty,
   createCustomer,
+  createContract,
   getCustomer360,
   createInteraction,
   listInteractions,
@@ -203,6 +204,51 @@ describe("cpr seam (mock driver)", () => {
       });
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error.category).toBe("validation");
+    });
+  });
+
+  describe("createContract (prepaid)", () => {
+    it("creates a contract for an existing customer, keyed by the MSISDN", async () => {
+      const party = await createParty({
+        tenantId: "drei",
+        givenName: "Casey",
+        familyName: "Contract",
+        email: "casey.contract@drei.example",
+      });
+      if (!party.ok) throw new Error("setup party failed");
+      const customer = await createCustomer({ tenantId: "drei", partyId: party.data.partyId });
+      if (!customer.ok) throw new Error("setup customer failed");
+
+      const contract = await createContract({
+        tenantId: "drei",
+        customerId: customer.data.customerId,
+        communicationId: "+4368150000021",
+        paymentContext: "PREPAID",
+      });
+      expect(contract.ok).toBe(true);
+      if (contract.ok) expect(contract.data.contractId).toMatch(/^contract-/);
+    });
+
+    it("rejects an empty communicationId as a validation error (never sends empty)", async () => {
+      const r = await createContract({
+        tenantId: "drei",
+        customerId: "demo-drei",
+        communicationId: "",
+        paymentContext: "PREPAID",
+      });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.category).toBe("validation");
+    });
+
+    it("rejects a contract for an unknown customer as notFound", async () => {
+      const r = await createContract({
+        tenantId: "drei",
+        customerId: "no-such-customer",
+        communicationId: "+4368150000022",
+        paymentContext: "PREPAID",
+      });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.code).toBe("cpr.customer.notFound");
     });
   });
 

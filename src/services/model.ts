@@ -34,6 +34,27 @@ export interface Customer {
   createdAt: string;
 }
 
+/**
+ * Normalized from the real contract's `statuses:[{status:"ContractActive"|"ContractInactive"}]`
+ * array — the http mapper collapses the array to this single field.
+ */
+export type ContractStatus = "active" | "inactive";
+
+/**
+ * A prepaid contract (DXP CPR). Keys the account on an MSISDN (`communicationId`) and links
+ * customer ↔ payment ↔ recharge. Reduced to what the app needs now; the full contract GET carries
+ * `agreementDocumentNumber`, `contractSpecification`, `characteristics[]`, `statuses[]`.
+ */
+export interface Contract {
+  contractId: string;
+  customerId: string;
+  /** The MSISDN the contract is keyed by (links contract ↔ payment ↔ recharge). E.164 in-domain. */
+  communicationId: string;
+  paymentContext: "PREPAID";
+  status: ContractStatus;
+  externalId?: string;
+}
+
 /** A provisioned product on the customer's installed base (TMF637). */
 export interface Product {
   productId: string;

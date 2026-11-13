@@ -33,6 +33,18 @@ export const customerInputSchema = z.object({
 export const customerIdSchema = z.string().trim().min(1);
 
 /*
+ * Contract create input. `communicationId` is the reserved MSISDN (required — a contract keys on
+ * it; the onboarding step fails rather than send an empty value). `paymentContext` is PREPAID for
+ * this app and defaults so callers need not restate it.
+ */
+export const createContractSchema = z.object({
+  tenantId: tenantIdSchema,
+  customerId: customerIdSchema,
+  communicationId: z.string().trim().min(1),
+  paymentContext: z.literal("PREPAID").default("PREPAID"),
+});
+
+/*
  * Party Interaction (TMF683) create input. `type` is open for later moments; `status` defaults to
  * "completed" (onboarding records a done interaction at fulfilment). `relatedEntities` carries the
  * TMF "Related Entity" references (order/MSISDN/cart). tenantId is validated here but the seam
@@ -56,4 +68,5 @@ export const createInteractionSchema = z.object({
 
 export type PartyInput = z.infer<typeof partyInputSchema>;
 export type CustomerInput = z.infer<typeof customerInputSchema>;
+export type CreateContractInput = z.infer<typeof createContractSchema>;
 export type CreateInteractionInput = z.infer<typeof createInteractionSchema>;

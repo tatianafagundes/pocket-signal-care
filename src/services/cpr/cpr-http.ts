@@ -1,6 +1,11 @@
 import { ok, err, seamError, type SeamResult } from "@/services/seam-result";
 import type { Customer, Party, PartyInteraction } from "@/services/model";
-import type { PartyInput, CustomerInput, CreateInteractionInput } from "@/schemas/cpr";
+import type {
+  PartyInput,
+  CustomerInput,
+  CreateContractInput,
+  CreateInteractionInput,
+} from "@/schemas/cpr";
 import type { TenantId } from "@/lib/tenant-rules";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 
@@ -118,6 +123,10 @@ export function createCprHttp(): CprDriver {
         { method: "POST", body: JSON.stringify(toTmfCustomer(input)) },
         (json) => fromTmfCustomerCreate(json),
       );
+    },
+    async createContract(_input: CreateContractInput): Promise<SeamResult<{ contractId: string }>> {
+      // Real POST /customerManagement/v1/contract. Stubbed until Task 4 wires it.
+      return notConfigured<{ contractId: string }>();
     },
     async getCustomerAndParty(
       _customerId: string,

@@ -64,6 +64,7 @@ export const api = {
   resolveTenant: (tenantId: string) => unwrap(cpr.resolveTenant(tenantId)),
   createParty: (input: unknown) => unwrap(cpr.createParty(input)),
   createCustomer: (input: unknown) => unwrap(cpr.createCustomer(input)),
+  createContract: (input: unknown) => unwrap(cpr.createContract(input)),
   getCustomer360: (customerId: string, expectedTenant?: TenantId) =>
     unwrap(cpr.getCustomer360(customerId, expectedTenant)),
   createInteraction: (input: unknown) => unwrap(cpr.createInteraction(input)),

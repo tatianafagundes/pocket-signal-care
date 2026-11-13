@@ -1,6 +1,11 @@
 import type { SeamResult } from "@/services/seam-result";
-import type { Customer, Party, PartyInteraction } from "@/services/model";
-import type { PartyInput, CustomerInput, CreateInteractionInput } from "@/schemas/cpr";
+import type { Customer, Party, Contract, PartyInteraction } from "@/services/model";
+import type {
+  PartyInput,
+  CustomerInput,
+  CreateContractInput,
+  CreateInteractionInput,
+} from "@/schemas/cpr";
 import type { TenantId } from "@/lib/tenant-rules";
 
 /*
@@ -20,6 +25,8 @@ export interface CprDriver {
   ): Promise<SeamResult<{ exists: boolean; id: TenantId; name: string }>>;
   createParty(input: PartyInput): Promise<SeamResult<{ partyId: string }>>;
   createCustomer(input: CustomerInput): Promise<SeamResult<{ customerId: string }>>;
+  /** Create the prepaid contract keyed by the reserved MSISDN. Requires an existing customer. */
+  createContract(input: CreateContractInput): Promise<SeamResult<{ contractId: string }>>;
   /** The customer and its party — CPR's half of the 360. The seam adds installed base + balance. */
   getCustomerAndParty(
     customerId: string,
@@ -30,5 +37,5 @@ export interface CprDriver {
   listInteractions(customerId: string): Promise<SeamResult<PartyInteraction[]>>;
 }
 
-/** Re-exported so driver files have the party/customer shapes without a deep import. */
-export type { Customer, Party };
+/** Re-exported so driver files have the party/customer/contract shapes without a deep import. */
+export type { Customer, Party, Contract };

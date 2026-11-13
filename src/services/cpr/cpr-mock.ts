@@ -1,6 +1,11 @@
 import { ok, err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Customer, Party, PartyInteraction } from "@/services/model";
-import type { PartyInput, CustomerInput, CreateInteractionInput } from "@/schemas/cpr";
+import type { Contract, Customer, Party, PartyInteraction } from "@/services/model";
+import type {
+  PartyInput,
+  CustomerInput,
+  CreateContractInput,
+  CreateInteractionInput,
+} from "@/schemas/cpr";
 import { tenantName, type TenantId } from "@/lib/tenant-rules";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 import { withMock } from "@/services/mock-support";
@@ -30,6 +35,8 @@ interface MockRecord {
 const store = new Map<string, MockRecord>();
 // customerId -> party interactions (TMF683), newest first. Survives the session like the store.
 const interactions = new Map<string, PartyInteraction[]>();
+// customerId -> prepaid contract. Survives the session like the store.
+const contracts = new Map<string, Contract>();
 let seeded = false;
 
 /**
@@ -136,6 +143,31 @@ export function createCprMock(): CprDriver {
         store.set(customerId, { party, customer });
         pendingParties.delete(input.partyId);
         return ok({ customerId });
+      });
+    },
+
+    createContract(input: CreateContractInput): Promise<SeamResult<{ contractId: string }>> {
+      return withMock("cpr.createContract", () => {
+        // A contract needs an existing customer (mirrors createCustomer-requires-party).
+        if (!store.has(input.customerId)) {
+          return err(
+            seamError(
+              "cpr.customer.notFound",
+              "notFound",
+              "fixInput",
+              "Create the customer first.",
+            ),
+          );
+        }
+        const contractId = `contract-${cryptoId()}`;
+        contracts.set(input.customerId, {
+          contractId,
+          customerId: input.customerId,
+          communicationId: input.communicationId,
+          paymentContext: "PREPAID",
+          status: "active",
+        });
+        return ok({ contractId });
       });
     },
 
