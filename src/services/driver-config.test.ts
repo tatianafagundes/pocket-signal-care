@@ -86,6 +86,26 @@ describe("driver-config.assertDriverConfig (boot fail-fast)", () => {
     expect(() => assertDriverConfig()).toThrow(/not a valid URL/i);
   });
 
+  it("R-F9: rejects 0.0.0.0 (binds all interfaces — not loopback) so it isn't mistaken for local", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    vi.stubEnv("VITE_CPR_BASE_URL", "http://0.0.0.0:8787");
+    expect(() => assertDriverConfig()).toThrow(/not local/i);
+  });
+
+  it("R-F9: is not fooled by host look-alikes (userinfo / subdomain / fragment)", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    for (const url of [
+      "http://127.0.0.1@evil.com/", // userinfo trick — real host is evil.com
+      "http://127.0.0.1.evil.com:8787", // subdomain trick
+      "https://evil.com#127.0.0.1", // fragment trick
+    ]) {
+      vi.stubEnv("VITE_CPR_BASE_URL", url);
+      expect(() => assertDriverConfig(), url).toThrow(/not local/i);
+    }
+  });
+
   it("D1: WARNS when CPR is http but VITE_CPR_ACTIVE_BRAND is unset/invalid", () => {
     vi.stubEnv("VITE_CPR_DRIVER", "http");
     vi.stubEnv("VITE_CPR_BASE_URL", "http://127.0.0.1:8787");
