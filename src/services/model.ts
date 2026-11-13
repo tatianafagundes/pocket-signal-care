@@ -63,13 +63,15 @@ export interface Balance {
 /**
  * A financial activity entry — the "recent activity / last top-ups" feed on the money axis. This is
  * a MONETARY event (a top-up, a refill charged from balance, an adjustment), distinct from a Party
- * Interaction (TMF683, the relationship/journey timeline on CPR). In real DMP Evolved these come
- * from CBEV **Financial Transaction Enquiry** (TMF654 recharge records / FIN), read by the charging
- * seam — so a real connector maps a financial-transaction record straight onto this shape. The UI
- * never reads this directly; `customer360-rules.activityFeed` composes it into display items.
+ * Interaction (TMF683, the relationship/journey timeline on CPR). In real DMP Evolved this feed is a
+ * UNION of two sources, both read behind the charging seam: top-ups and allowance refills come from
+ * **TMF654 Prepay Balance Management** (the top-up-balance list, BUC C349A_5); payments, refunds and
+ * operator adjustments come from **Financial Transaction Enquiry** (`transactionType` Payment/Refund,
+ * FIN). A real connector maps either record onto this one shape. The UI never reads this directly;
+ * `customer360-rules.activityFeed` composes it into display items.
  */
 export interface ActivityItem {
-  /** Stable id (the financial-transaction reference in real CBEV). */
+  /** Stable id (the top-up-balance id for refills, or the financial-transaction reference for payments). */
   activityId: string;
   /**
    * What happened. `topUp` = money added; `refill` = an allowance bought from balance (add-on);
@@ -219,9 +221,10 @@ export interface Customer360 {
   usage: UsageBucket[];
   /**
    * Financial activity (top-ups / refills / adjustments), the MONEY axis — the "recent activity /
-   * last top-ups" feed. From the charging seam (real DMP: CBEV Financial Transaction Enquiry),
-   * newest-first by composition. Distinct from `interactions` (the relationship timeline); a later
-   * step merges both into one display feed. Empty when none or the seam is unavailable.
+   * last top-ups" feed. From the charging seam (real DMP: TMF654 Prepay Balance Management for
+   * top-ups/refills, Financial Transaction Enquiry for payments/refunds/adjustments), newest-first
+   * by composition. Distinct from `interactions` (the relationship timeline); a later step merges
+   * both into one display feed. Empty when none or the seam is unavailable.
    */
   activity: ActivityItem[];
   /** Party interactions (TMF683), newest first — the activity timeline. Empty when none. */

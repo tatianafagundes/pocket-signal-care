@@ -15,7 +15,8 @@ import { createChargingHttp } from "@/services/charging/charging-http";
 /*
  * Charging (ECEV) seam. (Spec Fase 4.4 + usage buckets + activity) getBalance / topUp /
  * rateAndDeduct, the usage axis getUsage / grantAllowance (TMF654 product buckets), and the money
- * activity feed getActivity (real DMP: CBEV Financial Transaction Enquiry). Mock by default.
+ * activity feed getActivity (real DMP: TMF654 Prepay Balance Management for top-ups/refills +
+ * Financial Transaction Enquiry for payments/refunds/adjustments). Mock by default.
  * Amounts are minor units (euro cents). Same shape as the other seams.
  */
 

@@ -119,8 +119,16 @@ notice already covers that; reconsider if it reads as contradictory.
 ## Recent activity — step 1 shipped (financial feed via charging getActivity)
 
 Grounded in Glean/DMP docs: "last top-ups / recent activity" is **financial history**, served in real
-DMP Evolved by **CBEV Financial Transaction Enquiry** (read via the charging seam) — NOT Party
-Interaction (TMF683, the relationship timeline on CPR). So the money feed lives on the charging axis.
+DMP Evolved by a union of two charging-axis sources — **TMF654 Prepay Balance Management** (the
+top-up-balance list, BUC C349A_5) for top-ups and allowance refills, and **Financial Transaction
+Enquiry** (`transactionType` Payment/Refund, FIN) for payments, refunds and operator adjustments.
+Both are read via the charging seam — NOT Party Interaction (TMF683, the relationship timeline on
+CPR). So the money feed lives on the charging axis.
+
+> Correction (validated against Glean after step 1 shipped): an earlier draft attributed the whole
+> feed to Financial Transaction Enquiry alone. That API carries only Payment/Refund (postpaid/FIN);
+> prepaid top-ups and refills are retrieved from the TMF654 top-up-balance list. The seam is
+> unchanged — it was always the right union seam — only the source attribution is corrected.
 
 - `ActivityItem` model + `Customer360.activity`; composer sorts newest-first, defaults [].
 - Charging seam `getActivity(customerId)` (driver + http stub notConfigured); mock seeds a short
@@ -128,11 +136,12 @@ Interaction (TMF683, the relationship timeline on CPR). So the money feed lives 
 - `getCustomer360` fan-out adds `getActivity`, degrades to [] independently.
 - `RecentActivity` on Account: grouped hairline-divider card, icon + label + date + signed amount
   (neutral colour; status owns green/red) + status dot/word; empty state. i18n both locales.
-- The real-ECEV swap is a connector: `getActivity` http driver maps Financial Transaction Enquiry
-  records → `ActivityItem`, zero UI change. Same pattern as usage buckets.
+- The real-ECEV swap is a connector: `getActivity` http driver maps TMF654 top-up-balance records
+  and Financial Transaction Enquiry records → `ActivityItem`, zero UI change. Same pattern as usage
+  buckets.
 
 Known demo artifact (accepted): a SEEDED refill carries a price (−€3.50, standing in for a real
-CBEV financial-transaction record), but a LIVE add-on purchase records a refill with NO amount —
+top-up-balance / financial-transaction record), but a LIVE add-on purchase records a refill with NO amount —
 the add-on's money charge isn't deducted through this seam, so inventing a price would be dishonest.
 If this reads as inconsistent, a later step can either price live refills (needs the charge in the
 grant) or drop the seeded refill's amount.

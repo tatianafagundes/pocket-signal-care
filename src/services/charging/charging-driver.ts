@@ -41,7 +41,8 @@ export interface ChargingDriver {
   grantAllowance(customerId: string, grant: AllowanceGrant): Promise<SeamResult<UsageBucket>>;
   /**
    * Read the customer's financial activity — top-ups, refills, adjustments, newest first. Real DMP:
-   * CBEV Financial Transaction Enquiry. Empty when none. The money-axis "recent activity" feed.
+   * a union of TMF654 Prepay Balance Management (top-ups/refills) and Financial Transaction Enquiry
+   * (payments/refunds/adjustments). Empty when none. The money-axis "recent activity" feed.
    */
   getActivity(customerId: string): Promise<SeamResult<ActivityItem[]>>;
 }
