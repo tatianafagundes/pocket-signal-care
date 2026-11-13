@@ -272,7 +272,34 @@
     },
     "support": {
       "title": "Hilfe",
-      "subtitle": "Wir sind für dich da. Das Hilfecenter folgt in Kürze."
+      "actionsLabel": "Schnellaktionen",
+      "status": {
+        "online": "Alle Dienste online",
+        "pending": "Mobilfunk wird aktiviert",
+        "suspended": "Mobilfunk gesperrt",
+        "service": "Mobil"
+      },
+      "actions": {
+        "checkBalance": "Guthaben prüfen",
+        "checkBalanceSub": "Guthaben und Gültigkeit ansehen",
+        "topUp": "Aufladen",
+        "topUpSub": "Guthaben hinzufügen"
+      },
+      "topicsTitle": "Hilfethemen",
+      "topics": {
+        "topupNotCredited": {
+          "q": "Meine Aufladung wurde nicht gutgeschrieben",
+          "a": "Kartenaufladungen erscheinen innerhalb von 30 Minuten; andernfalls chatten Sie mit uns. Rückerstattungen dauern bis zu 5 Werktage."
+        },
+        "balanceValidity": {
+          "q": "Guthaben und Gültigkeit",
+          "a": "Was wann abläuft und wie eine Aufladung es verlängert."
+        },
+        "plansAddons": {
+          "q": "Tarife & Zusatzpakete",
+          "a": "Was enthalten ist und wie Zusatzpakete bezahlt werden."
+        }
+      }
     }
   },
   "onboarding": {

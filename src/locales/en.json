@@ -272,7 +272,34 @@
     },
     "support": {
       "title": "Support",
-      "subtitle": "We're here for you. The help center is coming soon."
+      "actionsLabel": "Quick actions",
+      "status": {
+        "online": "All services online",
+        "pending": "Mobile service activating",
+        "suspended": "Mobile service suspended",
+        "service": "Mobile"
+      },
+      "actions": {
+        "checkBalance": "Check balance",
+        "checkBalanceSub": "See your balance and validity",
+        "topUp": "Top up",
+        "topUpSub": "Add credit to your balance"
+      },
+      "topicsTitle": "Help topics",
+      "topics": {
+        "topupNotCredited": {
+          "q": "My top-up was not credited",
+          "a": "Card top-ups show within 30 minutes; if not, chat with us. Refunds take up to 5 business days."
+        },
+        "balanceValidity": {
+          "q": "Balance and validity",
+          "a": "What expires when, and how a top-up extends it."
+        },
+        "plansAddons": {
+          "q": "Plans & add-ons",
+          "a": "What’s included and how add-ons are paid."
+        }
+      }
     }
   },
   "onboarding": {
