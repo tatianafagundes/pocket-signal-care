@@ -1,5 +1,11 @@
 import { ok, err, seamError } from "@/services/seam-result";
-import type { ActivityItem, Balance, UsageBucket, UsageUnit } from "@/services/model";
+import type {
+  ActivityItem,
+  Balance,
+  UsageBucket,
+  UsageUnit,
+  VoucherRedemption,
+} from "@/services/model";
 import type { TenantId } from "@/lib/tenant-rules";
 import { TOPUP_VALIDITY_EXTENSION_DAYS } from "@/services/customer360-rules";
 import { withMock } from "@/services/mock-support";
@@ -30,9 +36,37 @@ const usage = new Map<string, UsageBucket[]>();
 // customerId -> financial activity (top-ups/refills/adjustments), the money-axis feed. Real DMP:
 // CBEV Financial Transaction Enquiry. topUp/grantAllowance append; getActivity reads.
 const activity = new Map<string, ActivityItem[]>();
+
+/*
+ * Voucher registry (demo). Real CBEV resolves the code against the Next Generation Voucher Server
+ * (NGVS), which owns the face value and the redeemed state — the client never sends an amount
+ * (One Pager BUC C349A_5 / DXP Recharge BUC). Here a small seeded map stands in: code -> face value
+ * + a redeemed flag the redemption flips. Codes are the normalized 12 digits (no spaces).
+ */
+interface VoucherRecord {
+  faceValueMinor: number;
+  redeemed: boolean;
+}
+const vouchers = new Map<string, VoucherRecord>();
+
+// customerId -> count of wrong voucher attempts, with a day stamp. Mirrors the DXP refill-fraud
+// counter (increment on a failed validation, barred above a daily threshold). In-memory + per-day
+// here; the real counter is server-side and persisted (anchored as Fase 8 debt).
+interface AttemptRecord {
+  count: number;
+  day: string;
+}
+const voucherAttempts = new Map<string, AttemptRecord>();
+
+/** Above this face value, redeeming a voucher also extends validity (Figma P17 rule; see debt). */
+const VOUCHER_VALIDITY_THRESHOLD_MINOR = 2000; // €20
+/** Daily wrong-attempt ceiling before a customer is temporarily barred (anti brute-force). */
+const VOUCHER_MAX_WRONG_ATTEMPTS = 5;
+
 let seeded = false;
 let bucketSeq = 0;
 let activitySeq = 0;
+let voucherSeq = 0;
 
 /** Append a financial activity entry for a customer (newest appended; getActivity sorts). */
 function recordActivity(customerId: string, entry: Omit<ActivityItem, "activityId">): ActivityItem {
@@ -65,9 +99,38 @@ function extendValidity(customerId: string): string {
   return next;
 }
 
+/** Today's date (UTC day) — the key the wrong-attempt counter resets on. */
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Current wrong-attempt count for a customer today (0 if none or a new day). */
+function wrongAttemptsToday(customerId: string): number {
+  const rec = voucherAttempts.get(customerId);
+  return rec && rec.day === today() ? rec.count : 0;
+}
+
+/** Record one more wrong voucher attempt for a customer (resets across days). */
+function recordWrongAttempt(customerId: string): void {
+  const day = today();
+  const rec = voucherAttempts.get(customerId);
+  voucherAttempts.set(customerId, {
+    day,
+    count: rec && rec.day === day ? rec.count + 1 : 1,
+  });
+}
+
 function seed(): void {
   if (seeded) return;
   seeded = true;
+  // Demo voucher registry (shared across customers). Normalized 12-digit codes:
+  //  - 4471 0392 8816 → €20 (meets the validity-extension threshold)
+  //  - 1000 2000 3000 → €10 (credits only; below the threshold)
+  //  - 9999 8888 7777 → already redeemed (the "already used" error path)
+  vouchers.set("447103928816", { faceValueMinor: 2000, redeemed: false });
+  vouchers.set("100020003000", { faceValueMinor: 1000, redeemed: false });
+  vouchers.set("999988887777", { faceValueMinor: 2000, redeemed: true });
+
   const tenants: TenantId[] = ["drei", "dreigo"];
   for (const tenantId of tenants) {
     for (const variant of DEMO_VARIANTS) {
@@ -214,6 +277,58 @@ export function createChargingMock(): ChargingDriver {
           status: "completed",
         });
         return ok(toBalance(customerId, next));
+      });
+    },
+
+    redeemVoucher(customerId, code) {
+      return withMock("charging.redeemVoucher", () => {
+        // Anti brute-force (DXP refill-fraud counter): a customer barred for the day can't keep
+        // probing codes. Checked BEFORE looking the code up, so being barred reveals nothing about
+        // any code. A distinct error so the UI can show "try again later", not "code invalid".
+        if (wrongAttemptsToday(customerId) >= VOUCHER_MAX_WRONG_ATTEMPTS) {
+          return err(seamError("charging.voucher.tooManyAttempts", "rejected", "contactSupport"));
+        }
+
+        const record = vouchers.get(code);
+        // Unknown code OR already redeemed → ONE indistinct error (don't reveal which: a caller
+        // must not be able to tell a real-but-used code from a non-existent one). Both count as a
+        // wrong attempt toward the daily bar.
+        if (!record || record.redeemed) {
+          recordWrongAttempt(customerId);
+          return err(seamError("charging.voucher.invalid", "notFound", "fixInput"));
+        }
+
+        // Valid, unused code: the face value is the voucher's (server-side), never the client's.
+        const faceValueMinor = record.faceValueMinor;
+        record.redeemed = true; // commit the voucher (NGVS "end the reservation by committing").
+
+        const current = balances.get(customerId) ?? 0;
+        const next = current + faceValueMinor;
+        balances.set(customerId, next);
+
+        // Validity extends ONLY above the threshold (Figma P17 rule; a prototype/config rule, not a
+        // documented CBEV one — see the debt doc). Below it, the credit lands but validity is left.
+        const extendedValidity = faceValueMinor >= VOUCHER_VALIDITY_THRESHOLD_MINOR;
+        if (extendedValidity) extendValidity(customerId);
+
+        // A redemption is a financial event — record it so it shows in recent activity (kind
+        // "voucher" reads more honestly than "topUp" in the money feed).
+        recordActivity(customerId, {
+          kind: "voucher",
+          occurredAt: new Date().toISOString(),
+          amountMinor: faceValueMinor,
+          currency: "EUR",
+          status: "completed",
+        });
+
+        const redemption: VoucherRedemption = {
+          reference: `vch-${(++voucherSeq).toString(16).padStart(6, "0")}`,
+          creditedMinor: faceValueMinor,
+          currency: "EUR",
+          balance: toBalance(customerId, next),
+          extendedValidity,
+        };
+        return ok(redemption);
       });
     },
 

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   getBalance,
   topUp,
+  redeemVoucher,
   rateAndDeduct,
   getUsage,
   grantAllowance,
@@ -238,6 +239,98 @@ describe("charging activity feed (mock)", () => {
   it("degrades to a seam error when getActivity is forced to fail", async () => {
     forceError("charging.getActivity");
     const r = await getActivity("demo-drei");
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe("charging voucher redemption (mock)", () => {
+  // The demo voucher registry is seeded once (module state): each valid code can be redeemed once
+  // across this file. 447103928816 = €20 (extends validity), 100020003000 = €10 (credit only),
+  // 999988887777 = already redeemed. Each valid-code test uses a distinct customer.
+
+  it("redeems a €20 voucher: credits the face value (server-side, not client) and extends validity", async () => {
+    const before = await getBalance("vch-20");
+    const start = before.ok && before.data ? before.data.amountMinor : 0;
+
+    const r = await redeemVoucher({ customerId: "vch-20", code: "4471 0392 8816" });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.creditedMinor).toBe(2000); // the voucher's face value, resolved server-side
+      expect(r.data.balance.amountMinor).toBe(start + 2000);
+      expect(r.data.extendedValidity).toBe(true);
+      expect(Date.parse(r.data.balance.validUntil!)).toBeGreaterThan(Date.now());
+      expect(r.data.reference).toMatch(/^vch-/);
+    }
+  });
+
+  it("redeems a €10 voucher: credits but does NOT extend validity (below threshold)", async () => {
+    const r = await redeemVoucher({ customerId: "vch-10", code: "100020003000" });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.creditedMinor).toBe(1000);
+      expect(r.data.extendedValidity).toBe(false);
+    }
+  });
+
+  it("records the redemption in the activity feed as kind 'voucher'", async () => {
+    // The €20 redeem (first test in this block) credited vch-20; its feed must carry a voucher entry.
+    const feed = await getActivity("vch-20");
+    expect(feed.ok).toBe(true);
+    if (feed.ok) {
+      const v = feed.data.find((a) => a.kind === "voucher");
+      expect(v).toBeDefined();
+      expect(v?.amountMinor).toBe(2000);
+      expect(v?.status).toBe("completed");
+    }
+  });
+
+  it("rejects an unknown code with an indistinct notFound error (doesn't reveal which)", async () => {
+    const r = await redeemVoucher({ customerId: "vch-unknown", code: "000000000000" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error.code).toBe("charging.voucher.invalid");
+      expect(r.error.category).toBe("notFound");
+    }
+  });
+
+  it("rejects an already-redeemed code with the SAME indistinct error as an unknown code", async () => {
+    const r = await redeemVoucher({ customerId: "vch-used", code: "9999 8888 7777" });
+    expect(r.ok).toBe(false);
+    // Same code + category as the unknown-code case: a caller can't tell a used code from a fake one.
+    if (!r.ok) {
+      expect(r.error.code).toBe("charging.voucher.invalid");
+      expect(r.error.category).toBe("notFound");
+    }
+  });
+
+  it("rejects a malformed code (not 12 digits) as a validation error", async () => {
+    const r = await redeemVoucher({ customerId: "vch-bad", code: "12345" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("validation");
+  });
+
+  it("bars a customer after too many wrong attempts (anti brute-force)", async () => {
+    // Five wrong attempts with fake codes (never touching a real voucher's state).
+    for (let i = 0; i < 5; i++) {
+      const r = await redeemVoucher({
+        customerId: "vch-brute",
+        code: `0000000000${i}0`.slice(0, 12),
+      });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error.code).toBe("charging.voucher.invalid");
+    }
+    // The sixth is barred with a DISTINCT error, even though the code shape is valid.
+    const barred = await redeemVoucher({ customerId: "vch-brute", code: "000000000000" });
+    expect(barred.ok).toBe(false);
+    if (!barred.ok) {
+      expect(barred.error.code).toBe("charging.voucher.tooManyAttempts");
+      expect(barred.error.category).toBe("rejected");
+    }
+  });
+
+  it("degrades to a seam error when redeemVoucher is forced to fail", async () => {
+    forceError("charging.redeemVoucher");
+    const r = await redeemVoucher({ customerId: "vch-20b", code: "100020003000" });
     expect(r.ok).toBe(false);
   });
 });

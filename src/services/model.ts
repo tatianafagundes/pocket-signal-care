@@ -61,6 +61,23 @@ export interface Balance {
 }
 
 /**
+ * The result of redeeming a voucher (CBEV monetary voucher recharge — TMF654 voucherBasedRefill).
+ * The face value is resolved SERVER-SIDE from the code (the client never sends an amount); the UI
+ * shows `creditedMinor` and the resulting `balance` from this result, never a value it computed.
+ */
+export interface VoucherRedemption {
+  /** Opaque redemption reference, shown on the receipt (not the voucher code). */
+  reference: string;
+  /** Face value credited to the balance, in minor units — determined by the voucher, server-side. */
+  creditedMinor: number;
+  currency: "EUR";
+  /** The balance AFTER crediting (new amount + validity; validity extended only above a threshold). */
+  balance: Balance;
+  /** Whether this redemption extended the balance validity (face value met the threshold). */
+  extendedValidity: boolean;
+}
+
+/**
  * A financial activity entry — the "recent activity / last top-ups" feed on the money axis. This is
  * a MONETARY event (a top-up, a refill charged from balance, an adjustment), distinct from a Party
  * Interaction (TMF683, the relationship/journey timeline on CPR). In real DMP Evolved this feed is a
@@ -74,10 +91,11 @@ export interface ActivityItem {
   /** Stable id (the top-up-balance id for refills, or the financial-transaction reference for payments). */
   activityId: string;
   /**
-   * What happened. `topUp` = money added; `refill` = an allowance bought from balance (add-on);
-   * `adjustment` = an operator credit/debit. Union left open for later kinds (payment/refund).
+   * What happened. `topUp` = money added by card; `voucher` = money added by redeeming a voucher
+   * code; `refill` = an allowance bought from balance (add-on); `adjustment` = an operator
+   * credit/debit. Union left open for later kinds (payment/refund).
    */
-  kind: "topUp" | "refill" | "adjustment";
+  kind: "topUp" | "voucher" | "refill" | "adjustment";
   /** ISO timestamp the transaction occurred. */
   occurredAt: string;
   /**

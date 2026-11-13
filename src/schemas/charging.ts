@@ -20,6 +20,19 @@ export const deductSchema = z.object({
   amountMinor: z.number().int().positive(),
 });
 
+/**
+ * Redeem a voucher (CBEV monetary voucher recharge). The client sends only the code + customer —
+ * NEVER an amount (the face value is resolved server-side from the code; dossiê + TMF654). The code
+ * is 12 digits; spaces/dashes are stripped before validating so "4471 0392 8816" is accepted.
+ */
+export const redeemVoucherSchema = z.object({
+  customerId: customerIdSchema,
+  code: z
+    .string()
+    .transform((s) => s.replace(/[\s-]/g, ""))
+    .pipe(z.string().regex(/^\d{12}$/, "a voucher code is 12 digits")),
+});
+
 /** Grant/refill a non-monetary allowance bucket (TMF654), triggered by an add-on fulfilment. */
 export const grantAllowanceSchema = z
   .object({
@@ -42,3 +55,4 @@ export const grantAllowanceSchema = z
 export type TopUpInput = z.infer<typeof topUpSchema>;
 export type DeductInput = z.infer<typeof deductSchema>;
 export type GrantAllowanceInput = z.infer<typeof grantAllowanceSchema>;
+export type RedeemVoucherInput = z.infer<typeof redeemVoucherSchema>;

@@ -1,5 +1,11 @@
 import type { SeamResult } from "@/services/seam-result";
-import type { ActivityItem, Balance, UsageBucket, UsageUnit } from "@/services/model";
+import type {
+  ActivityItem,
+  Balance,
+  UsageBucket,
+  UsageUnit,
+  VoucherRedemption,
+} from "@/services/model";
 
 /**
  * A grant/refill of a non-monetary allowance (TMF654). The ECEV op that an add-on fulfilment
@@ -30,6 +36,13 @@ export interface AllowanceGrant {
 export interface ChargingDriver {
   getBalance(customerId: string): Promise<SeamResult<Balance | null>>;
   topUp(customerId: string, amountMinor: number): Promise<SeamResult<Balance>>;
+  /**
+   * Redeem a voucher (CBEV monetary voucher recharge). The driver resolves the face value from the
+   * code SERVER-SIDE, credits the balance, and extends validity only above a threshold. Domain
+   * errors: an unknown/used code (one indistinct error, so a caller can't probe which), or too many
+   * wrong attempts (anti brute-force, DXP refill-fraud counter). The code is never logged.
+   */
+  redeemVoucher(customerId: string, code: string): Promise<SeamResult<VoucherRedemption>>;
   /** Deduct a charge from a customer's balance (Fase 6 buy flow). Refuses to go negative. */
   rateAndDeduct(customerId: string, amountMinor: number): Promise<SeamResult<{ ok: true }>>;
   /** Read the customer's non-monetary allowance buckets (TMF654). Empty when none. */

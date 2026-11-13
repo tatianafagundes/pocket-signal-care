@@ -1,12 +1,13 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
 import { runRead, runWrite, seamCtx } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
-import type { ActivityItem, Balance, UsageBucket } from "@/services/model";
+import type { ActivityItem, Balance, UsageBucket, VoucherRedemption } from "@/services/model";
 import {
   customerIdSchema,
   topUpSchema,
   deductSchema,
   grantAllowanceSchema,
+  redeemVoucherSchema,
 } from "@/schemas/charging";
 import type { ChargingDriver } from "@/services/charging/charging-driver";
 import { createChargingMock } from "@/services/charging/charging-mock";
@@ -46,6 +47,14 @@ export function topUp(input: unknown): Promise<SeamResult<Balance>> {
   if (!parsed.success) return invalid<Balance>("charging.topUp.invalid");
   return runWrite({ tenantId: "ecev" }, "charging.topUp", () =>
     driver.topUp(parsed.data.customerId, parsed.data.amountMinor),
+  );
+}
+
+export function redeemVoucher(input: unknown): Promise<SeamResult<VoucherRedemption>> {
+  const parsed = redeemVoucherSchema.safeParse(input);
+  if (!parsed.success) return invalid<VoucherRedemption>("charging.redeemVoucher.invalid");
+  return runWrite({ tenantId: "ecev" }, "charging.redeemVoucher", () =>
+    driver.redeemVoucher(parsed.data.customerId, parsed.data.code),
   );
 }
 
