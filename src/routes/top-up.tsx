@@ -309,6 +309,17 @@ function AmountStep({ data, locale, amountMinor, onAmountChange, onPay }: Amount
           })}
         </Button>
       </section>
+
+      {/* A voucher is the card-less alternative to a top-up (DXP monetary voucher recharge). A
+          discreet secondary path, not competing with the primary Pay action. */}
+      <p className="text-center">
+        <Link
+          to="/redeem"
+          className="focus-ring rounded-control type-body-sm-strong text-accent-ink"
+        >
+          {t("pages.topUp.addVoucher", "Add a voucher instead")}
+        </Link>
+      </p>
     </div>
   );
 }

@@ -149,6 +149,7 @@
         "validUntil": "Valid until {{date}}"
       },
       "pay": "Pay {{amount}}",
+      "addVoucher": "Add a voucher instead",
       "handoff": {
         "title": "Leaving the app to pay",
         "body": "The secure payment page opens next; your bank may ask you to confirm. When you finish, you come back here and see the result.",

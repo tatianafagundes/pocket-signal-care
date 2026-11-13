@@ -141,5 +141,16 @@
     "clicar": "button:has-text('Continue to payment page')",
     "esperar": "text=Balance topped up",
     "pausa": 800
+  },
+  {
+    "nome": "13-redeem-enter",
+    "js": "window.location.href='/redeem'",
+    "esperar": "text=Voucher code",
+    "pausa": 800
+  },
+  {
+    "nome": "14-redeem-filled",
+    "preencher": { "#voucher-code": "447103928816" },
+    "esperar": "text=Add to balance"
   }
 ]

@@ -149,6 +149,7 @@
         "validUntil": "Gültig bis {{date}}"
       },
       "pay": "{{amount}} bezahlen",
+      "addVoucher": "Stattdessen Gutschein einlösen",
       "handoff": {
         "title": "Zur Zahlung verlassen Sie die App",
         "body": "Die sichere Zahlungsseite öffnet sich als Nächstes; Ihre Bank fragt eventuell nach einer Bestätigung. Danach kehren Sie hierher zurück und sehen das Ergebnis.",
