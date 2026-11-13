@@ -193,7 +193,14 @@
       "redeeming": "Adding to balance…",
       "success": {
         "title": "Voucher added",
-        "body": "Your new balance is {{amount}}, valid until {{date}}."
+        "body": "Your new balance is {{amount}}, valid until {{date}}.",
+        "rowReference": "Reference",
+        "rowAdded": "Added",
+        "rowVoucher": "Voucher",
+        "rowDate": "Date",
+        "rowNewBalance": "New balance",
+        "backHome": "Back to Home",
+        "seePlan": "See my plan"
       }
     },
     "addOns": {

@@ -10,12 +10,13 @@ import type { Locale } from "@/lib/tenant-rules";
 import type { Customer360, VoucherRedemption } from "@/services/model";
 import { PageShell } from "@/components/page-shell";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
+import { ResultHead, SummaryRow } from "@/components/result-summary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import { formatMsisdn, formatPrice } from "@/lib/format";
-import { formatShortDate } from "@/lib/format-date";
+import { formatShortDate, formatDateTime } from "@/lib/format-date";
 
 export const Route = createFileRoute("/redeem")({
   head: () => ({
@@ -43,6 +44,14 @@ const VOUCHER_CODE_DIGITS = 12;
 /** Which step of the redeem task is on screen. A reload does not resume a half-finished redeem. */
 type Phase = "enter" | "result";
 
+/** A completed redemption, snapshotted for the receipt (the code is masked; never shown in full). */
+interface SuccessData {
+  redemption: VoucherRedemption;
+  /** Last 4 digits of the redeemed code, for a masked "Voucher •••• 8816" receipt line. */
+  codeLast4: string;
+  redeemedAt: string;
+}
+
 /** Strip non-digits and cap at 12 — the raw code we send to the seam. */
 function normalizeCode(raw: string): string {
   return raw.replace(/\D/g, "").slice(0, VOUCHER_CODE_DIGITS);
@@ -69,7 +78,7 @@ function Page() {
   const [phase, setPhase] = useState<Phase>("enter");
   const [code, setCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
-  const [redemption, setRedemption] = useState<VoucherRedemption | null>(null);
+  const [success, setSuccess] = useState<SuccessData | null>(null);
 
   // Move focus to the result heading on each phase change, so a screen reader announces the new
   // screen (the phases share one route, so there's no route change to announce). WCAG 2.4.3.
@@ -88,7 +97,11 @@ function Page() {
     try {
       // The seam resolves the face value from the code (server-side); we never send an amount.
       const result = await api.redeemVoucher({ customerId, code: digits });
-      setRedemption(result);
+      setSuccess({
+        redemption: result,
+        codeLast4: digits.slice(-4),
+        redeemedAt: new Date().toISOString(),
+      });
       // Refresh balance + activity everywhere (Home, Account, My plan).
       void queryClient.invalidateQueries({ queryKey: queryKeys.customer360(tenant, customerId) });
       setPhase("result");
@@ -126,27 +139,8 @@ function Page() {
           redeeming={redeeming}
           onRedeem={() => void redeem()}
         />
-      ) : redemption ? (
-        <ResultHead
-          tone="success"
-          icon={<Check className="size-9 text-success" aria-hidden="true" />}
-          title={t("pages.redeem.success.title", "Voucher added")}
-          body={t(
-            "pages.redeem.success.body",
-            "Your new balance is {{amount}}, valid until {{date}}.",
-            {
-              amount: formatPrice(
-                redemption.balance.amountMinor,
-                redemption.balance.currency,
-                locale,
-              ),
-              date: redemption.balance.validUntil
-                ? formatShortDate(redemption.balance.validUntil, locale)
-                : "—",
-            },
-          )}
-          headingRef={headingRef}
-        />
+      ) : success ? (
+        <SuccessStep locale={locale} success={success} headingRef={headingRef} />
       ) : null}
     </PageShell>
   );
@@ -240,30 +234,71 @@ function EnterStep({
   );
 }
 
-/** The top of a result screen: a tinted circle with a status icon, a title and a line. */
-function ResultHead({
-  tone,
-  icon,
-  title,
-  body,
-  headingRef,
-}: {
-  tone: "success";
-  icon: React.ReactNode;
-  title: string;
-  body: string;
+interface SuccessStepProps {
+  locale: Locale;
+  success: SuccessData;
   headingRef: React.RefObject<HTMLHeadingElement | null>;
-}) {
-  const tint = tone === "success" ? "bg-success-tint" : "bg-accent-tint";
+}
+
+/** P18 "Voucher added" — the success receipt. The balance line is the honest new state. */
+function SuccessStep({ locale, success, headingRef }: SuccessStepProps) {
+  const { t } = useLocalizedTranslation();
+  const { redemption, codeLast4, redeemedAt } = success;
+  const { balance } = redemption;
+  const validUntil = balance.validUntil ? formatShortDate(balance.validUntil, locale) : "—";
+
   return (
-    <div className="flex flex-col items-center gap-4 pt-4 text-center">
-      <span className={`flex size-[72px] items-center justify-center rounded-full ${tint}`}>
-        {icon}
-      </span>
-      <h2 ref={headingRef} tabIndex={-1} className="type-title text-text-primary focus-ring">
-        {title}
-      </h2>
-      <p className="type-body text-text-secondary">{body}</p>
+    <div className="grid gap-5">
+      <ResultHead
+        tone="success"
+        icon={<Check className="size-9 text-success" aria-hidden="true" />}
+        title={t("pages.redeem.success.title", "Voucher added")}
+        body={t(
+          "pages.redeem.success.body",
+          "Your new balance is {{amount}}, valid until {{date}}.",
+          {
+            amount: formatPrice(balance.amountMinor, balance.currency, locale),
+            date: validUntil,
+          },
+        )}
+        headingRef={headingRef}
+      />
+
+      <div className="overflow-hidden rounded-card border border-hairline bg-surface">
+        <SummaryRow
+          label={t("pages.redeem.success.rowReference", "Reference")}
+          value={redemption.reference}
+        />
+        <SummaryRow
+          label={t("pages.redeem.success.rowAdded", "Added")}
+          value={formatPrice(redemption.creditedMinor, redemption.currency, locale)}
+          divider
+        />
+        <SummaryRow
+          label={t("pages.redeem.success.rowVoucher", "Voucher")}
+          value={`•••• ${codeLast4}`}
+          divider
+        />
+        <SummaryRow
+          label={t("pages.redeem.success.rowDate", "Date")}
+          value={formatDateTime(redeemedAt, locale)}
+          divider
+        />
+        <SummaryRow
+          label={t("pages.redeem.success.rowNewBalance", "New balance")}
+          value={`${formatPrice(balance.amountMinor, balance.currency, locale)} · ${validUntil}`}
+          divider
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Button asChild className="w-full">
+          <Link to="/">{t("pages.redeem.success.backHome", "Back to Home")}</Link>
+        </Button>
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/my-plan">{t("pages.redeem.success.seePlan", "See my plan")}</Link>
+        </Button>
+      </div>
     </div>
   );
 }

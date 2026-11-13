@@ -193,7 +193,14 @@
       "redeeming": "Wird hinzugefügt…",
       "success": {
         "title": "Gutschein hinzugefügt",
-        "body": "Ihr neues Guthaben beträgt {{amount}}, gültig bis {{date}}."
+        "body": "Ihr neues Guthaben beträgt {{amount}}, gültig bis {{date}}.",
+        "rowReference": "Referenz",
+        "rowAdded": "Hinzugefügt",
+        "rowVoucher": "Gutschein",
+        "rowDate": "Datum",
+        "rowNewBalance": "Neues Guthaben",
+        "backHome": "Zurück zur Startseite",
+        "seePlan": "Mein Tarif ansehen"
       }
     },
     "addOns": {
