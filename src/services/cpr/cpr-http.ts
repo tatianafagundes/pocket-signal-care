@@ -152,14 +152,13 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
   }
 
   return {
-    async resolveTenant(tenantId) {
-      // TMF: GET an Organization/Party for the tenant. Mapping confined to fromTmf* below.
-      return request(
-        tenantId,
-        `/customerManagement/v1/organization/${resolveDxpTenant(tenantId)}`,
-        { method: "GET" },
-        (json) => fromTmfTenant(json, tenantId),
-      );
+    async resolveTenant(_tenantId) {
+      // notConfigured: the collection + response-shapes.md carry NO tenant-lookup endpoint, so the
+      // real path is unknown and inventing one (e.g. /organization/{id}) would be a guessed API.
+      // tenant-provider's resolveTenant confirm treats a SeamFailure as a backend blip (keeps the
+      // brand, no not-found banner), so this degrades gracefully. Real tenant resolution is a
+      // later spec; the brand→DXP map is already a documented debt.
+      return notConfigured<{ exists: boolean; id: TenantId; name: string }>();
     },
     async createParty(input: PartyInput) {
       return request(
@@ -248,14 +247,6 @@ function toTmfContract(input: CreateContractInput): unknown {
     paymentContext: "PREPAID",
     statuses: [{ status: "ContractActive", validFor: { start: new Date().toISOString() } }],
   };
-}
-
-function fromTmfTenant(
-  _json: unknown,
-  tenantId: TenantId,
-): { exists: boolean; id: TenantId; name: string } {
-  // DXP Organization -> canonical TenantResolution. The real payload fills this later.
-  return { exists: true, id: tenantId, name: tenantId };
 }
 
 function fromTmfPartyCreate(json: unknown): { partyId: string } {
