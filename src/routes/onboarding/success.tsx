@@ -87,10 +87,10 @@ function SuccessPage() {
       <MoneyTimeline simType={snapshot.simType} />
 
       <Button asChild className="mt-6 w-full min-h-11">
-        <Link to="/top-up">{t("onboarding.success.topUp", "Top up now")}</Link>
+        <Link to="/">{t("onboarding.success.goHome", "Go to Home")}</Link>
       </Button>
       <Button asChild variant="ghost" className="mt-2 w-full min-h-11">
-        <Link to="/my-plan">{t("onboarding.success.later", "Maybe later")}</Link>
+        <Link to="/top-up">{t("onboarding.success.topUp", "Top up now")}</Link>
       </Button>
     </WizardPage>
   );

@@ -45,6 +45,20 @@ export function allowanceGrantForAddOn(offer: Offer): AllowanceGrant | null {
   return { ...base, amount: gb, unit: "GB" };
 }
 
+/**
+ * Derive the data allowance a PLAN grants from its catalogue Offer — the bucket a newly activated
+ * line starts with. Always a data bucket (a plan's data allowance): unlimited for an unlimited
+ * plan, a finite GB figure for a metered one, or null when the plan's data label isn't a parseable
+ * quantity (then no bucket is granted — entitlement only). Used by onboarding activation.
+ */
+export function allowanceGrantForPlan(offer: Offer): AllowanceGrant | null {
+  const gb = allowanceGb(offer);
+  if (gb === null) return null;
+  const base = { type: "data" as const, offerId: offer.offerId, offerName: offer.name };
+  if (gb === Number.POSITIVE_INFINITY) return { ...base, unlimited: true };
+  return { ...base, amount: gb, unit: "GB" };
+}
+
 /** Buy a single add-on for an existing customer. Returns the created orderId on success. */
 export async function purchaseAddOn(customerId: string, offer: Offer): Promise<string> {
   const cart = await api.createCart(customerId);

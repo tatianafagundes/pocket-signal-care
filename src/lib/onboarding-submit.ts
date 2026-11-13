@@ -1,6 +1,7 @@
 import { api } from "@/services/api";
 import type { OnboardingPatch, OnboardingState } from "@/lib/onboarding-context";
 import type { TenantId } from "@/lib/tenant-rules";
+import type { AllowanceGrant } from "@/services/charging/charging-driver";
 
 /*
  * Onboarding submit orchestration. (Spec Fase 5 / Req 7; Fase 7.4 adds the three money moments.)
@@ -56,7 +57,8 @@ export type SubmitStep =
   | "submitOrder"
   | "recordInteraction"
   | "capture"
-  | "credit";
+  | "credit"
+  | "grantAllowance";
 
 function simOfferId(tenant: TenantId): string {
   return `${tenant}-sim-po`;
@@ -72,6 +74,13 @@ interface SubmitDeps {
   extrasMinor?: number;
   /** Opaque (mock) payment-method token. Never a PAN; never persisted. */
   methodToken: string;
+  /**
+   * The data allowance the chosen plan grants (TMF654 usage bucket), derived by the caller from
+   * the resolved plan offer. Null when the plan's data label isn't a parseable quantity — then no
+   * bucket is granted (entitlement only), never a fabricated one. Granted after the first top-up so
+   * the newly activated line has its plan allowance, not an empty usage list.
+   */
+  planAllowance?: AllowanceGrant | null;
 }
 
 /**
@@ -85,6 +94,7 @@ export async function runOnboardingSubmit({
   planPriceMinor,
   extrasMinor = 0,
   methodToken,
+  planAllowance = null,
 }: SubmitDeps): Promise<string> {
   const { tenant, selectedOfferId, selectedAddOnIds, simType, email, givenName, familyName } =
     state;
@@ -231,6 +241,18 @@ export async function runOnboardingSubmit({
     onStep("credit");
     await api.topUp({ customerId, amountMinor: planPriceMinor });
     patch({ credited: true });
+  }
+
+  // 8. Grant the plan's data allowance (TMF654 usage bucket) so the activated line shows its
+  //    included data, not an empty "No data allowance yet". In real DMP, order fulfilment makes
+  //    CBEV create the product bucket; here it's an explicit step after the order + credit succeed,
+  //    mirroring the add-on purchase flow. Same persisted-flag guard as capture/credit: a retry
+  //    after this ran skips it, so the allowance is never granted twice. A null grant (plan whose
+  //    data label isn't a parseable quantity) simply skips — entitlement only, no fabricated bucket.
+  if (planAllowance && !state.granted) {
+    onStep("grantAllowance");
+    await api.grantAllowance({ customerId, ...planAllowance });
+    patch({ granted: true });
   }
 
   return customerId;

@@ -21,6 +21,7 @@ import { api, SeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import { formatMsisdn, formatPrice, offerPriceLabel } from "@/lib/format";
 import { runOnboardingSubmit, type SubmitStep } from "@/lib/onboarding-submit";
+import { allowanceGrantForPlan } from "@/lib/addon-purchase";
 import { onboardingTodayTotal } from "@/lib/onboarding-total";
 import { tokenizeCardMock } from "@/lib/card-token";
 
@@ -139,6 +140,9 @@ function ReviewPage() {
         planPriceMinor,
         extrasMinor: today.extrasMinor,
         methodToken,
+        // Grant the chosen plan's data allowance on activation, so the new line isn't rendered with
+        // "No data allowance yet" (derived from the resolved offer; null label grants nothing).
+        planAllowance: allowanceGrantForPlan(offer),
       });
       // Auto-login: the activation created this customer, so start their session NOW — before the
       // onboarding reset on the success screen discards the wizard state. The session is a separate

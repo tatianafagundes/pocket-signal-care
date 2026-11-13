@@ -139,6 +139,12 @@ export interface OnboardingState {
   captured: boolean;
   credited: boolean;
   /**
+   * The plan's data allowance has been granted (TMF654 usage bucket). Persisted + reused on retry
+   * so a resumed submit never grants the plan allowance twice (same idempotency contract as
+   * captured/credited).
+   */
+  granted: boolean;
+  /**
    * Party Interaction (TMF683) recorded at order fulfilment. Persisted + reused on retry so a
    * resumed submit never logs the onboarding interaction twice ("Don't pay again", applied to the
    * interaction log).

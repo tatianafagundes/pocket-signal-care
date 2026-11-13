@@ -588,6 +588,7 @@
         "recordInteraction": "Deine Aktivierung wird gespeichert…",
         "capture": "Deine Zahlung wird bestätigt…",
         "credit": "Dein erstes Guthaben wird hinzugefügt…",
+        "grantAllowance": "Dein Datenvolumen wird eingerichtet…",
         "finalizing": "Wird abgeschlossen…"
       },
       "terminalError": "Wir konnten deinen Tarif nicht fertig aktivieren. Dein Konto ist gespeichert — du kannst es erneut versuchen.",
@@ -600,8 +601,8 @@
       "title": "Alles erledigt, {{name}}",
       "titleNoName": "Alles erledigt",
       "subtitle": "Dein Tarif ist aktiv.",
+      "goHome": "Zur Startseite",
       "topUp": "Jetzt aufladen",
-      "later": "Vielleicht später",
       "money": {
         "heading": "Deine erste Aufladung",
         "stateDone": "Erledigt",

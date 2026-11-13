@@ -45,6 +45,13 @@ vi.mock("@/services/api", () => ({
       status: "captured" as const,
     })),
     topUp: vi.fn(async () => ({ amountMinor: 1000, currency: "EUR" as const })),
+    grantAllowance: vi.fn(async () => ({
+      bucketId: "bkt-1",
+      type: "data" as const,
+      offerId: "drei-up",
+      total: { value: 10, unit: "GB" as const },
+      remaining: { value: 10, unit: "GB" as const },
+    })),
   },
 }));
 
@@ -61,7 +68,8 @@ const mockApi = api as unknown as Record<
   | "submitOrder"
   | "createInteraction"
   | "capturePayment"
-  | "topUp",
+  | "topUp"
+  | "grantAllowance",
   ReturnType<typeof vi.fn>
 >;
 
@@ -146,6 +154,50 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
     const submitArg = mockApi.submitOrder.mock.calls[0]![0] as Record<string, unknown>;
     expect(submitArg["simType"]).toBe("esim");
     expect(submitArg["addressId"]).toBeUndefined();
+  });
+
+  it("grants the plan's data allowance after credit when a planAllowance is given", async () => {
+    const steps: SubmitStep[] = [];
+    const patches: Record<string, unknown>[] = [];
+    await runOnboardingSubmit({
+      ...deps(completeState(), steps, patches),
+      planAllowance: {
+        type: "data",
+        offerId: "drei-up",
+        offerName: "Up 10",
+        amount: 10,
+        unit: "GB",
+      },
+    });
+    // Granted last, after credit, and recorded as the final step.
+    expect(steps[steps.length - 1]).toBe("grantAllowance");
+    expect(mockApi.grantAllowance).toHaveBeenCalledWith({
+      customerId: "cust-1",
+      type: "data",
+      offerId: "drei-up",
+      offerName: "Up 10",
+      amount: 10,
+      unit: "GB",
+    });
+    // The idempotency flag is persisted so a retry skips it.
+    expect(patches).toContainEqual({ granted: true });
+  });
+
+  it("skips the allowance grant when already granted (idempotent retry)", async () => {
+    const steps: SubmitStep[] = [];
+    await runOnboardingSubmit({
+      ...deps(completeState({ granted: true }), steps, []),
+      planAllowance: { type: "data", offerId: "drei-up", amount: 10, unit: "GB" },
+    });
+    expect(steps).not.toContain("grantAllowance");
+    expect(mockApi.grantAllowance).not.toHaveBeenCalled();
+  });
+
+  it("grants nothing when no planAllowance is given (unparseable data label)", async () => {
+    const steps: SubmitStep[] = [];
+    await runOnboardingSubmit(deps(completeState(), steps, []));
+    expect(steps).not.toContain("grantAllowance");
+    expect(mockApi.grantAllowance).not.toHaveBeenCalled();
   });
 
   it("throws if a physical SIM has no delivery address", async () => {

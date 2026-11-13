@@ -57,6 +57,7 @@ export function initialOnboardingState(tenant: TenantId): OnboardingState {
     orderId: null,
     captured: false,
     credited: false,
+    granted: false,
     interactionId: null,
   };
 }
@@ -113,6 +114,7 @@ function reviveForTenant(raw: unknown, tenant: TenantId, now: number): Onboardin
     orderId: str(state.orderId),
     captured: bool(state.captured),
     credited: bool(state.credited),
+    granted: bool(state.granted),
     interactionId: str(state.interactionId),
   };
 }

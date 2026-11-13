@@ -588,6 +588,7 @@
         "recordInteraction": "Saving your activation…",
         "capture": "Confirming your payment…",
         "credit": "Adding your first top-up…",
+        "grantAllowance": "Setting up your data…",
         "finalizing": "Finishing up…"
       },
       "terminalError": "We couldn't finish activating your plan. Your account is saved — you can try again.",
@@ -600,8 +601,8 @@
       "title": "You're all set, {{name}}",
       "titleNoName": "You're all set",
       "subtitle": "Your plan is active.",
+      "goHome": "Go to Home",
       "topUp": "Top up now",
-      "later": "Maybe later",
       "money": {
         "heading": "Your first top-up",
         "stateDone": "Done",
