@@ -27,6 +27,7 @@ import { runTopUp } from "@/lib/topup-payment";
 import { tokenizeCardMock } from "@/lib/card-token";
 import { formatPrice } from "@/lib/format";
 import { formatShortDate } from "@/lib/format-date";
+import { AutoTopUpTrigger } from "@/components/demo/auto-top-up-trigger";
 
 /** The demo saved method (read-only — same card the manual top-up + preferences mock use). */
 const DEMO_CARD_NUMBER = "5555 5555 5555 7310";
@@ -186,7 +187,12 @@ function Page() {
           onRetry={() => void configQuery.refetch()}
         />
       ) : showOnState && config ? (
-        <OnStep locale={locale} config={config} onTurnOffRequest={() => setSheetOpen(true)} />
+        <OnStep
+          locale={locale}
+          config={config}
+          balance={balance}
+          onTurnOffRequest={() => setSheetOpen(true)}
+        />
       ) : phase === "intro" ? (
         <IntroStep locale={locale} onSetUp={() => setPhase("review")} />
       ) : phase === "review" ? (
@@ -515,10 +521,12 @@ function ConfigRow({
 function OnStep({
   locale,
   config,
+  balance,
   onTurnOffRequest,
 }: {
   locale: Locale;
   config: AutoTopUpConfig;
+  balance: Balance | null;
   onTurnOffRequest: () => void;
 }) {
   const { t } = useLocalizedTranslation();
@@ -586,6 +594,9 @@ function OnStep({
       >
         {t("pages.autoTopUp.turnOff.cta", "Turn off auto top-up")}
       </Button>
+
+      {/* DEV-only: stands in for the absent recurring scheduler (renders nothing in prod). */}
+      <AutoTopUpTrigger config={config} balance={balance} locale={locale} />
     </div>
   );
 }

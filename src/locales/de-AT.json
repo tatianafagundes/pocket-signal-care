@@ -93,7 +93,8 @@
         "title": "Daten hinzufügen",
         "low": "Noch {{amount}}. Du kannst jederzeit mehr hinzufügen.",
         "depleted": "Dein Datenvolumen ist aufgebraucht. Du kannst jederzeit mehr hinzufügen."
-      }
+      },
+      "autoTopUpLink": "Automatische Aufladung"
     },
     "myPlan": {
       "title": "Mein Tarif",
@@ -271,6 +272,15 @@
         "confirm": "Automatische Aufladung abschalten",
         "working": "Wird abgeschaltet…",
         "keep": "Eingeschaltet lassen"
+      },
+      "demo": {
+        "title": "Demo: Auslöser",
+        "body": "Im Demo läuft kein Planer. Löse die wiederkehrende Prüfung jetzt aus — es lädt nur auf, wenn dein Guthaben unter dem Schwellenwert liegt.",
+        "run": "Aufladeprüfung ausführen",
+        "running": "Wird ausgeführt…",
+        "notNeeded": "Guthaben liegt bei oder über {{threshold}} — nichts zu tun.",
+        "fired": "Automatische Aufladung ausgelöst — {{amount}} hinzugefügt. Neues Guthaben {{balance}}.",
+        "failed": "Die simulierte Abbuchung ist fehlgeschlagen. Versuche es erneut."
       }
     },
     "addOns": {

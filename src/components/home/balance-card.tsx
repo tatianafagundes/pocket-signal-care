@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Repeat } from "lucide-react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { Button } from "@/components/ui/button";
@@ -29,9 +30,19 @@ export function BalanceCard({
   const { t } = useLocalizedTranslation();
   return (
     <section className="rounded-card border border-hairline bg-surface p-4">
-      <h2 className="type-caption text-text-secondary">
-        {t("pages.myPlan.balanceLabel", "Balance")}
-      </h2>
+      <div className="flex items-start justify-between gap-2">
+        <h2 className="type-caption text-text-secondary">
+          {t("pages.myPlan.balanceLabel", "Balance")}
+        </h2>
+        {/* Quiet entry into the auto top-up screen (Figma P1: link beside the Balance title). */}
+        <Link
+          to="/auto-top-up"
+          className="focus-ring -mt-1 flex items-center gap-1 rounded-control px-1 py-1 type-body-sm-strong text-accent-ink"
+        >
+          <Repeat className="size-4" aria-hidden="true" />
+          {t("pages.home.autoTopUpLink", "Auto top-up")}
+        </Link>
+      </div>
       {balance === null || state === "none" ? (
         <p className="mt-1 type-body-sm text-text-secondary">
           {t("pages.myPlan.balanceEmpty", "No balance yet — make your first top up.")}

@@ -93,7 +93,8 @@
         "title": "Add data",
         "low": "{{amount}} left. You can add more anytime.",
         "depleted": "Your data is used up. You can add more anytime."
-      }
+      },
+      "autoTopUpLink": "Auto top-up"
     },
     "myPlan": {
       "title": "My plan",
@@ -271,6 +272,15 @@
         "confirm": "Turn off auto top-up",
         "working": "Turning off…",
         "keep": "Keep it on"
+      },
+      "demo": {
+        "title": "Demo: trigger",
+        "body": "No scheduler runs in the demo. Fire the recurring check now — it tops up only if your balance is below the threshold.",
+        "run": "Run auto top-up check",
+        "running": "Running…",
+        "notNeeded": "Balance is at or above {{threshold}} — nothing to do.",
+        "fired": "Auto top-up fired — {{amount}} added. New balance {{balance}}.",
+        "failed": "The simulated charge failed. Try again."
       }
     },
     "addOns": {
