@@ -158,5 +158,62 @@
     "clicar": "a:has-text('Support')",
     "esperar": "text=Help topics",
     "pausa": 400
+  },
+  {
+    "nome": "16-autotopup-off",
+    "clicar": "a:has-text('Account')",
+    "esperar": "text=Top up automatically when your balance runs low",
+    "pausa": 400,
+    "capturar": false
+  },
+  {
+    "nome": "16-autotopup-off",
+    "clicar": "a:has-text('Auto top-up')",
+    "esperar": "text=How it would work",
+    "pausa": 600
+  },
+  {
+    "nome": "17-autotopup-review",
+    "clicar": "button:has-text('Set up auto top-up')",
+    "esperar": "text=Turn on auto top-up",
+    "pausa": 400
+  },
+  {
+    "nome": "18-autotopup-on",
+    "clicar": "input[type=checkbox]",
+    "pausa": 200,
+    "capturar": false
+  },
+  {
+    "nome": "18-autotopup-on",
+    "clicar": "button:has-text('Turn on auto top-up')",
+    "esperar": "text=Back to Home",
+    "pausa": 600,
+    "capturar": false
+  },
+  {
+    "nome": "18-autotopup-on",
+    "clicar": "a:has-text('Back to Home')",
+    "pausa": 500,
+    "capturar": false
+  },
+  {
+    "nome": "18-autotopup-on",
+    "clicar": "a:has-text('Account')",
+    "esperar": "text=Top up automatically when your balance runs low",
+    "pausa": 400,
+    "capturar": false
+  },
+  {
+    "nome": "18-autotopup-on",
+    "clicar": "a:has-text('Auto top-up')",
+    "esperar": "button:has-text('Turn off auto top-up')",
+    "pausa": 600
+  },
+  {
+    "nome": "19-autotopup-turnoff-sheet",
+    "clicar": "button:has-text('Turn off auto top-up')",
+    "esperar": "text=Turn off auto top-up?",
+    "pausa": 500
   }
 ]
