@@ -36,6 +36,9 @@ const store = new Map<string, MockRecord>();
 // customerId -> party interactions (TMF683), newest first. Survives the session like the store.
 const interactions = new Map<string, PartyInteraction[]>();
 // customerId -> prepaid contract. Survives the session like the store.
+// NOTE: write-only for now — createContract fills it, but nothing reads it yet. It will be read by
+// the customerview mapper (Task 5) and referenced by the recharge flow (later spec); kept here so
+// the contract persists across the session like party/customer. Not dead code, just not-read-yet.
 const contracts = new Map<string, Contract>();
 let seeded = false;
 

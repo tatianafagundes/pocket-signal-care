@@ -58,7 +58,8 @@ only ever exercised locally via gitignored `.env.local` + the fake. Requirement 
         send the resolved id as `X-Tenant-Id`. (6.4)
   - [ ] 4.4 Parse the `{code,reason,message}` error envelope in `request()` and map to `SeamError`
         categories (404→notFound, 4041/409→conflict, 4040/5031/5032→rejected, 5xx/network→unavailable);
-        keep never-throw + `badResponse` path. (2.6)
+        keep never-throw + `badResponse` path. **Treat 200 AND 201 as success** (CPR create returns
+        201; `res.ok` covers 2xx — assert this in a test so a future narrowing to `=== 200` is caught). (2.6)
   - Verify (tsc/build/test/lint) — no runtime change with mock default. Commit.
   - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6, 2.7, 6.4_
 

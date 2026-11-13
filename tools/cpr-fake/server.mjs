@@ -251,7 +251,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // --- fall-through ---
-  return sendError(res, 404, 4040_0, "Not Found", `No fake route for ${method} ${path}`);
+  return sendError(res, 404, 40400, "Not Found", `No fake route for ${method} ${path}`);
 });
 
 server.listen(PORT, "127.0.0.1", () => {
