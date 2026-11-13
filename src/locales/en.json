@@ -170,6 +170,13 @@
         "rowNewBalance": "New balance",
         "backHome": "Back to Home",
         "seePlan": "See my plan"
+      },
+      "failed": {
+        "title": "Payment didn’t go through",
+        "body": "Nothing was charged. Your balance stays {{amount}}, valid until {{date}}.",
+        "bodyNoBalance": "Nothing was charged. Your balance is unchanged.",
+        "tryAgain": "Try again",
+        "getHelp": "Get help"
       }
     },
     "addOns": {

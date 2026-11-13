@@ -170,6 +170,13 @@
         "rowNewBalance": "Neues Guthaben",
         "backHome": "Zurück zur Startseite",
         "seePlan": "Mein Tarif ansehen"
+      },
+      "failed": {
+        "title": "Zahlung nicht erfolgreich",
+        "body": "Es wurde nichts abgebucht. Ihr Guthaben bleibt {{amount}}, gültig bis {{date}}.",
+        "bodyNoBalance": "Es wurde nichts abgebucht. Ihr Guthaben bleibt unverändert.",
+        "tryAgain": "Erneut versuchen",
+        "getHelp": "Hilfe erhalten"
       }
     },
     "addOns": {

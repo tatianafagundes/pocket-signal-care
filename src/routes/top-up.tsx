@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Check, Lock } from "lucide-react";
+import { AlertTriangle, Check, Lock } from "lucide-react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
@@ -65,6 +65,12 @@ interface SuccessData {
   paidAt: string;
 }
 
+/** A failed attempt, snapshotted for the failed result. The balance is the UNCHANGED current one. */
+interface FailedData {
+  amountMinor: number;
+  balance: Balance | null;
+}
+
 function Page() {
   const { t } = useLocalizedTranslation();
   const { tenant, locale } = useTenant();
@@ -82,6 +88,7 @@ function Page() {
   const [amountMinor, setAmountMinor] = useState<number>(DEFAULT_AMOUNT_MINOR);
   const [paying, setPaying] = useState(false);
   const [success, setSuccess] = useState<SuccessData | null>(null);
+  const [failed, setFailed] = useState<FailedData | null>(null);
 
   // Move focus to the step heading on each phase change, so a screen reader announces the new
   // screen (the three phases share one route, so there's no route change to announce). WCAG 2.4.3.
@@ -106,6 +113,7 @@ function Page() {
         patch: (next) => saveTopUpProgress(tenant, customerId, amountMinor, next),
       });
       clearTopUpProgress();
+      setFailed(null);
       setSuccess({
         amountMinor,
         balance: result.balance,
@@ -116,9 +124,13 @@ function Page() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.customer360(tenant, customerId) });
       setPhase("result");
     } catch {
-      // Failed/declined path lands in the next increment (4b). For now, return to the amount step
-      // so the attempt can be retried; progress stays persisted for a safe resume.
-      setPhase("amount");
+      // P6 failed result. The payment seam never credited, so the balance is unchanged — we snapshot
+      // the CURRENT balance for the honest "balance stays" line. We do NOT clear persisted progress:
+      // a declined authorize left nothing to resume, but a capture-failure mid-flight can resume
+      // safely from where it stopped (anti double-charge) on the next attempt.
+      setSuccess(null);
+      setFailed({ amountMinor, balance: query.data?.balance ?? null });
+      setPhase("result");
     } finally {
       setPaying(false);
     }
@@ -159,6 +171,16 @@ function Page() {
           headingRef={headingRef}
           onContinue={() => void pay()}
           onBack={() => setPhase("amount")}
+        />
+      ) : failed ? (
+        <FailedStep
+          locale={locale}
+          failed={failed}
+          headingRef={headingRef}
+          onTryAgain={() => {
+            setFailed(null);
+            setPhase("amount");
+          }}
         />
       ) : success ? (
         <SuccessStep locale={locale} success={success} headingRef={headingRef} />
@@ -439,6 +461,58 @@ function SuccessStep({ locale, success, headingRef }: SuccessStepProps) {
   );
 }
 
+interface FailedStepProps {
+  locale: Locale;
+  failed: FailedData;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
+  onTryAgain: () => void;
+}
+
+/**
+ * P6 "Payment didn't go through" — the failed result. Honest on two counts: nothing was charged
+ * (the seam never captured, or the credit never ran), and the balance is unchanged (we show the
+ * current balance, not a projection). Recovery is retry or get help.
+ */
+function FailedStep({ locale, failed, headingRef, onTryAgain }: FailedStepProps) {
+  const { t } = useLocalizedTranslation();
+  const balance = failed.balance;
+
+  return (
+    <div className="grid gap-5">
+      <ResultHead
+        tone="danger"
+        icon={<AlertTriangle className="size-9 text-danger" aria-hidden="true" />}
+        title={t("pages.topUp.failed.title", "Payment didn’t go through")}
+        body={
+          balance
+            ? t(
+                "pages.topUp.failed.body",
+                "Nothing was charged. Your balance stays {{amount}}, valid until {{date}}.",
+                {
+                  amount: formatPrice(balance.amountMinor, balance.currency, locale),
+                  date: balance.validUntil ? formatShortDate(balance.validUntil, locale) : "—",
+                },
+              )
+            : t(
+                "pages.topUp.failed.bodyNoBalance",
+                "Nothing was charged. Your balance is unchanged.",
+              )
+        }
+        headingRef={headingRef}
+      />
+
+      <div className="grid gap-2">
+        <Button className="w-full" onClick={onTryAgain}>
+          {t("pages.topUp.failed.tryAgain", "Try again")}
+        </Button>
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/support">{t("pages.topUp.failed.getHelp", "Get help")}</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /** The top of a result/handoff screen: a tinted circle with a status icon, a title and a line. */
 function ResultHead({
   tone,
@@ -447,13 +521,18 @@ function ResultHead({
   body,
   headingRef,
 }: {
-  tone: "accent" | "success";
+  tone: "accent" | "success" | "danger";
   icon: React.ReactNode;
   title: string;
   body: string;
   headingRef: React.RefObject<HTMLHeadingElement | null>;
 }) {
-  const tint = tone === "success" ? "bg-success-tint" : "bg-accent-tint";
+  const tint =
+    tone === "success"
+      ? "bg-success-tint"
+      : tone === "danger"
+        ? "bg-danger-tint"
+        : "bg-accent-tint";
   return (
     <div className="flex flex-col items-center gap-4 pt-4 text-center">
       <span className={`flex size-[72px] items-center justify-center rounded-full ${tint}`}>
