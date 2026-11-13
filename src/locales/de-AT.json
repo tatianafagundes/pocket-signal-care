@@ -191,6 +191,11 @@
       "hintCode": "Der Code hat 12 Ziffern. Sie finden ihn auf dem Gutschein oder in der zugehörigen E-Mail.",
       "submit": "Zum Guthaben hinzufügen",
       "redeeming": "Wird hinzugefügt…",
+      "error": {
+        "invalid": "Dieser Code ist ungültig oder wurde bereits verwendet. Prüfen Sie die 12 Ziffern.",
+        "tooManyAttempts": "Zu viele Versuche. Bitte später erneut versuchen oder Hilfe holen.",
+        "getHelp": "Hilfe erhalten"
+      },
       "success": {
         "title": "Gutschein hinzugefügt",
         "body": "Ihr neues Guthaben beträgt {{amount}}, gültig bis {{date}}.",

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
@@ -44,6 +44,13 @@ const VOUCHER_CODE_DIGITS = 12;
 /** Which step of the redeem task is on screen. A reload does not resume a half-finished redeem. */
 type Phase = "enter" | "result";
 
+/**
+ * An inline error on the enter screen (not a separate result phase). `invalid` covers BOTH an
+ * unknown and an already-used code — one indistinct message, so the UI never reveals which (the
+ * seam returns the same error for both). `tooManyAttempts` is the anti brute-force bar.
+ */
+type VoucherError = "invalid" | "tooManyAttempts";
+
 /** A completed redemption, snapshotted for the receipt (the code is masked; never shown in full). */
 interface SuccessData {
   redemption: VoucherRedemption;
@@ -79,6 +86,13 @@ function Page() {
   const [code, setCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [success, setSuccess] = useState<SuccessData | null>(null);
+  const [error, setError] = useState<VoucherError | null>(null);
+
+  // Editing the code clears a prior error (the next attempt starts clean).
+  function onCodeChange(next: string) {
+    setCode(next);
+    if (error) setError(null);
+  }
 
   // Move focus to the result heading on each phase change, so a screen reader announces the new
   // screen (the phases share one route, so there's no route change to announce). WCAG 2.4.3.
@@ -94,6 +108,7 @@ function Page() {
     // Anti double-submit, and don't call the seam with an incomplete code (the button gates it too).
     if (redeeming || !complete) return;
     setRedeeming(true);
+    setError(null);
     try {
       // The seam resolves the face value from the code (server-side); we never send an amount.
       const result = await api.redeemVoucher({ customerId, code: digits });
@@ -105,8 +120,12 @@ function Page() {
       // Refresh balance + activity everywhere (Home, Account, My plan).
       void queryClient.invalidateQueries({ queryKey: queryKeys.customer360(tenant, customerId) });
       setPhase("result");
-    } catch {
-      // The inline error path (invalid / already used / barred) lands in a later increment.
+    } catch (e) {
+      // Inline error, staying on the enter screen (a wrong code is a correction, not a new page).
+      // "tooManyAttempts" = the anti brute-force bar; everything else (unknown OR used) reads as the
+      // one indistinct "invalid", so we never reveal which — matching the seam's own discipline.
+      const failure = asSeamFailure(e, "charging.redeemVoucher");
+      setError(failure.code === "charging.voucher.tooManyAttempts" ? "tooManyAttempts" : "invalid");
     } finally {
       setRedeeming(false);
     }
@@ -134,9 +153,10 @@ function Page() {
           data={query.data}
           locale={locale}
           code={code}
-          onCodeChange={setCode}
+          onCodeChange={onCodeChange}
           complete={complete}
           redeeming={redeeming}
+          error={error}
           onRedeem={() => void redeem()}
         />
       ) : success ? (
@@ -153,6 +173,7 @@ interface EnterStepProps {
   onCodeChange: (code: string) => void;
   complete: boolean;
   redeeming: boolean;
+  error: VoucherError | null;
   onRedeem: () => void;
 }
 
@@ -164,11 +185,23 @@ function EnterStep({
   onCodeChange,
   complete,
   redeeming,
+  error,
   onRedeem,
 }: EnterStepProps) {
   const { t } = useLocalizedTranslation();
   const balance = data.balance;
   const msisdn = data.party.msisdn;
+  const errorText = error
+    ? error === "tooManyAttempts"
+      ? t(
+          "pages.redeem.error.tooManyAttempts",
+          "Too many tries. Please try again later, or get help.",
+        )
+      : t(
+          "pages.redeem.error.invalid",
+          "This code isn’t valid or was already used. Check the 12 digits.",
+        )
+    : null;
 
   return (
     <div className="grid gap-5">
@@ -202,9 +235,22 @@ function EnterStep({
           value={formatCode(normalizeCode(code))}
           onChange={(e) => onCodeChange(e.target.value)}
           placeholder="4471 0392 8816"
-          aria-describedby="voucher-hint-value voucher-hint-code"
-          className="focus-ring h-[52px] w-full rounded-control border border-input bg-surface px-4 type-body text-text-primary tabular-figures placeholder:text-text-secondary"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={
+            error
+              ? "voucher-error voucher-hint-value voucher-hint-code"
+              : "voucher-hint-value voucher-hint-code"
+          }
+          className={`focus-ring h-[52px] w-full rounded-control border bg-surface px-4 type-body text-text-primary tabular-figures placeholder:text-text-secondary ${
+            error ? "border-danger" : "border-input"
+          }`}
         />
+        {errorText ? (
+          <div id="voucher-error" role="alert" className="flex items-start gap-2 text-danger">
+            <AlertTriangle className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            <p className="type-body-sm">{errorText}</p>
+          </div>
+        ) : null}
       </div>
 
       <p id="voucher-hint-value" className="type-body-sm text-text-secondary">
@@ -220,16 +266,24 @@ function EnterStep({
         )}
       </p>
 
-      <Button
-        className="w-full"
-        onClick={onRedeem}
-        disabled={!complete || redeeming}
-        aria-busy={redeeming}
-      >
-        {redeeming
-          ? t("pages.redeem.redeeming", "Adding to balance…")
-          : t("pages.redeem.submit", "Add to balance")}
-      </Button>
+      <div className="grid gap-2">
+        <Button
+          className="w-full"
+          onClick={onRedeem}
+          disabled={!complete || redeeming}
+          aria-busy={redeeming}
+        >
+          {redeeming
+            ? t("pages.redeem.redeeming", "Adding to balance…")
+            : t("pages.redeem.submit", "Add to balance")}
+        </Button>
+        {/* Get help is a recovery exit, shown once an attempt has failed (Figma P17 error). */}
+        {error ? (
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/support">{t("pages.redeem.error.getHelp", "Get help")}</Link>
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }
