@@ -9,6 +9,7 @@ import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DemoStateSwitcher } from "@/components/demo/demo-state-switcher";
 import { RecentActivity } from "@/components/account/recent-activity";
+import { activityFeed } from "@/services/customer360-rules";
 import { api, SeamFailure } from "@/services/api";
 
 export const Route = createFileRoute("/account")({
@@ -62,7 +63,7 @@ function Page() {
             onRetry={() => void query.refetch()}
           />
         ) : (
-          <RecentActivity activity={query.data.activity} locale={locale} />
+          <RecentActivity feed={activityFeed(query.data)} locale={locale} />
         )}
 
         {/* Dev-only demo tool; renders nothing in a real build or when signed out. */}

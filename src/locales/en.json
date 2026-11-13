@@ -187,6 +187,9 @@
         "topUp": "Top-up",
         "refill": "Add-on",
         "adjustment": "Adjustment",
+        "onboarding": "Welcome",
+        "planChange": "Plan change",
+        "support": "Support",
         "pending": "Pending",
         "failed": "Failed"
       }

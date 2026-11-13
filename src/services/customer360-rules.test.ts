@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   activeAddOns,
+  activityFeed,
   balanceState,
   bucketState,
   composeCustomer360,
@@ -19,7 +20,16 @@ import {
   planRenewalVisible,
   renewalShortfall,
 } from "@/services/customer360-rules";
-import type { Balance, Customer, Offer, Party, Product, UsageBucket } from "@/services/model";
+import type {
+  ActivityItem,
+  Balance,
+  Customer,
+  Offer,
+  Party,
+  PartyInteraction,
+  Product,
+  UsageBucket,
+} from "@/services/model";
 
 const party: Party = {
   partyId: "p1",
@@ -678,5 +688,122 @@ describe("homeDataPrompt", () => {
   });
   it("should not prompt on an unlimited plan", () => {
     expect(homeDataPrompt(withData(0, true), now)).toBeNull();
+  });
+});
+
+describe("activityFeed", () => {
+  const base = { customer, party, installedBase: [] as Product[], balance: null };
+
+  const money = (
+    over: Partial<ActivityItem> & Pick<ActivityItem, "activityId" | "occurredAt">,
+  ): ActivityItem => ({
+    kind: "topUp",
+    status: "completed",
+    ...over,
+  });
+  const interaction = (
+    over: Partial<PartyInteraction> & Pick<PartyInteraction, "interactionId" | "occurredAt">,
+  ): PartyInteraction => ({
+    partyId: "p1",
+    customerId: "c1",
+    tenantId: "drei",
+    type: "onboarding",
+    status: "completed",
+    ...over,
+  });
+
+  it("unions money and relationship sources into one list", () => {
+    const c360 = composeCustomer360({
+      ...base,
+      activity: [money({ activityId: "ftx-1", occurredAt: "2026-02-01T10:00:00Z" })],
+      interactions: [interaction({ interactionId: "int-1", occurredAt: "2026-01-01T10:00:00Z" })],
+    });
+    const feed = activityFeed(c360);
+    expect(feed).toHaveLength(2);
+    expect(feed.map((f) => f.source)).toEqual(["money", "relationship"]);
+  });
+
+  it("sorts the merged feed newest-first across both sources", () => {
+    const c360 = composeCustomer360({
+      ...base,
+      activity: [
+        money({ activityId: "ftx-old", occurredAt: "2026-01-05T10:00:00Z" }),
+        money({ activityId: "ftx-new", occurredAt: "2026-03-20T10:00:00Z" }),
+      ],
+      interactions: [interaction({ interactionId: "int-mid", occurredAt: "2026-02-10T10:00:00Z" })],
+    });
+    expect(activityFeed(c360).map((f) => f.feedId)).toEqual([
+      "money:ftx-new",
+      "rel:int-mid",
+      "money:ftx-old",
+    ]);
+  });
+
+  it("prefixes feedIds by source so keys never collide", () => {
+    // Same raw id on both axes must still produce two distinct feed rows.
+    const c360 = composeCustomer360({
+      ...base,
+      activity: [money({ activityId: "x", occurredAt: "2026-02-01T10:00:00Z" })],
+      interactions: [interaction({ interactionId: "x", occurredAt: "2026-01-01T10:00:00Z" })],
+    });
+    const ids = activityFeed(c360).map((f) => f.feedId);
+    expect(new Set(ids).size).toBe(2);
+    expect(ids).toContain("money:x");
+    expect(ids).toContain("rel:x");
+  });
+
+  it("carries the signed amount, currency and offer name of a money refill", () => {
+    const c360 = composeCustomer360({
+      ...base,
+      activity: [
+        money({
+          activityId: "ftx-r",
+          occurredAt: "2026-02-01T10:00:00Z",
+          kind: "refill",
+          amountMinor: -350,
+          currency: "EUR",
+          offerName: "+1 GB",
+        }),
+      ],
+    });
+    const [row] = activityFeed(c360);
+    expect(row).toMatchObject({
+      kind: "refill",
+      amountMinor: -350,
+      currency: "EUR",
+      offerName: "+1 GB",
+    });
+  });
+
+  it("omits amount for a relationship row and for an unpriced money refill", () => {
+    const c360 = composeCustomer360({
+      ...base,
+      activity: [
+        money({ activityId: "ftx-noamt", occurredAt: "2026-02-02T10:00:00Z", kind: "refill" }),
+      ],
+      interactions: [interaction({ interactionId: "int-1", occurredAt: "2026-02-01T10:00:00Z" })],
+    });
+    for (const row of activityFeed(c360)) {
+      expect(row.amountMinor).toBeUndefined();
+      expect(row.currency).toBeUndefined();
+    }
+  });
+
+  it("normalizes an inProgress interaction to pending", () => {
+    const c360 = composeCustomer360({
+      ...base,
+      interactions: [
+        interaction({
+          interactionId: "int-ip",
+          occurredAt: "2026-02-01T10:00:00Z",
+          status: "inProgress",
+        }),
+      ],
+    });
+    expect(activityFeed(c360)[0]?.status).toBe("pending");
+  });
+
+  it("is empty when there is no activity and no interactions", () => {
+    expect(activityFeed(composeCustomer360(base))).toEqual([]);
   });
 });

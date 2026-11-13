@@ -43,8 +43,9 @@ export interface Customer360Parts {
    */
   usage?: UsageBucket[];
   /**
-   * Financial activity (top-ups/refills/adjustments) from the charging seam (real DMP: CBEV
-   * Financial Transaction Enquiry); empty/absent when none or the seam is unavailable.
+   * Financial activity (top-ups/refills/adjustments) from the charging seam (real DMP: TMF654
+   * Prepay Balance Management for top-ups/refills, Financial Transaction Enquiry for
+   * payments/refunds/adjustments); empty/absent when none or the seam is unavailable.
    */
   activity?: ActivityItem[];
 }
@@ -316,4 +317,76 @@ export function homeDataPrompt(c360: Customer360, now: Date = new Date()): HomeD
   if (bucket === null || bucket.unlimited) return null;
   const state = bucketState(bucket, now);
   return state === "low" || state === "depleted" ? state : null;
+}
+
+/**
+ * One row of the merged "recent activity" feed — a PURE display projection. (Step 2)
+ *
+ * The Account feed is a UNION of two axes that are kept separate in the model: the MONEY axis
+ * (`Customer360.activity`, from the charging seam — top-ups/refills/adjustments) and the
+ * RELATIONSHIP axis (`Customer360.interactions`, TMF683 from CPR — onboarding/plan-change/support).
+ * `activityFeed` flattens both onto this one shape so the UI renders a single list and never touches
+ * either raw source. Keeping `source` means the UI can still pick the right icon/label per axis.
+ */
+export interface FeedItem {
+  /** Unique across both sources (`money:<activityId>` / `rel:<interactionId>`), so React keys don't collide. */
+  feedId: string;
+  /** Which axis this row came from — drives the icon/label family in the UI. */
+  source: "money" | "relationship";
+  /**
+   * What happened. Money kinds are financial (`topUp`/`refill`/`adjustment`); relationship kinds are
+   * lifecycle moments (`onboarding`/`planChange`/`support`). `topUp` appears in both unions on purpose
+   * — a money top-up vs. a (future) recorded top-up interaction — disambiguated by `source`.
+   */
+  kind: ActivityItem["kind"] | PartyInteraction["type"];
+  /** ISO timestamp the event occurred — the merge/sort key (newest first). */
+  occurredAt: string;
+  /** Outcome, normalized across sources, so a failed/pending row reads as such (colour + word). */
+  status: "completed" | "pending" | "failed";
+  /** Signed minor units for a money row (+ credit / − debit). Absent for a relationship row or an unpriced refill. */
+  amountMinor?: number;
+  currency?: "EUR";
+  /** For a money refill: the offer bought, for the label. Absent otherwise. */
+  offerName?: string;
+}
+
+/**
+ * Normalize a TMF683 interaction status onto the feed's three-state outcome. `inProgress` → pending.
+ */
+function interactionStatus(s: PartyInteraction["status"]): FeedItem["status"] {
+  return s === "inProgress" ? "pending" : s;
+}
+
+/**
+ * The merged recent-activity feed — a PURE rule, no I/O, no throw. (Step 2)
+ *
+ * Unions the money feed (`c360.activity`) and the relationship timeline (`c360.interactions`) into
+ * one list of `FeedItem`, newest first. Both sub-sources are already individually newest-first from
+ * `composeCustomer360`, but they must be re-sorted together once interleaved. The UI reads THIS,
+ * not the raw axes — so when a connector starts recording new interaction or transaction kinds, the
+ * feed grows with no UI change.
+ *
+ * No de-duplication today: the only interaction recorded is `onboarding`, which never coincides with
+ * a money row. If a `topUp`/`planChange` interaction ever lands that mirrors a money transaction,
+ * add a prefer-money-row rule here (same instant + same kind) — not before it can actually happen.
+ */
+export function activityFeed(c360: Customer360): FeedItem[] {
+  const money: FeedItem[] = c360.activity.map((a) => ({
+    feedId: `money:${a.activityId}`,
+    source: "money",
+    kind: a.kind,
+    occurredAt: a.occurredAt,
+    status: a.status,
+    ...(a.amountMinor !== undefined ? { amountMinor: a.amountMinor } : {}),
+    ...(a.currency !== undefined ? { currency: a.currency } : {}),
+    ...(a.offerName !== undefined ? { offerName: a.offerName } : {}),
+  }));
+  const relationship: FeedItem[] = c360.interactions.map((it) => ({
+    feedId: `rel:${it.interactionId}`,
+    source: "relationship",
+    kind: it.type,
+    occurredAt: it.occurredAt,
+    status: interactionStatus(it.status),
+  }));
+  return [...money, ...relationship].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 }

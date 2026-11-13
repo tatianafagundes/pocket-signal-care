@@ -187,6 +187,9 @@
         "topUp": "Aufladung",
         "refill": "Zusatzpaket",
         "adjustment": "Anpassung",
+        "onboarding": "Willkommen",
+        "planChange": "Tarifwechsel",
+        "support": "Support",
         "pending": "Ausstehend",
         "failed": "Fehlgeschlagen"
       }
