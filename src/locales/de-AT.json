@@ -127,7 +127,8 @@
       "renewsInOn": "Verlängert sich {{when}} · {{date}}",
       "autoRenew": "Verlängert sich automatisch über dein Guthaben.",
       "refillsOn": "Auffüllung am {{date}}",
-      "addData": "Daten hinzufügen"
+      "addData": "Daten hinzufügen",
+      "addRoaming": "Roaming zubuchen"
     },
     "topUp": {
       "title": "Aufladen",

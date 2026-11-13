@@ -21,7 +21,14 @@ const BAR_TONE: Record<BucketState, string> = {
  * a thin bar filled to what is LEFT (matching the Home ring), and a state word when attention is
  * needed — the word stays text colour; the dot and bar carry the status colour.
  */
-export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
+export function AllowanceRow({
+  bucket,
+  canAddRoaming = false,
+}: {
+  bucket: UsageBucket;
+  /** Whether the tenant sells a roaming top-up — gates the roaming bucket's "Add roaming" CTA. */
+  canAddRoaming?: boolean;
+}) {
   const { t } = useLocalizedTranslation();
   const { locale } = useTenant();
   const state = bucketState(bucket);
@@ -94,6 +101,22 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
               {t("pages.myPlan.addData", "Add data")}
             </Link>
           ) : null}
+        </div>
+      ) : null}
+      {/*
+       * Roaming is a PROACTIVE buy — a traveller tops up before the trip, not once the allowance
+       * runs low — so, unlike the remedial "Add data" CTA above, this shows whenever the tenant
+       * actually sells a roaming add-on (canAddRoaming), regardless of the bucket's state. A quiet
+       * text link, not a loud button: it offers, it doesn't nag.
+       */}
+      {bucket.type === "roaming" && canAddRoaming ? (
+        <div className="mt-1.5 flex justify-end">
+          <Link
+            to="/add-ons"
+            className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
+          >
+            {t("pages.myPlan.addRoaming", "Add roaming")}
+          </Link>
         </div>
       ) : null}
     </li>

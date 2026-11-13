@@ -127,7 +127,8 @@
       "renewsInOn": "Renews {{when}} · {{date}}",
       "autoRenew": "Renews automatically from your balance.",
       "refillsOn": "Refill on {{date}}",
-      "addData": "Add data"
+      "addData": "Add data",
+      "addRoaming": "Add roaming"
     },
     "topUp": {
       "title": "Top up",

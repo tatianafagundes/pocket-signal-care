@@ -48,6 +48,16 @@ function Page() {
     queryFn: () => api.getCustomer360(customerId),
   });
 
+  // Whether this tenant's catalogue actually sells a roaming top-up (an add-on with euRoaming).
+  // This gates the per-bucket "Add roaming" CTA so we never offer something that doesn't exist
+  // (drei has one; dreigo has none). A catalogue capability — no customer, so its own cache key,
+  // distinct from the add-ons page's per-customer offer+qualify list.
+  const roamingQuery = useQuery({
+    queryKey: ["add-ons-catalog", tenant],
+    queryFn: () => api.listAddOns(tenant),
+  });
+  const canAddRoaming = (roamingQuery.data ?? []).some((o) => o.euRoaming === true);
+
   return (
     <PageShell
       title={t("pages.myPlan.title", "My plan")}
@@ -78,13 +88,21 @@ function Page() {
           onRetry={() => void query.refetch()}
         />
       ) : (
-        <PlanDetail data={query.data} locale={locale} />
+        <PlanDetail data={query.data} locale={locale} canAddRoaming={canAddRoaming} />
       )}
     </PageShell>
   );
 }
 
-function PlanDetail({ data, locale }: { data: Customer360; locale: Locale }) {
+function PlanDetail({
+  data,
+  locale,
+  canAddRoaming,
+}: {
+  data: Customer360;
+  locale: Locale;
+  canAddRoaming: boolean;
+}) {
   const { t } = useLocalizedTranslation();
   const plan = primaryPlan(data);
   const when = renewalWhen(data);
@@ -157,7 +175,7 @@ function PlanDetail({ data, locale }: { data: Customer360; locale: Locale }) {
             {/* One grouped card with hairline dividers — calmer than a box per allowance. */}
             <ul className="mt-2 divide-y divide-hairline rounded-card border border-hairline bg-surface">
               {data.usage.map((b) => (
-                <AllowanceRow key={b.bucketId} bucket={b} />
+                <AllowanceRow key={b.bucketId} bucket={b} canAddRoaming={canAddRoaming} />
               ))}
             </ul>
           </>
