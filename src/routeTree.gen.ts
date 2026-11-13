@@ -14,11 +14,13 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as AddOnsRouteImport } from './routes/add-ons'
 import { Route as AutoTopUpRouteImport } from './routes/auto-top-up'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MyPlanRouteImport } from './routes/my-plan'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TopUpRouteImport } from './routes/top-up'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding/index'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding/account'
 import { Route as OnboardingAddonsRouteImport } from './routes/onboarding/addons'
@@ -55,6 +57,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyPlanRoute = MyPlanRouteImport.update({
   id: '/my-plan',
   path: '/my-plan',
@@ -80,6 +87,12 @@ const TopUpRoute = TopUpRouteImport.update({
   path: '/top-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -137,11 +150,13 @@ export interface FileRoutesByFullPath {
   '/add-ons': typeof AddOnsRoute
   '/auto-top-up': typeof AutoTopUpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/my-plan': typeof MyPlanRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/redeem': typeof RedeemRoute
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/onboarding/account': typeof OnboardingAccountRoute
   '/onboarding/addons': typeof OnboardingAddonsRoute
   '/onboarding/delivery': typeof OnboardingDeliveryRoute
@@ -159,10 +174,12 @@ export interface FileRoutesByTo {
   '/add-ons': typeof AddOnsRoute
   '/auto-top-up': typeof AutoTopUpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/my-plan': typeof MyPlanRoute
   '/redeem': typeof RedeemRoute
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/onboarding/account': typeof OnboardingAccountRoute
   '/onboarding/addons': typeof OnboardingAddonsRoute
   '/onboarding/delivery': typeof OnboardingDeliveryRoute
@@ -181,11 +198,13 @@ export interface FileRoutesById {
   '/add-ons': typeof AddOnsRoute
   '/auto-top-up': typeof AutoTopUpRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/my-plan': typeof MyPlanRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/redeem': typeof RedeemRoute
   '/support': typeof SupportRoute
   '/top-up': typeof TopUpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/onboarding/account': typeof OnboardingAccountRoute
   '/onboarding/addons': typeof OnboardingAddonsRoute
   '/onboarding/delivery': typeof OnboardingDeliveryRoute
@@ -205,11 +224,13 @@ export interface FileRouteTypes {
     | '/add-ons'
     | '/auto-top-up'
     | '/login'
+    | '/mcp'
     | '/my-plan'
     | '/onboarding'
     | '/redeem'
     | '/support'
     | '/top-up'
+    | '/.well-known/oauth-protected-resource'
     | '/onboarding/account'
     | '/onboarding/addons'
     | '/onboarding/delivery'
@@ -227,10 +248,12 @@ export interface FileRouteTypes {
     | '/add-ons'
     | '/auto-top-up'
     | '/login'
+    | '/mcp'
     | '/my-plan'
     | '/redeem'
     | '/support'
     | '/top-up'
+    | '/.well-known/oauth-protected-resource'
     | '/onboarding/account'
     | '/onboarding/addons'
     | '/onboarding/delivery'
@@ -248,11 +271,13 @@ export interface FileRouteTypes {
     | '/add-ons'
     | '/auto-top-up'
     | '/login'
+    | '/mcp'
     | '/my-plan'
     | '/onboarding'
     | '/redeem'
     | '/support'
     | '/top-up'
+    | '/.well-known/oauth-protected-resource'
     | '/onboarding/account'
     | '/onboarding/addons'
     | '/onboarding/delivery'
@@ -271,11 +296,13 @@ export interface RootRouteChildren {
   AddOnsRoute: typeof AddOnsRoute
   AutoTopUpRoute: typeof AutoTopUpRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   MyPlanRoute: typeof MyPlanRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   RedeemRoute: typeof RedeemRoute
   SupportRoute: typeof SupportRoute
   TopUpRoute: typeof TopUpRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -315,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-plan': {
       id: '/my-plan'
       path: '/my-plan'
@@ -348,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/top-up'
       fullPath: '/top-up'
       preLoaderRoute: typeof TopUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding/': {
@@ -459,11 +500,14 @@ const rootRouteChildren: RootRouteChildren = {
   AddOnsRoute: AddOnsRoute,
   AutoTopUpRoute: AutoTopUpRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   MyPlanRoute: MyPlanRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   RedeemRoute: RedeemRoute,
   SupportRoute: SupportRoute,
   TopUpRoute: TopUpRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
