@@ -15,6 +15,10 @@ import { logSeamOp, newCorrelationId } from "@/services/seam-logger";
  * never-throw, log op + tenant + ms + status — and leave room for the real auth/idempotency
  * checks to slot in when the http drivers land, without changing any seam or the UI.
  *
+ * ⚠️ This is the single choke point where Fase-8 authorization/RLS and the REAL tenant (today most
+ * call-sites pass a seam-name placeholder, not the tenant) must land. See the consolidated anchor:
+ * docs/design/2026-11-11-fase8-security-debt.md §1 (authorization) and §2 (seam-name vs tenant).
+ *
  * runWrite currently mirrors runRead; it is kept distinct so writes can later add
  * idempotency/audit without touching call sites (every write already goes through it).
  */

@@ -100,7 +100,7 @@ export function getCustomer360(
     const tenantId = cpr.data.customer.tenantId;
 
     // Defence-in-depth tenant check (NOT the real authorization boundary — that is server-side RLS,
-    // Fase 8; see docs/design fase8-security-debt). The caller states which tenant it is acting for
+    // Fase 8; see docs/design/2026-11-11-fase8-security-debt.md §1). The caller states which tenant it is acting for
     // (expectedTenant, from the active brand); if the resolved customer belongs to another tenant,
     // refuse rather than serve a cross-tenant 360. Reported as notFound so it never reveals that the
     // id exists under a different brand. Omitting expectedTenant (tests, server-internal) skips it.

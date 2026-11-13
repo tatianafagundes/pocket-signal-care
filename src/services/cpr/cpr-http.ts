@@ -32,6 +32,8 @@ interface CprHttpConfig {
 
 function readConfig(): CprHttpConfig | null {
   const baseUrl = import.meta.env["VITE_CPR_BASE_URL"] as string | undefined;
+  // ⚠️ A VITE_-prefixed var is bundled into client JS. A real token must NOT ship to the browser —
+  // terminate auth server-side (BFF) in Fase 8. See docs/design/2026-11-11-fase8-security-debt.md §4.
   const token = import.meta.env["VITE_CPR_TOKEN"] as string | undefined;
   if (!baseUrl || !token) return null;
   return { baseUrl, token, timeoutMs: 10_000 };
