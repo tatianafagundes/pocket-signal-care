@@ -146,7 +146,45 @@ the add-on's money charge isn't deducted through this seam, so inventing a price
 If this reads as inconsistent, a later step can either price live refills (needs the charge in the
 grant) or drop the seeded refill's amount.
 
-Deferred to step 2: merge Party Interactions (onboarding/plan-change/support) into the same feed via
-a pure `activityFeed(c360)` composer — the UI already reads one list, so only the composer changes.
 Also: the capture scenario's `03-account-switcher` step name is now stale (Account leads with Recent
 activity); rename on the next capture-scenario edit.
+
+---
+
+## Recent activity — step 2 shipped (merge Party Interactions into the feed)
+
+The feed is now a UNION of both axes, composed by a new pure rule `activityFeed(c360)`: the money feed
+(`Customer360.activity`) interleaved with the TMF683 relationship timeline (`Customer360.interactions`),
+newest-first. The UI reads one `FeedItem[]` and never touches either raw axis, so a connector that starts
+recording new interaction or transaction kinds grows the feed with no UI change.
+
+- `FeedItem` display projection + `activityFeed()` in `customer360-rules`; source-tagged
+  (`money` | `relationship`) so the UI picks the icon/label family; `feedId` prefixed (`money:` / `rel:`)
+  so React keys never collide; `inProgress` interaction status normalizes to `pending`.
+- `RecentActivity` takes `FeedItem[]`; relationship rows render their own lucide icons (onboarding →
+  Welcome, planChange, support) and carry no money amount. i18n keys added in en + de-AT.
+- Verified by simulation against the real mocks: the healthy customer composes 3 money rows + 1
+  onboarding row, newest-first, onboarding anchored at the bottom; a live top-up prepends a fresh money
+  row with the onboarding still last. Confirmed, not inferred.
+
+### Faithfulness note — B2C uses Customer Interaction, not Party Interaction (validated against Glean)
+
+TMF683 Party Interaction is the right *shape* for the relationship timeline, and that is what we model.
+But the DXP docs (DXP Technical Product Description §4.3 / Product Overview §21.3) are explicit that
+TMF683 was introduced **specifically for B2B journeys** "where existing customer interactions do not fit
+fully," and that DXP keeps the older **Customer Interaction** API for B2C and "migrates to party
+interactions gradually." Our app is B2C prepaid, so a fully faithful real connector may read **Customer**
+Interactions rather than **Party** Interactions. The resource models are near-identical (both carry the
+same `relatedEntities` set — Contract, Account, Order, Shopping Cart, MSISDN, …), the platform is
+converging on Party Interactions, and our `PartyInteraction` shape maps onto either, so modelling the
+timeline as TMF683 is defensible and forward-looking. The connector swap is one line behind the CPR seam
+(`listInteractions` points at the Customer Interaction endpoint instead), with no change to the composer,
+the `FeedItem` shape, or the UI.
+
+### No de-duplication yet (by design)
+
+Today the only interaction recorded is `onboarding`, which never coincides with a money row, so there is
+nothing to collapse. If a future connector records a `topUp` / `planChange` **interaction** (TMF683) that
+mirrors the same event already present as a money transaction, the feed would show it twice. The place to
+add a prefer-money-row rule (same instant + same kind → drop the relationship copy) is documented in
+`activityFeed` — deliberately not built before it can actually happen.
