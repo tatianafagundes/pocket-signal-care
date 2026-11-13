@@ -55,3 +55,38 @@ From Lovable's "Later" lists and the prototype map, none built yet:
 Do **1 (hygiene)** and **2 (demo states)** as one small increment — they make the already-shipped
 UI correct and reviewable — then **3 (capture)**, then bring **4** to the user as a scoped choice.
 Nothing here rebuilds what Lovable shipped; it finishes and verifies it.
+
+---
+
+## Visual capture — round 1 (2026-11-13, signed-in dashboard)
+
+Captured the signed-in Home + My plan across all demo states with Playwright (ui-capture skill).
+Scenario `docs/design/roteiro-captura.json`; images `docs/design/capturas/r1/`. Drei brand, EN,
+desktop width (the app renders its 390px phone column centred). Login via the real form, then the
+Account demo switcher drives each state. **Console was clean** (no runtime errors in any state).
+
+### Confirmed working (matches Figma P1 + the Apple-calm review)
+- **Healthy Home**: line header (number + copy + "Active · eSIM" green badge), Balance €15.00 with
+  green-dot "Covers your renewal in 25 days", Data ring (1.8 GB left, amber consumed arc, "Running
+  low" + amber dot), Plan card ("up", €14.90, "Renews in 25 days", "Automatically, from your
+  balance"), and the conditional "Add data" card (shown because data is low).
+- **Unlimited**: Data card shows the word "Unlimited" (no ring/number); Plan "up Unlimited+" €29.90.
+- **Suspended**: danger "Suspended · eSIM" badge, "Your line is suspended" danger notice + Get help,
+  Balance "No balance / Top up to keep using your line", Data "No data allowance yet" empty state.
+- **Loading**: neutral grey skeletons shaped like the real layout (no brand-tint flash) — caught
+  incidentally and confirms Lovable's fix.
+
+### Findings (for a later pass — NOT fixed here)
+1. **Suspended line still shows "Renews Jan 1, 2027 · Automatically, from your balance" on the Plan
+   card.** A suspended line with €0 won't auto-renew; the renewal / auto-renew copy in
+   `PlanSummaryCard` (and/or `renewalWhen`) doesn't account for `lineStatus === "suspended"`. A
+   cross-state inconsistency unit tests miss. Likely fix: suppress or reword the renewal line when
+   suspended (and arguably when balance is empty/expired).
+2. **No mobile capture width.** The ui-capture tool's widths are all desktop-class, so the phone
+   column sits centred on a wide canvas. Fine for content review; if we want true 390px framing,
+   add a mobile width to the tool or crop.
+
+### Reproduce
+`bun run dev`, then:
+`python3 ~/.kiro/skills/ui-capture/tools/capture.py --url http://localhost:8080 --roteiro docs/design/roteiro-captura.json --out docs/design/capturas/r2 --temas claro --larguras desktop --full --diff docs/design/capturas/r1`
+(`--diff` flags any state that moved vs r1 — pixel regression gate for the next UI change.)
