@@ -179,6 +179,16 @@
           "empty": "Empty balance",
           "pending": "Pending line"
         }
+      },
+      "loading": "Loading your account…",
+      "activity": {
+        "title": "Recent activity",
+        "empty": "No activity yet.",
+        "topUp": "Top-up",
+        "refill": "Add-on",
+        "adjustment": "Adjustment",
+        "pending": "Pending",
+        "failed": "Failed"
       }
     },
     "support": {

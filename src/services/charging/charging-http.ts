@@ -1,5 +1,5 @@
 import { err, seamError, type SeamResult } from "@/services/seam-result";
-import type { Balance, UsageBucket } from "@/services/model";
+import type { ActivityItem, Balance, UsageBucket } from "@/services/model";
 import type { ChargingDriver } from "@/services/charging/charging-driver";
 
 /*
@@ -26,5 +26,7 @@ export function createChargingHttp(): ChargingDriver {
       Promise.resolve(notConfigured<UsageBucket[]>()),
     grantAllowance: (): Promise<SeamResult<UsageBucket>> =>
       Promise.resolve(notConfigured<UsageBucket>()),
+    getActivity: (): Promise<SeamResult<ActivityItem[]>> =>
+      Promise.resolve(notConfigured<ActivityItem[]>()),
   };
 }

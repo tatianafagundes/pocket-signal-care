@@ -113,3 +113,31 @@ catch it. Revisit if a lightweight router-render helper is added for component t
 Still open from the capture review: the empty/expired-balance case (not suspended) still shows the
 renewal line though the balance won't cover it — deliberately left, since the shortfall `renewal`
 notice already covers that; reconsider if it reads as contradictory.
+
+---
+
+## Recent activity — step 1 shipped (financial feed via charging getActivity)
+
+Grounded in Glean/DMP docs: "last top-ups / recent activity" is **financial history**, served in real
+DMP Evolved by **CBEV Financial Transaction Enquiry** (read via the charging seam) — NOT Party
+Interaction (TMF683, the relationship timeline on CPR). So the money feed lives on the charging axis.
+
+- `ActivityItem` model + `Customer360.activity`; composer sorts newest-first, defaults [].
+- Charging seam `getActivity(customerId)` (driver + http stub notConfigured); mock seeds a short
+  history per demo variant and records a `topUp` on each top-up, a `refill` on each add-on grant.
+- `getCustomer360` fan-out adds `getActivity`, degrades to [] independently.
+- `RecentActivity` on Account: grouped hairline-divider card, icon + label + date + signed amount
+  (neutral colour; status owns green/red) + status dot/word; empty state. i18n both locales.
+- The real-ECEV swap is a connector: `getActivity` http driver maps Financial Transaction Enquiry
+  records → `ActivityItem`, zero UI change. Same pattern as usage buckets.
+
+Known demo artifact (accepted): a SEEDED refill carries a price (−€3.50, standing in for a real
+CBEV financial-transaction record), but a LIVE add-on purchase records a refill with NO amount —
+the add-on's money charge isn't deducted through this seam, so inventing a price would be dishonest.
+If this reads as inconsistent, a later step can either price live refills (needs the charge in the
+grant) or drop the seeded refill's amount.
+
+Deferred to step 2: merge Party Interactions (onboarding/plan-change/support) into the same feed via
+a pure `activityFeed(c360)` composer — the UI already reads one list, so only the composer changes.
+Also: the capture scenario's `03-account-switcher` step name is now stale (Account leads with Recent
+activity); rename on the next capture-scenario edit.

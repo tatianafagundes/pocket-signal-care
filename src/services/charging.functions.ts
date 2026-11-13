@@ -1,7 +1,7 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
 import { runRead, runWrite } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
-import type { Balance, UsageBucket } from "@/services/model";
+import type { ActivityItem, Balance, UsageBucket } from "@/services/model";
 import {
   customerIdSchema,
   topUpSchema,
@@ -13,8 +13,9 @@ import { createChargingMock } from "@/services/charging/charging-mock";
 import { createChargingHttp } from "@/services/charging/charging-http";
 
 /*
- * Charging (ECEV) seam. (Spec Fase 4.4 + usage buckets) getBalance / topUp / rateAndDeduct, plus
- * the usage axis getUsage / grantAllowance (TMF654 product buckets). Mock by default.
+ * Charging (ECEV) seam. (Spec Fase 4.4 + usage buckets + activity) getBalance / topUp /
+ * rateAndDeduct, the usage axis getUsage / grantAllowance (TMF654 product buckets), and the money
+ * activity feed getActivity (real DMP: CBEV Financial Transaction Enquiry). Mock by default.
  * Amounts are minor units (euro cents). Same shape as the other seams.
  */
 
@@ -62,5 +63,13 @@ export function grantAllowance(input: unknown): Promise<SeamResult<UsageBucket>>
   const { customerId, ...grant } = parsed.data;
   return runWrite({ tenantId: "ecev" }, "charging.grantAllowance", () =>
     driver.grantAllowance(customerId, grant),
+  );
+}
+
+export function getActivity(customerIdRaw: string): Promise<SeamResult<ActivityItem[]>> {
+  const parsed = customerIdSchema.safeParse(customerIdRaw);
+  if (!parsed.success) return invalid<ActivityItem[]>("charging.customer.invalid");
+  return runRead({ tenantId: "ecev" }, "charging.getActivity", () =>
+    driver.getActivity(parsed.data),
   );
 }

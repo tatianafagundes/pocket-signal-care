@@ -1,4 +1,5 @@
 import type {
+  ActivityItem,
   Balance,
   BucketState,
   Customer,
@@ -41,6 +42,11 @@ export interface Customer360Parts {
    * line has no buckets or the seam is unavailable (the 360 then shows no usage, never an error).
    */
   usage?: UsageBucket[];
+  /**
+   * Financial activity (top-ups/refills/adjustments) from the charging seam (real DMP: CBEV
+   * Financial Transaction Enquiry); empty/absent when none or the seam is unavailable.
+   */
+  activity?: ActivityItem[];
 }
 
 /** Compose the canonical Customer360 from the sources. Deterministic. */
@@ -68,6 +74,8 @@ export function composeCustomer360(parts: Customer360Parts): Customer360 {
     // Stable order data→voice→sms→roaming, so the usage panel reads the same way every time
     // regardless of the order the seam returned buckets in.
     usage: [...(parts.usage ?? [])].sort((a, b) => usageTypeRank(a.type) - usageTypeRank(b.type)),
+    // Financial activity, newest first — the "recent activity / last top-ups" feed.
+    activity: [...(parts.activity ?? [])].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
     // Newest first, so the activity timeline reads top-down regardless of source order.
     interactions: [...(parts.interactions ?? [])].sort((a, b) =>
       b.occurredAt.localeCompare(a.occurredAt),

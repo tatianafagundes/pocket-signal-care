@@ -179,6 +179,16 @@
           "empty": "Leeres Guthaben",
           "pending": "Leitung in Aktivierung"
         }
+      },
+      "loading": "Konto wird geladen…",
+      "activity": {
+        "title": "Letzte Aktivitäten",
+        "empty": "Noch keine Aktivitäten.",
+        "topUp": "Aufladung",
+        "refill": "Zusatzpaket",
+        "adjustment": "Anpassung",
+        "pending": "Ausstehend",
+        "failed": "Fehlgeschlagen"
       }
     },
     "support": {

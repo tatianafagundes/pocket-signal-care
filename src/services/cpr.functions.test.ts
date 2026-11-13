@@ -113,6 +113,27 @@ describe("cpr seam (mock driver)", () => {
       }
     });
 
+    it("includes the financial activity feed, newest first", async () => {
+      const r = await getCustomer360("demo-drei");
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.data.activity.length).toBeGreaterThanOrEqual(3);
+        // Composed newest-first.
+        const times = r.data.activity.map((a) => a.occurredAt);
+        expect([...times].sort((x, y) => y.localeCompare(x))).toEqual(times);
+      }
+    });
+
+    it("degrades gracefully when ECEV activity fails (empty activity, 360 still renders)", async () => {
+      forceError("charging.getActivity");
+      const r = await getCustomer360("demo-drei");
+      expect(r.ok).toBe(true);
+      if (r.ok) {
+        expect(r.data.customer.customerId).toBe("demo-drei");
+        expect(r.data.activity).toEqual([]);
+      }
+    });
+
     it("fails with notFound for an unknown customer (never throws)", async () => {
       const r = await getCustomer360("does-not-exist");
       expect(r.ok).toBe(false);

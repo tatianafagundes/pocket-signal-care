@@ -6,6 +6,7 @@ import {
   rateAndDeduct,
   getUsage,
   grantAllowance,
+  getActivity,
 } from "@/services/charging.functions";
 import { clearForcedError, forceError } from "@/services/mock-support";
 
@@ -168,6 +169,48 @@ describe("charging usage axis (mock)", () => {
   it("degrades to a seam error when getUsage is forced to fail", async () => {
     forceError("charging.getUsage");
     const r = await getUsage("demo-drei");
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe("charging activity feed (mock)", () => {
+  it("reads the seeded financial history (top-ups + a refill)", async () => {
+    const r = await getActivity("demo-drei");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.length).toBeGreaterThanOrEqual(3);
+      expect(r.data.some((a) => a.kind === "topUp")).toBe(true);
+      expect(r.data.some((a) => a.kind === "refill")).toBe(true);
+      // Top-ups add to balance (positive); refills carry no invented amount.
+      const aTopUp = r.data.find((a) => a.kind === "topUp")!;
+      expect(aTopUp.amountMinor).toBeGreaterThan(0);
+    }
+  });
+
+  it("records a new top-up in the activity feed", async () => {
+    const before = await getActivity("activity-test");
+    const beforeCount = before.ok ? before.data.length : 0;
+    await topUp({ customerId: "activity-test", amountMinor: 1000 });
+    const after = await getActivity("activity-test");
+    expect(after.ok).toBe(true);
+    if (after.ok) {
+      expect(after.data.length).toBe(beforeCount + 1);
+      const top = after.data.find((a) => a.amountMinor === 1000 && a.kind === "topUp");
+      expect(top?.status).toBe("completed");
+    }
+  });
+
+  it("does not expose the mock's internal entries (returned copies)", async () => {
+    const r1 = await getActivity("demo-dreigo");
+    if (r1.ok && r1.data[0]) r1.data[0].status = "failed";
+    const r2 = await getActivity("demo-dreigo");
+    if (r2.ok)
+      expect(r2.data.every((a) => a.status !== "failed" || a.kind === "adjustment")).toBe(true);
+  });
+
+  it("degrades to a seam error when getActivity is forced to fail", async () => {
+    forceError("charging.getActivity");
+    const r = await getActivity("demo-drei");
     expect(r.ok).toBe(false);
   });
 });

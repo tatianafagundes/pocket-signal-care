@@ -61,6 +61,36 @@ export interface Balance {
 }
 
 /**
+ * A financial activity entry — the "recent activity / last top-ups" feed on the money axis. This is
+ * a MONETARY event (a top-up, a refill charged from balance, an adjustment), distinct from a Party
+ * Interaction (TMF683, the relationship/journey timeline on CPR). In real DMP Evolved these come
+ * from CBEV **Financial Transaction Enquiry** (TMF654 recharge records / FIN), read by the charging
+ * seam — so a real connector maps a financial-transaction record straight onto this shape. The UI
+ * never reads this directly; `customer360-rules.activityFeed` composes it into display items.
+ */
+export interface ActivityItem {
+  /** Stable id (the financial-transaction reference in real CBEV). */
+  activityId: string;
+  /**
+   * What happened. `topUp` = money added; `refill` = an allowance bought from balance (add-on);
+   * `adjustment` = an operator credit/debit. Union left open for later kinds (payment/refund).
+   */
+  kind: "topUp" | "refill" | "adjustment";
+  /** ISO timestamp the transaction occurred. */
+  occurredAt: string;
+  /**
+   * Signed amount in minor units (euro cents): positive adds to balance (top-up, credit), negative
+   * spends it (refill, debit). Absent for a non-monetary entry. The UI formats + signs by kind.
+   */
+  amountMinor?: number;
+  currency?: "EUR";
+  /** Outcome, so a failed/pending top-up reads as such (colour + word), not as a silent success. */
+  status: "completed" | "pending" | "failed";
+  /** For a refill: the offer that was bought (correlation to the catalogue), for the label. */
+  offerName?: string;
+}
+
+/**
  * Unit of measure for a usage bucket: data in GB, voice in minutes, SMS as a count. GB (not MB)
  * matches both the catalogue (`Offer.dataAmount` is "10 GB") and the live TMF654 payload the real
  * ECEV/CBEV connector returns (`productBucket[].remainingValue[].units: "GB"`), so a bucket maps
@@ -187,6 +217,13 @@ export interface Customer360 {
    * of truth, model that as benefit-offer references, not an allowance field on the plan Offer.
    */
   usage: UsageBucket[];
+  /**
+   * Financial activity (top-ups / refills / adjustments), the MONEY axis — the "recent activity /
+   * last top-ups" feed. From the charging seam (real DMP: CBEV Financial Transaction Enquiry),
+   * newest-first by composition. Distinct from `interactions` (the relationship timeline); a later
+   * step merges both into one display feed. Empty when none or the seam is unavailable.
+   */
+  activity: ActivityItem[];
   /** Party interactions (TMF683), newest first — the activity timeline. Empty when none. */
   interactions: PartyInteraction[];
 }

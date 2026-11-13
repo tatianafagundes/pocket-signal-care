@@ -1,5 +1,5 @@
 import { ok, err, seamError } from "@/services/seam-result";
-import type { Balance, UsageBucket, UsageUnit } from "@/services/model";
+import type { ActivityItem, Balance, UsageBucket, UsageUnit } from "@/services/model";
 import type { TenantId } from "@/lib/tenant-rules";
 import { withMock } from "@/services/mock-support";
 import type { AllowanceGrant, ChargingDriver } from "@/services/charging/charging-driver";
@@ -26,8 +26,21 @@ const balances = new Map<string, number>();
 const balanceValidUntil = new Map<string, string>();
 // customerId -> allowance buckets (TMF654), the usage axis.
 const usage = new Map<string, UsageBucket[]>();
+// customerId -> financial activity (top-ups/refills/adjustments), the money-axis feed. Real DMP:
+// CBEV Financial Transaction Enquiry. topUp/grantAllowance append; getActivity reads.
+const activity = new Map<string, ActivityItem[]>();
 let seeded = false;
 let bucketSeq = 0;
+let activitySeq = 0;
+
+/** Append a financial activity entry for a customer (newest appended; getActivity sorts). */
+function recordActivity(customerId: string, entry: Omit<ActivityItem, "activityId">): ActivityItem {
+  const item: ActivityItem = { activityId: `ftx-${++activitySeq}`, ...entry };
+  const list = activity.get(customerId) ?? [];
+  list.push(item);
+  activity.set(customerId, list);
+  return item;
+}
 
 /** ISO for `days` from now (negative = past). Keeps the seed's validity relative to "now". */
 function isoFromNow(days: number): string {
@@ -55,6 +68,32 @@ function seedVariant(tenantId: TenantId, variant: DemoVariant): void {
     balances.set(customerId, spec.balanceMinor);
     balanceValidUntil.set(customerId, isoFromNow(spec.balanceValidDays));
   }
+
+  // A short financial history so the "recent activity" feed isn't empty in the demo: two past
+  // top-ups and one refill (an add-on bought from balance). Every variant gets it — even the
+  // suspended line has a history ("No balance now" + past top-ups reads coherently).
+  recordActivity(customerId, {
+    kind: "topUp",
+    occurredAt: isoFromNow(-32),
+    amountMinor: 2000,
+    currency: "EUR",
+    status: "completed",
+  });
+  recordActivity(customerId, {
+    kind: "refill",
+    occurredAt: isoFromNow(-20),
+    amountMinor: -350,
+    currency: "EUR",
+    status: "completed",
+    offerName: "+1 GB",
+  });
+  recordActivity(customerId, {
+    kind: "topUp",
+    occurredAt: isoFromNow(-4),
+    amountMinor: 1500,
+    currency: "EUR",
+    status: "completed",
+  });
 
   if (!spec.seedUsage) return; // suspended line: no usage buckets
 
@@ -145,6 +184,14 @@ export function createChargingMock(): ChargingDriver {
         const current = balances.get(customerId) ?? 0;
         const next = current + amountMinor;
         balances.set(customerId, next);
+        // A top-up is a financial transaction — record it so it shows in recent activity.
+        recordActivity(customerId, {
+          kind: "topUp",
+          occurredAt: new Date().toISOString(),
+          amountMinor,
+          currency: "EUR",
+          status: "completed",
+        });
         return ok(toBalance(customerId, next));
       });
     },
@@ -176,7 +223,23 @@ export function createChargingMock(): ChargingDriver {
         const buckets = usage.get(customerId) ?? [];
         const granted = applyGrant(buckets, grant);
         usage.set(customerId, buckets);
+        // Record the fulfilment as a refill in the activity feed. No amountMinor: the add-on's
+        // monetary charge isn't deducted through this seam (the purchase flow doesn't call
+        // rateAndDeduct), so inventing a price here would be dishonest — show the offer, not a cost.
+        recordActivity(customerId, {
+          kind: "refill",
+          occurredAt: new Date().toISOString(),
+          status: "completed",
+          ...(grant.offerName !== undefined ? { offerName: grant.offerName } : {}),
+        });
         return ok(cloneBucket(granted));
+      });
+    },
+
+    getActivity(customerId) {
+      return withMock("charging.getActivity", () => {
+        // Copies so a caller can't mutate the mock's stored entries; composition sorts newest-first.
+        return ok((activity.get(customerId) ?? []).map((a) => ({ ...a })));
       });
     },
   };

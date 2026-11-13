@@ -1,5 +1,5 @@
 import type { SeamResult } from "@/services/seam-result";
-import type { Balance, UsageBucket, UsageUnit } from "@/services/model";
+import type { ActivityItem, Balance, UsageBucket, UsageUnit } from "@/services/model";
 
 /**
  * A grant/refill of a non-monetary allowance (TMF654). The ECEV op that an add-on fulfilment
@@ -39,4 +39,9 @@ export interface ChargingDriver {
    * exists it is refilled (total + remaining both increase); otherwise a new bucket is created.
    */
   grantAllowance(customerId: string, grant: AllowanceGrant): Promise<SeamResult<UsageBucket>>;
+  /**
+   * Read the customer's financial activity — top-ups, refills, adjustments, newest first. Real DMP:
+   * CBEV Financial Transaction Enquiry. Empty when none. The money-axis "recent activity" feed.
+   */
+  getActivity(customerId: string): Promise<SeamResult<ActivityItem[]>>;
 }

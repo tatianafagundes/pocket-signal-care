@@ -15,7 +15,7 @@ import type { CprDriver } from "@/services/cpr/cpr-driver";
 import { createCprMock } from "@/services/cpr/cpr-mock";
 import { createCprHttp } from "@/services/cpr/cpr-http";
 import { getInstalledBase } from "@/services/order.functions";
-import { getBalance, getUsage } from "@/services/charging.functions";
+import { getBalance, getUsage, getActivity } from "@/services/charging.functions";
 import { listOffers, listAddOns } from "@/services/catalog.functions";
 
 /*
@@ -88,11 +88,12 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
     // The customer's tenant drives the catalogue fetch — known only after the CPR read resolves.
     const tenantId = cpr.data.customer.tenantId;
 
-    const [baseRes, balanceRes, usageRes, interactionsRes, offersRes, addOnsRes] =
+    const [baseRes, balanceRes, usageRes, activityRes, interactionsRes, offersRes, addOnsRes] =
       await Promise.all([
         getInstalledBase(customerId),
         getBalance(customerId),
         getUsage(customerId),
+        getActivity(customerId),
         driver.listInteractions(customerId),
         listOffers(tenantId),
         listAddOns(tenantId),
@@ -104,6 +105,9 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
     // Usage (TMF654 buckets) degrades like balance: a failed ECEV usage read shows no buckets, not
     // an error — the money axis and the rest of the 360 still render.
     const usage = usageRes.ok ? usageRes.data : [];
+    // Financial activity (money feed) degrades like usage: a failed read shows no recent activity,
+    // not an error.
+    const activity = activityRes.ok ? activityRes.data : [];
     // Interactions degrade gracefully like base/balance: a failed timeline must not blank the 360.
     const interactions = interactionsRes.ok ? interactionsRes.data : [];
     // Catalogue enrichment also degrades: if ECM fails, offers is empty and each product's `offer`
@@ -121,6 +125,7 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
         installedBase: rawInstalledBase,
         balance,
         usage,
+        activity,
         interactions,
         offers,
       }),
