@@ -57,7 +57,14 @@ function Page() {
     queryKey: queryKeys.addOnsCatalog(tenant),
     queryFn: () => api.listAddOns(tenant),
   });
-  const canAddRoaming = (roamingQuery.data ?? []).some((o) => o.euRoaming === true);
+  // Gate on `isSuccess`, not `data ?? []`: on a catalogue FAILURE we leave the CTA hidden, we do
+  // NOT treat "didn't load" as "no roaming add-on". This is a deliberate, proportional choice —
+  // the roaming CTA is a secondary affordance, and blocking the whole My plan page (balance, plan,
+  // allowances) because the add-on catalogue didn't answer would be wrong. react-query already
+  // retries a transient failure; until it succeeds the CTA simply doesn't show. `isSuccess` makes
+  // that intent explicit, where `data ?? []` silently conflated the two states.
+  const canAddRoaming =
+    roamingQuery.isSuccess && roamingQuery.data.some((o) => o.euRoaming === true);
 
   return (
     <PageShell
