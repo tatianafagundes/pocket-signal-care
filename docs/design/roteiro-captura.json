@@ -111,5 +111,35 @@
     "clicar": "a:has-text('Home')",
     "pausa": 1600,
     "esperar": "text=+43"
+  },
+  {
+    "nome": "09-reset-healthy",
+    "clicar": "a:has-text('Account')",
+    "esperar": "text=Demo: line state",
+    "capturar": false
+  },
+  {
+    "nome": "09-reset-healthy",
+    "clicar": "button:has-text('Healthy')",
+    "pausa": 300,
+    "capturar": false
+  },
+  {
+    "nome": "10-topup-amount",
+    "clicar": "a:has-text('Top up')",
+    "esperar": "text=How much",
+    "pausa": 600
+  },
+  {
+    "nome": "11-topup-handoff",
+    "clicar": "button:has-text('Pay')",
+    "esperar": "text=Leaving the app to pay",
+    "pausa": 400
+  },
+  {
+    "nome": "12-topup-success",
+    "clicar": "button:has-text('Continue to payment page')",
+    "esperar": "text=Balance topped up",
+    "pausa": 800
   }
 ]
