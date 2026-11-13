@@ -1,12 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { Check, Lock } from "lucide-react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { useCurrentCustomerId } from "@/lib/current-customer";
-import type { Locale } from "@/lib/tenant-rules";
-import type { Customer360 } from "@/services/model";
+import type { Locale, TenantId } from "@/lib/tenant-rules";
+import { tenantName } from "@/lib/tenant-rules";
+import type { Balance, Customer360 } from "@/services/model";
 import { PageShell } from "@/components/page-shell";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,7 +18,19 @@ import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import { projectedBalanceAfterTopUp } from "@/services/customer360-rules";
 import { formatMsisdn, formatPrice } from "@/lib/format";
-import { formatShortDate } from "@/lib/format-date";
+import { formatShortDate, formatDateTime } from "@/lib/format-date";
+import { tokenizeCardMock } from "@/lib/card-token";
+import { runTopUp } from "@/lib/topup-payment";
+import {
+  loadTopUpProgress,
+  saveTopUpProgress,
+  clearTopUpProgress,
+  emptyTopUpProgress,
+} from "@/lib/topup-progress";
+
+/** The demo payment method shown on the flow (read-only — no saved-card model; see plan doc). */
+const DEMO_CARD_NUMBER = "5555 5555 5555 7310";
+const DEMO_METHOD_LABEL = "Mastercard •••• 7310";
 
 export const Route = createFileRoute("/top-up")({
   head: () => ({
@@ -43,10 +57,19 @@ const DEFAULT_AMOUNT_MINOR = 2000;
 /** Which step of the top-up task is on screen. A reload does not resume a half-finished payment. */
 type Phase = "amount" | "handoff" | "result";
 
+/** A completed top-up, snapshotted for the success receipt (survives the balance query refetch). */
+interface SuccessData {
+  amountMinor: number;
+  balance: Balance;
+  authorizationRef: string;
+  paidAt: string;
+}
+
 function Page() {
   const { t } = useLocalizedTranslation();
   const { tenant, locale } = useTenant();
   const customerId = useCurrentCustomerId();
+  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: queryKeys.customer360(tenant, customerId),
@@ -57,6 +80,49 @@ function Page() {
   // must not be deep-linked or resumed across reloads. Amount is the entry phase.
   const [phase, setPhase] = useState<Phase>("amount");
   const [amountMinor, setAmountMinor] = useState<number>(DEFAULT_AMOUNT_MINOR);
+  const [paying, setPaying] = useState(false);
+  const [success, setSuccess] = useState<SuccessData | null>(null);
+
+  // Move focus to the step heading on each phase change, so a screen reader announces the new
+  // screen (the three phases share one route, so there's no route change to announce). WCAG 2.4.3.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, [phase]);
+
+  async function pay() {
+    // Anti double-submit: ignore a second trigger while a payment is in flight.
+    if (paying) return;
+    setPaying(true);
+    try {
+      // Resume any persisted progress for THIS exact top-up (same tenant+customer+amount), so a
+      // reload between capture and credit doesn't re-authorize (anti double-charge).
+      const start = loadTopUpProgress(tenant, customerId, amountMinor);
+      const result = await runTopUp({
+        customerId,
+        amountMinor,
+        methodToken: tokenizeCardMock(DEMO_CARD_NUMBER),
+        progress: start,
+        patch: (next) => saveTopUpProgress(tenant, customerId, amountMinor, next),
+      });
+      clearTopUpProgress();
+      setSuccess({
+        amountMinor,
+        balance: result.balance,
+        authorizationRef: result.authorizationRef,
+        paidAt: new Date().toISOString(),
+      });
+      // Refresh balance + activity everywhere (Home, Account, My plan).
+      void queryClient.invalidateQueries({ queryKey: queryKeys.customer360(tenant, customerId) });
+      setPhase("result");
+    } catch {
+      // Failed/declined path lands in the next increment (4b). For now, return to the amount step
+      // so the attempt can be retried; progress stays persisted for a safe resume.
+      setPhase("amount");
+    } finally {
+      setPaying(false);
+    }
+  }
 
   return (
     <PageShell title={t("pages.topUp.title", "Top up")} flush>
@@ -83,10 +149,20 @@ function Page() {
           onAmountChange={setAmountMinor}
           onPay={() => setPhase("handoff")}
         />
-      ) : (
-        // Handoff + result phases land in the next increments (4a/4b).
-        <p className="type-body text-text-secondary">…</p>
-      )}
+      ) : phase === "handoff" ? (
+        <HandoffStep
+          data={query.data}
+          locale={locale}
+          tenant={tenant}
+          amountMinor={amountMinor}
+          paying={paying}
+          headingRef={headingRef}
+          onContinue={() => void pay()}
+          onBack={() => setPhase("amount")}
+        />
+      ) : success ? (
+        <SuccessStep locale={locale} success={success} headingRef={headingRef} />
+      ) : null}
     </PageShell>
   );
 }
@@ -210,6 +286,203 @@ function AmountStep({ data, locale, amountMinor, onAmountChange, onPay }: Amount
           })}
         </Button>
       </section>
+    </div>
+  );
+}
+
+interface HandoffStepProps {
+  data: Customer360;
+  locale: Locale;
+  tenant: TenantId;
+  amountMinor: number;
+  paying: boolean;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
+  onContinue: () => void;
+  onBack: () => void;
+}
+
+/**
+ * P3 "Leaving the app to pay" — the hosted-payment-page handoff. Honest to our simulated PSP
+ * (FR-6): the real authorize→capture→credit runs behind "Continue" (see runTopUp). Read-only
+ * summary of what will be paid; a demo card as the method.
+ */
+function HandoffStep({
+  data,
+  locale,
+  tenant,
+  amountMinor,
+  paying,
+  headingRef,
+  onContinue,
+  onBack,
+}: HandoffStepProps) {
+  const { t } = useLocalizedTranslation();
+  const msisdn = data.party.msisdn;
+
+  return (
+    <div className="grid gap-5">
+      <ResultHead
+        tone="accent"
+        icon={<Lock className="size-9 text-accent-ink" aria-hidden="true" />}
+        title={t("pages.topUp.handoff.title", "Leaving the app to pay")}
+        body={t(
+          "pages.topUp.handoff.body",
+          "The secure payment page opens next; your bank may ask you to confirm. When you finish, you come back here and see the result.",
+        )}
+        headingRef={headingRef}
+      />
+
+      <div className="overflow-hidden rounded-card border border-hairline bg-surface">
+        <SummaryRow
+          label={t("pages.topUp.handoff.rowAmount", "Amount")}
+          value={formatPrice(amountMinor, "EUR", locale)}
+        />
+        <SummaryRow
+          label={t("pages.topUp.handoff.rowPayWith", "Pay with")}
+          value={t("pages.topUp.method.label", DEMO_METHOD_LABEL)}
+          divider
+        />
+        {msisdn ? (
+          <SummaryRow
+            label={t("pages.topUp.handoff.rowFor", "Top-up for")}
+            value={formatMsisdn(msisdn)}
+            divider
+          />
+        ) : null}
+      </div>
+
+      <div className="grid gap-2">
+        <Button className="w-full" onClick={onContinue} disabled={paying} aria-busy={paying}>
+          {paying
+            ? t("pages.topUp.handoff.paying", "Processing your payment…")
+            : t("pages.topUp.handoff.continue", "Continue to payment page")}
+        </Button>
+        <Button variant="outline" className="w-full" onClick={onBack} disabled={paying}>
+          {t("pages.topUp.handoff.back", "Back")}
+        </Button>
+      </div>
+
+      <p className="type-caption text-text-secondary text-center">
+        {t("pages.topUp.handoff.statement", "Shows on your statement as {{brand}}", {
+          brand: tenantName(tenant),
+        })}
+      </p>
+    </div>
+  );
+}
+
+interface SuccessStepProps {
+  locale: Locale;
+  success: SuccessData;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
+}
+
+/** P5 "Balance topped up" — the success receipt. The balance line is the honest new state. */
+function SuccessStep({ locale, success, headingRef }: SuccessStepProps) {
+  const { t } = useLocalizedTranslation();
+  const { balance } = success;
+  const validUntil = balance.validUntil ? formatShortDate(balance.validUntil, locale) : "—";
+
+  return (
+    <div className="grid gap-5">
+      <ResultHead
+        tone="success"
+        icon={<Check className="size-9 text-success" aria-hidden="true" />}
+        title={t("pages.topUp.success.title", "Balance topped up")}
+        body={t(
+          "pages.topUp.success.body",
+          "Your new balance is {{amount}}, valid until {{date}}.",
+          {
+            amount: formatPrice(balance.amountMinor, balance.currency, locale),
+            date: validUntil,
+          },
+        )}
+        headingRef={headingRef}
+      />
+
+      <div className="overflow-hidden rounded-card border border-hairline bg-surface">
+        <SummaryRow
+          label={t("pages.topUp.success.rowReference", "Reference")}
+          value={success.authorizationRef}
+        />
+        <SummaryRow
+          label={t("pages.topUp.success.rowPaid", "Paid")}
+          value={formatPrice(success.amountMinor, "EUR", locale)}
+          divider
+        />
+        <SummaryRow
+          label={t("pages.topUp.success.rowDate", "Date")}
+          value={formatDateTime(success.paidAt, locale)}
+          divider
+        />
+        <SummaryRow
+          label={t("pages.topUp.success.rowMethod", "Method")}
+          value={t("pages.topUp.method.label", DEMO_METHOD_LABEL)}
+          divider
+        />
+        <SummaryRow
+          label={t("pages.topUp.success.rowNewBalance", "New balance")}
+          value={`${formatPrice(balance.amountMinor, balance.currency, locale)} · ${validUntil}`}
+          divider
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Button asChild className="w-full">
+          <Link to="/">{t("pages.topUp.success.backHome", "Back to Home")}</Link>
+        </Button>
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/my-plan">{t("pages.topUp.success.seePlan", "See my plan")}</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** The top of a result/handoff screen: a tinted circle with a status icon, a title and a line. */
+function ResultHead({
+  tone,
+  icon,
+  title,
+  body,
+  headingRef,
+}: {
+  tone: "accent" | "success";
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
+}) {
+  const tint = tone === "success" ? "bg-success-tint" : "bg-accent-tint";
+  return (
+    <div className="flex flex-col items-center gap-4 pt-4 text-center">
+      <span className={`flex size-[72px] items-center justify-center rounded-full ${tint}`}>
+        {icon}
+      </span>
+      <h2 ref={headingRef} tabIndex={-1} className="type-title text-text-primary focus-ring">
+        {title}
+      </h2>
+      <p className="type-body text-text-secondary">{body}</p>
+    </div>
+  );
+}
+
+/** One label/value row inside a summary card (read-only; not a tap target). */
+function SummaryRow({
+  label,
+  value,
+  divider = false,
+}: {
+  label: string;
+  value: string;
+  divider?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 p-3 ${divider ? "border-t border-hairline" : ""}`}
+    >
+      <span className="type-body-sm-strong text-text-primary">{label}</span>
+      <span className="type-body-sm text-text-secondary tabular-figures text-right">{value}</span>
     </div>
   );
 }

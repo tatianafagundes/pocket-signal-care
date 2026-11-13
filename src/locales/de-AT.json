@@ -148,7 +148,29 @@
         "newBalance": "Neues Guthaben {{amount}}",
         "validUntil": "Gültig bis {{date}}"
       },
-      "pay": "{{amount}} bezahlen"
+      "pay": "{{amount}} bezahlen",
+      "handoff": {
+        "title": "Zur Zahlung verlassen Sie die App",
+        "body": "Die sichere Zahlungsseite öffnet sich als Nächstes; Ihre Bank fragt eventuell nach einer Bestätigung. Danach kehren Sie hierher zurück und sehen das Ergebnis.",
+        "rowAmount": "Betrag",
+        "rowPayWith": "Zahlen mit",
+        "rowFor": "Aufladung für",
+        "continue": "Weiter zur Zahlungsseite",
+        "paying": "Zahlung wird verarbeitet…",
+        "back": "Zurück",
+        "statement": "Erscheint auf Ihrer Abrechnung als {{brand}}"
+      },
+      "success": {
+        "title": "Guthaben aufgeladen",
+        "body": "Ihr neues Guthaben beträgt {{amount}}, gültig bis {{date}}.",
+        "rowReference": "Referenz",
+        "rowPaid": "Bezahlt",
+        "rowDate": "Datum",
+        "rowMethod": "Methode",
+        "rowNewBalance": "Neues Guthaben",
+        "backHome": "Zurück zur Startseite",
+        "seePlan": "Mein Tarif ansehen"
+      }
     },
     "addOns": {
       "title": "Zusatzpakete",

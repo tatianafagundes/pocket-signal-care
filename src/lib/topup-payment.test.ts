@@ -50,7 +50,7 @@ beforeEach(() => {
 describe("runTopUp — three money moments, idempotent", () => {
   it("happy path: authorize → capture → credit, each once, returns the new balance", async () => {
     const { patch } = recordingPatch();
-    const balance = await runTopUp({
+    const result = await runTopUp({
       customerId: "cust-1",
       amountMinor: 2000,
       methodToken: "tok-visa-4242",
@@ -62,8 +62,9 @@ describe("runTopUp — three money moments, idempotent", () => {
     expect(mockApi.capturePayment).toHaveBeenCalledTimes(1);
     expect(mockApi.topUp).toHaveBeenCalledTimes(1);
     expect(mockApi.getBalance).not.toHaveBeenCalled();
-    expect(balance.amountMinor).toBe(3240);
-    expect(balance.validUntil).toBe("2026-12-15T00:00:00Z");
+    expect(result.balance.amountMinor).toBe(3240);
+    expect(result.balance.validUntil).toBe("2026-12-15T00:00:00Z");
+    expect(result.authorizationRef).toBe("auth-1");
   });
 
   it("GOLDEN: a retry after the credit fails authorizes once, captures once, credits once", async () => {
@@ -105,7 +106,7 @@ describe("runTopUp — three money moments, idempotent", () => {
   it("resume after credit never re-credits — reads the current balance instead", async () => {
     const already: TopUpProgress = { authorizationRef: "auth-1", captured: true, credited: true };
     const { patch } = recordingPatch();
-    const balance = await runTopUp({
+    const result = await runTopUp({
       customerId: "cust-1",
       amountMinor: 2000,
       methodToken: "tok",
@@ -117,7 +118,8 @@ describe("runTopUp — three money moments, idempotent", () => {
     expect(mockApi.capturePayment).not.toHaveBeenCalled();
     expect(mockApi.topUp).not.toHaveBeenCalled(); // never credit twice
     expect(mockApi.getBalance).toHaveBeenCalledTimes(1);
-    expect(balance.amountMinor).toBe(3240);
+    expect(result.balance.amountMinor).toBe(3240);
+    expect(result.authorizationRef).toBe("auth-1");
   });
 
   it("rejects a non-positive amount before any seam call (money boundary)", async () => {

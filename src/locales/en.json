@@ -148,7 +148,29 @@
         "newBalance": "New balance {{amount}}",
         "validUntil": "Valid until {{date}}"
       },
-      "pay": "Pay {{amount}}"
+      "pay": "Pay {{amount}}",
+      "handoff": {
+        "title": "Leaving the app to pay",
+        "body": "The secure payment page opens next; your bank may ask you to confirm. When you finish, you come back here and see the result.",
+        "rowAmount": "Amount",
+        "rowPayWith": "Pay with",
+        "rowFor": "Top-up for",
+        "continue": "Continue to payment page",
+        "paying": "Processing your payment…",
+        "back": "Back",
+        "statement": "Shows on your statement as {{brand}}"
+      },
+      "success": {
+        "title": "Balance topped up",
+        "body": "Your new balance is {{amount}}, valid until {{date}}.",
+        "rowReference": "Reference",
+        "rowPaid": "Paid",
+        "rowDate": "Date",
+        "rowMethod": "Method",
+        "rowNewBalance": "New balance",
+        "backHome": "Back to Home",
+        "seePlan": "See my plan"
+      }
     },
     "addOns": {
       "title": "Add-ons",

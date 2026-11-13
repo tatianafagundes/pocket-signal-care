@@ -9,3 +9,16 @@ export function formatShortDate(iso: string, locale: string): string {
 export function formatRelativeDays(days: number, locale: string): string {
   return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(days, "day");
 }
+
+/** Localized date + time ("Oct 16, 2026, 12:10 PM"); the raw string when unparseable. */
+export function formatDateTime(iso: string, locale: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString(locale, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}

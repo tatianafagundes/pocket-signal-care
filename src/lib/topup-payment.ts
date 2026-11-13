@@ -43,8 +43,16 @@ export interface RunTopUpDeps {
   patch: (next: TopUpProgress) => void;
 }
 
+/** What a completed top-up yields — enough for the success receipt. */
+export interface TopUpResult {
+  /** The balance after crediting (new amount + extended validity). */
+  balance: Balance;
+  /** The payment authorization reference — shown on the receipt as the transaction reference. */
+  authorizationRef: string;
+}
+
 /**
- * Run or resume a top-up. Returns the new Balance (from the credit step) on success. Throws
+ * Run or resume a top-up. Returns the new balance + the authorization reference on success. Throws
  * SeamFailure on any step; partial progress is persisted via `patch` for an idempotent retry.
  */
 export async function runTopUp({
@@ -53,7 +61,7 @@ export async function runTopUp({
   methodToken,
   progress,
   patch,
-}: RunTopUpDeps): Promise<Balance> {
+}: RunTopUpDeps): Promise<TopUpResult> {
   // Money boundary: a non-positive amount must never reach authorize/topUp. The amount screen gates
   // this, but this is the reusable-function backstop so no caller can authorize a €0 top-up.
   if (!Number.isInteger(amountMinor) || amountMinor <= 0) {
@@ -65,15 +73,17 @@ export async function runTopUp({
 
   // 1. Authorize — reserve on the tokenized method, no charge. Reuse an existing ref on retry
   //    (never authorize the card twice).
-  if (!current.authorizationRef) {
+  let authorizationRef = current.authorizationRef;
+  if (!authorizationRef) {
     const auth = await api.authorizePayment({ customerId, amountMinor, methodToken });
-    current = { ...current, authorizationRef: auth.authorizationRef };
+    authorizationRef = auth.authorizationRef;
+    current = { ...current, authorizationRef };
     patch(current);
   }
 
   // 2. Capture — charge the authorized amount. Skip if already captured.
   if (!current.captured) {
-    await api.capturePayment({ authorizationRef: current.authorizationRef });
+    await api.capturePayment({ authorizationRef });
     current = { ...current, captured: true };
     patch(current);
   }
@@ -85,7 +95,7 @@ export async function runTopUp({
     const balance = await api.topUp({ customerId, amountMinor });
     current = { ...current, credited: true };
     patch(current);
-    return balance;
+    return { balance, authorizationRef };
   }
   // Already credited on a prior attempt — fetch the current balance (never re-credit).
   const existing = await api.getBalance(customerId);
@@ -94,5 +104,5 @@ export async function runTopUp({
     // fabricate a Balance.
     throw new Error("runTopUp: credited but no balance record found");
   }
-  return existing;
+  return { balance: existing, authorizationRef };
 }
