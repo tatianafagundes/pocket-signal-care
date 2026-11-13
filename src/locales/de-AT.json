@@ -290,27 +290,21 @@
       },
       "offers": {
         "drei-up-start": {
-          "tagline": "Gut für Nachrichten, Anrufe und Karten – meist im WLAN.",
           "description": "Ein leichter Einsteigertarif für alltägliches Nachrichten, Anrufe und ab und zu Karte oder Suche. Ideal, wenn du meist im WLAN bist."
         },
         "drei-up": {
-          "tagline": "Gut für Social Media, Musik und etwas Video, auch in der EU.",
           "description": "Unser beliebtester Tarif: genug 5G-Daten für tägliches Social Media, Navigation und Musikstreaming, mit EU-Roaming für Reisen."
         },
         "drei-up-max": {
-          "tagline": "Gut für viel Video jeden Tag oder regelmäßig Hotspot.",
           "description": "Ein großes 5G-Datenvolumen für alle, die täglich Video streamen oder einen Laptop tethern, mit EU-Roaming inklusive."
         },
         "drei-up-unlimited": {
-          "tagline": "Gut, wenn du streamst und teilst, ohne mitzuzählen.",
           "description": "Unbegrenzte 5G-Daten — streamen, tethern und surfen, ohne auf den Zähler zu schauen. Ideal für Vielnutzer."
         },
         "dreigo-go-8": {
-          "tagline": "Gut für Nachrichten, Anrufe und leichtes Surfen zum kleinen Preis.",
           "description": "Ein einfacher, günstiger Tarif für Anrufe, Chat und leichte Daten. Ein guter erster Wertkartentarif."
         },
         "dreigo-go-20": {
-          "tagline": "Gut für täglich Social Media und Video, auch in der EU.",
           "description": "Ein ausgewogener 5G-Tarif für alltägliches Streaming und Surfen, mit EU-Roaming für Reisen."
         },
         "dreigo-go-unlimited": {
