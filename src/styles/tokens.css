@@ -21,7 +21,7 @@
   /* --- surfaces (system; a brand may re-tint) --- */
   --canvas: #f5f6f8;
   --surface: #ffffff;
-  --surface-tint: #eef6f5;
+  --surface-tint: #eef0f3; /* neutral — no brand hue leaks into a quiet panel */
   --surface-sand: #fbf4e8;
   --hairline: #e4e7eb;
 
@@ -57,8 +57,10 @@
   /* --- status (system — never changed by a brand; always colour + word) --- */
   --success: #15703a;
   --success-tint: #e3f4ea;
-  --warning: #9a4607;
-  --warning-tint: #fbeedd;
+  /* warning is GRAPHIC-ONLY (icon, ring, bar, dot; >=3:1 on white, WCAG 1.4.11). An amber dark
+   * enough for 4.5:1 text reads brown, so warning words use text-primary beside the amber mark. */
+  --warning: #d97a00;
+  --warning-tint: #fff4e0;
   --danger: #c2281f;
   --danger-tint: #fbe5e3;
 

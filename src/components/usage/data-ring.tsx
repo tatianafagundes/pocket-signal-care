@@ -3,13 +3,12 @@ import type { BucketState } from "@/services/model";
 /*
  * DataRing — the 88px allowance ring on the Home "Data" card (Figma P1 · "Data ring").
  *
- * An SVG donut whose filled arc is the CONSUMED fraction (matching the prototype: the arc grows as
- * the allowance is used, and the centre reads "{consumed} used"). The remaining amount is shown as
- * TEXT beside the ring by the card — the ring is reinforcement, not the primary fact (usage
- * research + DESIGN.md: a bare progressbar doesn't announce itself).
+ * An SVG donut whose filled arc is the REMAINING fraction — prepaid users read "what's left", so
+ * the arc shrinks as the allowance is used and the centre reads "{remaining} left" (DESIGN.md:
+ * meters fill to what's left). The ring is reinforcement; the card pairs it with a state word.
  *
  * Colour follows the bucket state (never colour alone — the card pairs it with a word):
- *   ok → brand accent · low → warning · depleted → danger.
+ *   ok → brand accent · low → warning (graphic-only amber) · depleted → danger.
  * Only metered, active buckets reach here; unlimited/expired/pending are handled by the card
  * (no misleading ring). No hardcoded colour — stroke classes map to design tokens.
  */
@@ -19,7 +18,7 @@ const STROKE = 8;
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-/** Stroke colour class for the consumed arc, by state. */
+/** Stroke colour class for the remaining arc, by state. */
 function arcClass(state: BucketState): string {
   switch (state) {
     case "low":
@@ -34,25 +33,25 @@ function arcClass(state: BucketState): string {
 
 export interface DataRingProps {
   state: BucketState;
-  /** Consumed / total, 0..1. Passed in (computed once) so the card and ring agree. */
-  consumedFraction: number;
-  /** "3.8 GB" — the consumed amount shown large in the centre. */
+  /** Remaining / total, 0..1. Passed in (computed once) so the card and ring agree. */
+  remainingFraction: number;
+  /** "1.8 GB" — the remaining amount shown in the centre. */
   centreValue: string;
-  /** Translated word under the value, e.g. "used". */
+  /** Translated word under the value, e.g. "left". */
   centreCaption: string;
-  /** Accessible sentence, e.g. "3.8 of 10 GB used" (already localized). */
+  /** Accessible sentence, e.g. "1.8 of 10 GB left" (already localized). */
   ariaLabel: string;
 }
 
 export function DataRing({
   state,
-  consumedFraction,
+  remainingFraction,
   centreValue,
   centreCaption,
   ariaLabel,
 }: DataRingProps) {
   // Clamp so a rounding overshoot (remaining slightly negative) never draws past full.
-  const fraction = Math.max(0, Math.min(1, consumedFraction));
+  const fraction = Math.max(0, Math.min(1, remainingFraction));
   const dashOffset = CIRCUMFERENCE * (1 - fraction);
 
   return (
@@ -72,7 +71,7 @@ export function DataRing({
           strokeWidth={STROKE}
           className="stroke-hairline"
         />
-        {/* consumed arc — starts at 12 o'clock, grows clockwise */}
+        {/* remaining arc — starts at 12 o'clock, clockwise */}
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -86,12 +85,14 @@ export function DataRing({
           className={`${arcClass(state)} motion-safe:transition-[stroke-dashoffset] motion-safe:duration-500`}
         />
       </svg>
-      {/* centre: consumed amount + "used" — hidden from AT (the ring's aria-label already says it) */}
+      {/* centre: remaining amount + "left" — hidden from AT (the ring's aria-label already says it) */}
       <div
         className="absolute inset-0 flex flex-col items-center justify-center text-center"
         aria-hidden="true"
       >
-        <span className="type-body-sm-strong text-text-primary tabular-figures">{centreValue}</span>
+        <span className="type-body-sm-strong whitespace-nowrap text-text-primary tabular-figures">
+          {centreValue}
+        </span>
         <span className="type-caption text-text-secondary">{centreCaption}</span>
       </div>
     </div>

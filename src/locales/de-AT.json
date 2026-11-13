@@ -52,13 +52,12 @@
       },
       "data": {
         "title": "Daten",
-        "used": "verbraucht",
-        "left": "{{amount}} übrig",
         "none": "Keine Daten übrig",
         "unlimited": "Unbegrenzt",
         "empty": "Noch kein Datenvolumen.",
         "cardAria": "Datenvolumen — Mein Tarif öffnen",
-        "low": "Fast aufgebraucht: noch {{amount}}"
+        "ofTotal": "von {{total}}",
+        "leftCaption": "übrig"
       },
       "plan": {
         "title": "Tarif",
@@ -518,7 +517,7 @@
       "depleted": "Aufgebraucht"
     },
     "ring": {
-      "aria": "{{consumed}} von {{total}} {{unit}} verbraucht"
+      "ariaLeft": "{{remaining}} von {{total}} {{unit}} übrig"
     },
     "live": {
       "low": "Datenvolumen wird knapp: {{amount}} übrig",

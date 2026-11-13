@@ -237,3 +237,16 @@ export function balanceState(c360: Customer360, now: Date = new Date()): Balance
 export function activeAddOns(c360: Customer360): EnrichedProduct[] {
   return c360.installedBase.filter((p) => p.kind === "add-on");
 }
+
+/** The one attention notice Home shows above the balance, or none. */
+export type HomeNotice = "suspended" | "renewal" | null;
+
+/**
+ * One alarm at a time: a suspended line explains everything else (no balance, no renewal), so it
+ * wins; otherwise the renewal shortfall notice; otherwise nothing. Pure.
+ */
+export function homeNotice(c360: Customer360): HomeNotice {
+  if (lineStatus(c360) === "suspended") return "suspended";
+  if (renewalShortfall(c360) > 0) return "renewal";
+  return null;
+}

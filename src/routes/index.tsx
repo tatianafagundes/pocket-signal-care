@@ -19,6 +19,7 @@ import { api, SeamFailure } from "@/services/api";
 import {
   balanceState,
   lineSimType,
+  homeNotice,
   lineStatus,
   planRenewsAt,
   primaryDataBucket,
@@ -90,7 +91,7 @@ function HomeDashboard() {
             status={lineStatus(query.data)}
           />
 
-          {renewalShortfall(query.data) > 0 ? (
+          {homeNotice(query.data) === "renewal" ? (
             <RenewalNotice
               shortfallMinor={renewalShortfall(query.data)}
               planName={primaryPlan(query.data)?.offer?.name ?? primaryPlan(query.data)?.name ?? ""}

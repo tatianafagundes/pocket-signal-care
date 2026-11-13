@@ -1,10 +1,12 @@
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
+import { StatusDot } from "@/components/status/status-dot";
 import type { LineStatus } from "@/services/customer360-rules";
 import type { Product } from "@/services/model";
 
 const TONE: Record<LineStatus, string> = {
   active: "bg-success-tint text-success",
-  pending: "bg-warning-tint text-warning",
+  // warning is graphic-only: the word is text-primary, the amber dot carries the colour.
+  pending: "bg-warning-tint text-text-primary",
   suspended: "bg-danger-tint text-danger",
 };
 
@@ -30,7 +32,10 @@ export function LineStatusBadge({
         ? t("pages.home.line.physical", "SIM")
         : null;
   return (
-    <span className={`rounded-pill px-3 py-1 type-caption ${TONE[status]}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-pill px-3 py-1 type-caption ${TONE[status]}`}
+    >
+      {status === "pending" ? <StatusDot tone="warning" /> : null}
       {sim ? `${word} · ${sim}` : word}
     </span>
   );

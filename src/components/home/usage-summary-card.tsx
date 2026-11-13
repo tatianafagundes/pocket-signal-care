@@ -3,14 +3,15 @@ import { ChevronRight } from "lucide-react";
 
 import type { UsageBucket } from "@/services/model";
 import { bucketState } from "@/services/customer360-rules";
-import { consumedFraction, consumedValue, formatQuantity, unitOf } from "@/lib/usage-format";
+import { formatQuantity, remainingFraction, unitOf } from "@/lib/usage-format";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { DataRing } from "@/components/usage/data-ring";
+import { StatusDot, bucketTone } from "@/components/status/status-dot";
 
 /*
  * Home "Data" card (Figma P1 · "card Data → P10"). Shows the primary data allowance as a ring
- * (consumed arc) plus the authoritative "{remaining} left" text. State comes from bucketState and
+ * (remaining arc, "{remaining} left" in the centre) plus the total or a state word. State comes from bucketState and
  * is conveyed by icon/word + colour, never colour alone (WCAG 1.4.1 / DESIGN.md). Unlimited shows
  * the word with no ring; expired/pending show the word with no misleading number. Links to My plan.
  *
@@ -77,23 +78,20 @@ export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
       );
     } else {
       const remaining = bucket.remaining?.value ?? 0;
-      const consumed = consumedValue(bucket) ?? 0;
-      const remainingLabel = `${formatQuantity(remaining, locale)} ${unit}`;
-      const consumedLabel = `${formatQuantity(consumed, locale)} ${unit}`;
+      const total = bucket.total?.value ?? 0;
+      // Non-breaking space keeps "1.8 GB" together when the line wraps.
+      const remainingLabel = `${formatQuantity(remaining, locale)}\u00a0${unit}`;
+      const totalLabel = `${formatQuantity(total, locale)}\u00a0${unit}`;
+      const tone = bucketTone(state);
 
-      // State word + colour for the "left" line (never colour alone).
-      const leftTone =
-        state === "depleted"
-          ? "text-danger"
-          : state === "low"
-            ? "text-warning"
-            : "text-text-primary";
-      const leftText =
+      // Under the ring: the total when healthy, else the state word beside its status dot.
+      // Words stay text-primary; the dot (and the ring) carry the colour — warning is graphic-only.
+      const footText =
         state === "depleted"
           ? t("pages.home.data.none", "No data left")
           : state === "low"
-            ? t("pages.home.data.low", "Acabando: {{amount}} restantes", { amount: remainingLabel })
-            : t("pages.home.data.left", "{{amount}} left", { amount: remainingLabel });
+            ? t("usage.state.low", "Running low")
+            : t("pages.home.data.ofTotal", "of {{total}}", { total: totalLabel });
 
       // Announce only when attention is needed; ok is silent.
       if (state === "low") {
@@ -109,17 +107,24 @@ export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
           <div className="mt-3">
             <DataRing
               state={state}
-              consumedFraction={consumedFraction(bucket)}
-              centreValue={consumedLabel}
-              centreCaption={t("pages.home.data.used", "used")}
-              ariaLabel={t("usage.ring.aria", "{{consumed}} of {{total}} {{unit}} used", {
-                consumed: formatQuantity(consumed, locale),
-                total: formatQuantity(bucket.total?.value ?? 0, locale),
+              remainingFraction={remainingFraction(bucket)}
+              centreValue={remainingLabel}
+              centreCaption={t("pages.home.data.leftCaption", "left")}
+              ariaLabel={t("usage.ring.ariaLeft", "{{remaining}} of {{total}} {{unit}} left", {
+                remaining: formatQuantity(remaining, locale),
+                total: formatQuantity(total, locale),
                 unit,
               })}
             />
           </div>
-          <p className={`mt-3 type-body-sm-strong ${leftTone}`}>{leftText}</p>
+          <p
+            className={`mt-3 flex items-center gap-1.5 ${
+              tone ? "type-body-sm-strong text-text-primary" : "type-body-sm text-text-secondary"
+            }`}
+          >
+            {tone ? <StatusDot tone={tone} /> : null}
+            {footText}
+          </p>
         </>
       );
     }

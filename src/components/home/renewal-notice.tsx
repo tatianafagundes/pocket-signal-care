@@ -49,7 +49,7 @@ export function RenewalNotice({
       </div>
       <Link
         to="/top-up"
-        className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
+        className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-text-primary underline underline-offset-2"
       >
         {t("pages.home.renewal.cta", "Recarregar {{amount}}", { amount })}
       </Link>

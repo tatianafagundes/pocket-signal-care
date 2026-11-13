@@ -43,7 +43,7 @@ export function LineHeader({
           </div>
           <Link
             to="/support"
-            className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
+            className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-danger"
           >
             {t("pages.home.line.suspendedCta", "Pedir ajuda")}
           </Link>

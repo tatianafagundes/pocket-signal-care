@@ -2,7 +2,8 @@ import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { Progress } from "@/components/ui/progress";
 import { bucketState } from "@/services/customer360-rules";
-import { consumedFraction, formatQuantity, unitOf } from "@/lib/usage-format";
+import { formatQuantity, remainingFraction, unitOf } from "@/lib/usage-format";
+import { StatusDot, bucketTone } from "@/components/status/status-dot";
 import type { BucketState, UsageBucket } from "@/services/model";
 
 const BAR_TONE: Record<BucketState, string> = {
@@ -15,7 +16,8 @@ const BAR_TONE: Record<BucketState, string> = {
 
 /**
  * One allowance on My plan: name, "x of y left" (the authoritative text a screen reader reads),
- * a thin used-bar matching the Home ring, and a state word when attention is needed.
+ * a thin bar filled to what is LEFT (matching the Home ring), and a state word when attention is
+ * needed — the word stays text colour; the dot and bar carry the status colour.
  */
 export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
   const { t } = useLocalizedTranslation();
@@ -38,8 +40,8 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
     ? t("pages.myPlan.unlimited", "Ilimitado")
     : bucket.remaining && bucket.total
       ? t("pages.myPlan.left", "{{remaining}} de {{total}} restantes", {
-          remaining: `${formatQuantity(bucket.remaining.value, locale)} ${unit}`,
-          total: `${formatQuantity(bucket.total.value, locale)} ${unit}`,
+          remaining: `${formatQuantity(bucket.remaining.value, locale)}\u00a0${unit}`,
+          total: `${formatQuantity(bucket.total.value, locale)}\u00a0${unit}`,
         })
       : "";
 
@@ -53,8 +55,7 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
           : state === "pending"
             ? t("usage.state.pending", "Ainda não começou")
             : null;
-  const stateTone =
-    state === "depleted" ? "text-danger" : state === "low" ? "text-warning" : "text-text-secondary";
+  const tone = bucketTone(state);
 
   return (
     <li className="rounded-card border border-hairline bg-surface p-3">
@@ -66,13 +67,22 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
       </div>
       {!bucket.unlimited && bucket.total ? (
         <Progress
-          value={Math.round(consumedFraction(bucket) * 100)}
+          value={Math.round(remainingFraction(bucket) * 100)}
           aria-hidden="true"
           className="mt-2 h-1.5 bg-hairline"
           indicatorClassName={BAR_TONE[state]}
         />
       ) : null}
-      {stateWord ? <p className={`mt-1.5 type-caption ${stateTone}`}>{stateWord}</p> : null}
+      {stateWord ? (
+        <p
+          className={`mt-1.5 flex items-center gap-1.5 type-caption ${
+            tone ? "text-text-primary" : "text-text-secondary"
+          }`}
+        >
+          {tone ? <StatusDot tone={tone} /> : null}
+          {stateWord}
+        </p>
+      ) : null}
     </li>
   );
 }

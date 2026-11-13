@@ -52,13 +52,12 @@
       },
       "data": {
         "title": "Data",
-        "used": "used",
-        "left": "{{amount}} left",
         "none": "No data left",
         "unlimited": "Unlimited",
         "empty": "No data allowance yet.",
         "cardAria": "Data allowance — open My plan",
-        "low": "Running low: {{amount}} left"
+        "ofTotal": "of {{total}}",
+        "leftCaption": "left"
       },
       "plan": {
         "title": "Plan",
@@ -518,7 +517,7 @@
       "depleted": "Used up"
     },
     "ring": {
-      "aria": "{{consumed}} of {{total}} {{unit}} used"
+      "ariaLeft": "{{remaining}} of {{total}} {{unit}} left"
     },
     "live": {
       "low": "Data running low: {{amount}} left",

@@ -6,6 +6,7 @@ import {
   bucketState,
   composeCustomer360,
   hasBalance,
+  homeNotice,
   lineStatus,
   LOW_REMAINING_RATIO,
   primaryDataBucket,
@@ -485,5 +486,26 @@ describe("activeAddOns", () => {
   it("should list only add-ons from the installed base", () => {
     const c = composeCustomer360({ customer, party, installedBase: [sim, plan, addon], balance });
     expect(activeAddOns(c).map((p) => p.productId)).toEqual(["pr-ao"]);
+  });
+});
+
+describe("homeNotice", () => {
+  const offer = { offerId: "o-plan", priceMinor: 1490 } as unknown as Offer;
+  const make = (status: Customer["status"], amountMinor: number) =>
+    composeCustomer360({
+      customer: { ...customer, status },
+      party,
+      installedBase: [plan],
+      balance: { amountMinor, currency: "EUR" },
+      offers: [offer],
+    });
+  it("should show only the suspension notice when a suspended line also cannot cover renewal", () => {
+    expect(homeNotice(make("suspended", 0))).toBe("suspended");
+  });
+  it("should show the renewal notice when an active line's balance is below the plan price", () => {
+    expect(homeNotice(make("active", 500))).toBe("renewal");
+  });
+  it("should show nothing when an active line's balance covers the plan price", () => {
+    expect(homeNotice(make("active", 1490))).toBeNull();
   });
 });

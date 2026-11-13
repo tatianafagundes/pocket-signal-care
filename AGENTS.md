@@ -49,6 +49,7 @@ backend; every other system is mocked behind a seam). The design system is
   is hairline + surface contrast.
 - Status is always **colour + word**, never colour alone. A brand accent is never red
   (it would collide with the `danger` system token).
+- `warning` is graphic-only (icon/ring/bar/dot); warning words use text-primary beside a `StatusDot` — an amber dark enough for 4.5:1 text reads brown. Usage meters fill to what's left. `src/styles/tokens.test.ts` guards the contrast rules.
 
 ### i18n
 - Locales: **en-US (default) + de-AT**. Every UI string is a key in `src/locales/*.json`;
@@ -90,4 +91,4 @@ backend; every other system is mocked behind a seam). The design system is
 - Once `registeredEmail` is set, the account step edits name/email in place (`api.changeEmail`) and never calls `register` again — avoids the "email already in use" dead end.
 - Onboarding progress persists in localStorage with a 24-hour expiry (non-secret fields only) — so a closed tab or new browser session can resume.
 - "Help me choose" suggestions come only from the pure `recommend()` in `src/services/recommendation-rules.ts` (usage answers → estimated GB → cheapest covering plan, read from offer fields, never offer ids) — keeps suggestions deterministic, testable and tenant-agnostic.
-- Customer 360 display states (line status, balance state, renewal shortfall/date, active add-ons) come only from pure rules in `src/services/customer360-rules.ts`; screens never derive them inline — keeps Home and My plan consistent and testable.
+- Customer 360 display states (line status, balance state, renewal shortfall/date, active add-ons, which Home notice shows) come only from pure rules in `src/services/customer360-rules.ts`; screens never derive them inline — keeps Home and My plan consistent and testable.

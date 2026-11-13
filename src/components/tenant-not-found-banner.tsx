@@ -39,7 +39,7 @@ export function TenantNotFoundBanner() {
         </p>
         <a
           href={goToDreiHref}
-          className="focus-ring type-body-sm-strong mt-1 inline-block rounded-pill text-accent-ink underline underline-offset-2"
+          className="focus-ring type-body-sm-strong mt-1 inline-block rounded-pill text-text-primary underline underline-offset-2"
         >
           {t("tenant.goToDrei")}
         </a>

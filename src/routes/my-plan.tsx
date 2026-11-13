@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AllowanceRow } from "@/components/my-plan/allowance-row";
 import { CopyNumberButton } from "@/components/line/copy-number-button";
 import { LineStatusBadge } from "@/components/line/line-status-badge";
+import { StatusDot } from "@/components/status/status-dot";
 import { api, SeamFailure } from "@/services/api";
 import { formatPrice } from "@/lib/format";
 import { formatShortDate } from "@/lib/format-date";
@@ -174,7 +175,8 @@ function PlanDetail({ data, locale }: { data: Customer360; locale: Locale }) {
               >
                 <span className="type-body text-text-primary">{p.offer?.name ?? p.name}</span>
                 {p.status === "pending" ? (
-                  <span className="type-caption text-warning">
+                  <span className="flex items-center gap-1.5 type-caption text-text-primary">
+                    <StatusDot tone="warning" />
                     {t("pages.myPlan.statusPending", "Pendente")}
                   </span>
                 ) : p.offer ? (

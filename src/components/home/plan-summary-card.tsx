@@ -6,6 +6,7 @@ import type { Locale } from "@/lib/tenant-rules";
 import { formatPrice } from "@/lib/format";
 import { formatShortDate } from "@/lib/format-date";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
+import { StatusDot } from "@/components/status/status-dot";
 import { Badge } from "@/components/ui/badge";
 
 /*
@@ -53,7 +54,8 @@ export function PlanSummaryCard({ plan, renewsAt, locale }: PlanSummaryCardProps
           ) : null}
           {plan.status === "pending" ? (
             <div className="mt-3">
-              <Badge className="border-transparent bg-warning-tint text-warning">
+              <Badge className="gap-1.5 border-transparent bg-warning-tint text-text-primary">
+                <StatusDot tone="warning" />
                 {t("pages.myPlan.statusPending", "Pendente")}
               </Badge>
             </div>

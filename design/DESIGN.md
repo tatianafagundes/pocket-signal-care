@@ -6,7 +6,7 @@ baseOf: fuon selfcare (DESIGN.md alpha) — structure, components, rules inherit
 colors:
   canvas: "#f5f6f8"
   surface: "#ffffff"
-  surface-tint: "#eef6f5"
+  surface-tint: "#eef0f3"
   surface-sand: "#fbf4e8"
   hairline: "#e4e7eb"
   border-input: "#858c96"
@@ -21,8 +21,8 @@ colors:
   accent-tint: "#d9efee"
   success: "#15703a"
   success-tint: "#e3f4ea"
-  warning: "#9a4607"
-  warning-tint: "#fbeedd"
+  warning: "#d97a00"
+  warning-tint: "#fff4e0"
   danger: "#c2281f"
   danger-tint: "#fbe5e3"
   focus: "#7c5cd6"
@@ -188,11 +188,14 @@ colour is cyan `#0096c5` — opposite hue to red, so action and error never blur
 
 Inherited from fuon, unchanged except via the brand block:
 - **Canvas and surfaces.** Page is `canvas`; every card is `surface` white, 1 px `hairline`
-  border, **no shadow**. `surface-tint` / `surface-sand` are quiet info panels — never a
+  border, **no shadow**. `surface-tint` (neutral grey — no brand hue) / `surface-sand` are quiet info panels — never a
   button, never a header.
 - **Status owns green, amber, red.** `success` = paid/done/eligible; `warning` = due
   soon/pending/processing; `danger` = failed/overdue/turn-off. Always a dot or badge **plus
-  a word** — colour is never the only signal. These are **system tokens; a brand cannot
+  a word** — colour is never the only signal. **`warning` is graphic-only** (icon, ring, bar,
+  dot; ≥3:1 on white): an amber dark enough for 4.5:1 text reads brown, so warning words are
+  `text-primary` next to the amber mark (the iOS pattern). `success` and `danger` pass 4.5:1 and
+  may colour their words. These are **system tokens; a brand cannot
   change them** (so a brand accent must not be red — see above).
 - **Text.** `text-primary`, `text-secondary` (placeholders too, ≥4.5:1), `text-tertiary`
   for chevrons/dividers only — never a string.
@@ -243,14 +246,16 @@ that travel with them:
   only in a confirmation sheet, or as a secondary button with `danger` text on a screen.
   Never a loose red button.
 - **link** — `accent-ink`, `body-sm-strong`. On a status tint the link takes the status
-  colour, not the accent.
+  colour, not the accent (`danger` on the danger tint; on the warning tint, `text-primary`
+  underlined, because `warning` is graphic-only).
 - **card** (no shadow), **card-tint**, **row** / **row-compact**, **option-row** (radio +
   `accent-tint` wash when selected), **chip** / **chip-selected** (`accent-tint` fill + 2 px
   `accent-ink` ring), **badge** (success/warning/danger/neutral), **tab-bar** (6 tabs),
-  **notice-banner** (info/warning/danger; also carries low-balance "Balance below €15"),
+  **notice-banner** (info/warning/danger; also carries low-balance "Balance below €15"; one
+  at a time on Home — a suspended line shows only its own notice),
   **result-head** (72 px circle in the status tint — success check / pending clock / error
   alert / info), **skeleton** (never shows a value), **state-block** (empty/error body with
-  one action — never "Something went wrong" alone), **data-ring**, **stepper-dot**,
+  one action — never "Something went wrong" alone), **data-ring** (and allowance bars: the fill is what's LEFT, never what's used), **stepper-dot**,
   **status-bar**, **app-bar**, **icon-button**, **avatar**, **quick-tile**, **focus-ring**.
 - **brand-tile** — 52×32 `accent` rectangle with the white wordmark. The **only** place the
   logo renders.
