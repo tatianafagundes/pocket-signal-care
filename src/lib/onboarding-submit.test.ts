@@ -6,7 +6,31 @@ import type { OnboardingState } from "@/lib/onboarding-context";
 import type { DeliveryAddress } from "@/services/model";
 
 // Mock the api seam surface the orchestration calls. (Fase 7.4 adds the money + fulfilment calls.)
+// SeamFailure is provided too: runOnboardingSubmit throws one for the missing-MSISDN precondition,
+// and the mock replaces the whole module, so it must mirror the real class shape (name/code/
+// customerKey) for the terminal-path assertion to hold.
 vi.mock("@/services/api", () => ({
+  SeamFailure: class SeamFailure extends Error {
+    code: string;
+    category: string;
+    retryable: boolean;
+    customerKey: string;
+    detail: string | undefined;
+    constructor(e: {
+      code: string;
+      category: string;
+      retryable: boolean;
+      customerFacing?: { key?: string; detail?: string };
+    }) {
+      super(e.code);
+      this.name = "SeamFailure";
+      this.code = e.code;
+      this.category = e.category;
+      this.retryable = e.retryable;
+      this.customerKey = e.customerFacing?.key ?? e.code;
+      this.detail = e.customerFacing?.detail;
+    }
+  },
   api: {
     authorizePayment: vi.fn(async () => ({
       authorizationRef: "auth-1",
@@ -445,10 +469,15 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
       expect(mockApi.createContract).toHaveBeenCalledTimes(1); // only the first run
     });
 
-    it("fails rather than create a contract with an empty communicationId (missing MSISDN)", async () => {
+    it("fails with a SeamFailure (terminal path) when the MSISDN is missing, never an empty contract", async () => {
       await expect(
         runOnboardingSubmit(deps(completeState({ reservedMsisdn: null }), [], [])),
-      ).rejects.toThrow(/reserved MSISDN/i);
+      ).rejects.toMatchObject({
+        name: "SeamFailure",
+        code: "onboarding.contract.noMsisdn",
+        // review.tsx catch only handles SeamFailure → terminal screen; a bare Error would crash.
+        customerKey: "onboarding.review.terminalError",
+      });
       // The contract is never created with an empty key.
       expect(mockApi.createContract).not.toHaveBeenCalled();
     });

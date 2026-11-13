@@ -1,4 +1,4 @@
-import { api } from "@/services/api";
+import { api, SeamFailure } from "@/services/api";
 import type { OnboardingPatch, OnboardingState } from "@/lib/onboarding-context";
 import type { TenantId } from "@/lib/tenant-rules";
 import type { AllowanceGrant } from "@/services/charging/charging-driver";
@@ -154,7 +154,16 @@ export async function runOnboardingSubmit({
   let contractId = state.contractId;
   if (!contractId) {
     if (!state.reservedMsisdn) {
-      throw new Error("onboarding-submit: contract step reached with no reserved MSISDN");
+      // Throw a SeamFailure (not a bare Error) so review.tsx's catch routes it to the terminal
+      // "account saved — try again" screen, like the price-boundary guard — a bare Error would be
+      // re-thrown past that catch as an unhandled crash. This precondition shouldn't fire in
+      // practice (the MSISDN is reserved before review), but when it does it must fail gracefully.
+      throw new SeamFailure({
+        code: "onboarding.contract.noMsisdn",
+        category: "validation",
+        retryable: false,
+        customerFacing: { key: "onboarding.review.terminalError", nextAction: "contactSupport" },
+      });
     }
     onStep("createContract");
     const contract = await api.createContract({
