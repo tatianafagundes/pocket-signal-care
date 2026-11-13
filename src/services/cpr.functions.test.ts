@@ -9,6 +9,7 @@ import {
   listInteractions,
 } from "@/services/cpr.functions";
 import { clearForcedError, forceError } from "@/services/mock-support";
+import * as seamLogger from "@/services/seam-logger";
 
 afterEach(() => clearForcedError());
 
@@ -185,6 +186,36 @@ describe("cpr seam (mock driver)", () => {
       });
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error.category).toBe("validation");
+    });
+  });
+
+  describe("observability — correlation id propagation", () => {
+    it("logs getCustomer360 and all its sub-reads under one correlation id", async () => {
+      const spy = vi.spyOn(seamLogger, "logSeamOp").mockImplementation(() => {});
+      try {
+        const r = await getCustomer360("demo-drei");
+        expect(r.ok).toBe(true);
+
+        const records = spy.mock.calls.map((c) => c[0]);
+        const ops = records.map((r) => r.op);
+        // The fan-out parent and its seam sub-reads all logged.
+        expect(ops).toContain("cpr.getCustomer360");
+        expect(ops).toContain("order.getInstalledBase");
+        expect(ops).toContain("charging.getBalance");
+        expect(ops).toContain("catalog.listOffers");
+
+        // The whole 360 request shares ONE correlation id — the point of request-scoped correlation.
+        const cids = new Set(records.map((r) => r.correlationId));
+        expect(cids.size).toBe(1);
+        // And an unrelated op gets its own id (not the 360's).
+        spy.mockClear();
+        await getCustomer360("demo-dreigo");
+        const secondCid = spy.mock.calls[0]?.[0].correlationId;
+        expect(secondCid).toBeTruthy();
+        expect(cids.has(secondCid!)).toBe(false);
+      } finally {
+        spy.mockRestore();
+      }
     });
   });
 

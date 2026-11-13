@@ -1,5 +1,5 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
-import { runRead } from "@/services/seam-runtime";
+import { runRead, seamCtx } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
 import type { Offer } from "@/services/model";
 import type { QualifyResult } from "@/services/catalog-rules";
@@ -18,7 +18,10 @@ import { getBalance } from "@/services/charging.functions";
 const driver: CatalogDriver =
   driverFor("ecm") === "http" ? createCatalogHttp() : createCatalogMock();
 
-export function listOffers(tenantIdRaw: string): Promise<SeamResult<Offer[]>> {
+export function listOffers(
+  tenantIdRaw: string,
+  correlationId?: string,
+): Promise<SeamResult<Offer[]>> {
   const parsed = tenantIdSchema.safeParse(tenantIdRaw);
   if (!parsed.success) {
     return Promise.resolve<SeamResult<Offer[]>>({
@@ -26,12 +29,15 @@ export function listOffers(tenantIdRaw: string): Promise<SeamResult<Offer[]>> {
       error: seamError("catalog.tenant.invalid", "validation", "fixInput"),
     });
   }
-  return runRead({ tenantId: parsed.data }, "catalog.listOffers", () =>
+  return runRead(seamCtx(parsed.data, correlationId), "catalog.listOffers", () =>
     driver.listOffers(parsed.data),
   );
 }
 
-export function listAddOns(tenantIdRaw: string): Promise<SeamResult<Offer[]>> {
+export function listAddOns(
+  tenantIdRaw: string,
+  correlationId?: string,
+): Promise<SeamResult<Offer[]>> {
   const parsed = tenantIdSchema.safeParse(tenantIdRaw);
   if (!parsed.success) {
     return Promise.resolve<SeamResult<Offer[]>>({
@@ -39,7 +45,7 @@ export function listAddOns(tenantIdRaw: string): Promise<SeamResult<Offer[]>> {
       error: seamError("catalog.tenant.invalid", "validation", "fixInput"),
     });
   }
-  return runRead({ tenantId: parsed.data }, "catalog.listAddOns", () =>
+  return runRead(seamCtx(parsed.data, correlationId), "catalog.listAddOns", () =>
     driver.listAddOns(parsed.data),
   );
 }

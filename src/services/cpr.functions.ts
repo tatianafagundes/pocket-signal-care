@@ -1,5 +1,6 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
-import { runRead, runWrite } from "@/services/seam-runtime";
+import { runRead, runWrite, seamCtx } from "@/services/seam-runtime";
+import { newCorrelationId } from "@/services/seam-logger";
 import { driverFor } from "@/services/driver-config";
 import { composeCustomer360 } from "@/services/customer360-rules";
 import type { Customer360 } from "@/services/model";
@@ -82,7 +83,13 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
   // seam, enriched with the catalogue (ECM). Compose with the pure rule. If CPR fails, fail; if any
   // other source fails, degrade gracefully (empty base / null balance / empty usage / empty
   // catalogue) so the 360 still renders the customer rather than erroring out.
-  return runRead({ tenantId: "cpr" }, "cpr.getCustomer360", async () => {
+  // One correlation id for the whole fan-out: getCustomer360 and all its sub-reads log under the
+  // SAME id, so an operator can see the 6 seam calls of one 360 request as a single group. This is
+  // the request-scoped correlation the observability guidance calls for. (listInteractions calls
+  // the driver directly — it doesn't go through a seam function, so it isn't logged; wiring it
+  // through the cpr seam is a separate Fase-8 cleanup.)
+  const cid = newCorrelationId();
+  return runRead(seamCtx("cpr", cid), "cpr.getCustomer360", async () => {
     const cpr = await driver.getCustomerAndParty(customerId);
     if (!cpr.ok) return cpr;
     // The customer's tenant drives the catalogue fetch — known only after the CPR read resolves.
@@ -90,13 +97,13 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
 
     const [baseRes, balanceRes, usageRes, activityRes, interactionsRes, offersRes, addOnsRes] =
       await Promise.all([
-        getInstalledBase(customerId),
-        getBalance(customerId),
-        getUsage(customerId),
-        getActivity(customerId),
+        getInstalledBase(customerId, cid),
+        getBalance(customerId, cid),
+        getUsage(customerId, cid),
+        getActivity(customerId, cid),
         driver.listInteractions(customerId),
-        listOffers(tenantId),
-        listAddOns(tenantId),
+        listOffers(tenantId, cid),
+        listAddOns(tenantId, cid),
       ]);
     // The RAW installed base (un-enriched Product[]); composeCustomer360 joins the catalogue onto
     // it to produce the enriched EnrichedProduct[] on Customer360.installedBase.

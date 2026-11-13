@@ -1,5 +1,5 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
-import { runRead, runWrite } from "@/services/seam-runtime";
+import { runRead, runWrite, seamCtx } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
 import type { Product } from "@/services/model";
 import { customerIdSchema, addItemSchema, submitOrderSchema } from "@/schemas/order";
@@ -46,10 +46,13 @@ export function submitOrder(input: unknown) {
   );
 }
 
-export function getInstalledBase(customerIdRaw: string): Promise<SeamResult<Product[]>> {
+export function getInstalledBase(
+  customerIdRaw: string,
+  correlationId?: string,
+): Promise<SeamResult<Product[]>> {
   const parsed = customerIdSchema.safeParse(customerIdRaw);
   if (!parsed.success) return invalid<Product[]>("order.customer.invalid");
-  return runRead({ tenantId: "eoc" }, "order.getInstalledBase", () =>
+  return runRead(seamCtx("eoc", correlationId), "order.getInstalledBase", () =>
     driver.getInstalledBase(parsed.data),
   );
 }

@@ -1,4 +1,5 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
+import { logSeamOp, newCorrelationId } from "@/services/seam-logger";
 
 /*
  * seam-runtime — runRead / runWrite wrappers. (Spec Fase 0.3)
@@ -21,15 +22,23 @@ import { seamError, type SeamResult } from "@/services/seam-result";
 export interface SeamContext {
   /** The active tenant id (drei | dreigo). Threaded for logging + future RLS. */
   tenantId: string;
+  /**
+   * Correlation id tying this op to the request that spawned it. Optional at the call site: a
+   * standalone op (most of them) omits it and `run` mints a fresh one. A FAN-OUT (getCustomer360)
+   * mints one id and passes it to every sub-call so all its ops share a single id in the logs —
+   * the request-scoped correlation the observability guidance calls for. See newCorrelationId.
+   */
+  correlationId?: string;
 }
 
-type LogStatus = "ok" | "error";
-
-function logOp(op: string, tenantId: string, status: LogStatus, ms: number): void {
-  // Logs metadata only — never payloads (no PII). Swap for the real logger in Fase 8.
-  if (import.meta.env.DEV) {
-    console.debug(`[seam] ${op} tenant=${tenantId} ${status} ${ms}ms`);
-  }
+/**
+ * Build a SeamContext from a tenant and an optional correlation id. Use this instead of an inline
+ * object so `correlationId: undefined` is never set (the tsconfig uses exactOptionalPropertyTypes,
+ * which forbids an explicit `undefined` on an optional field) — the key is omitted when absent and
+ * `run` mints a fresh id. A fan-out passes its id here so every sub-op shares it.
+ */
+export function seamCtx(tenantId: string, correlationId?: string): SeamContext {
+  return correlationId ? { tenantId, correlationId } : { tenantId };
 }
 
 async function run<T>(
@@ -37,13 +46,28 @@ async function run<T>(
   op: string,
   fn: () => Promise<SeamResult<T>>,
 ): Promise<SeamResult<T>> {
+  const correlationId = ctx.correlationId ?? newCorrelationId();
   const started = Date.now();
   try {
     const result = await fn();
-    logOp(op, ctx.tenantId, result.ok ? "ok" : "error", Date.now() - started);
+    logSeamOp({
+      op,
+      tenantId: ctx.tenantId,
+      correlationId,
+      status: result.ok ? "ok" : "error",
+      ms: Date.now() - started,
+      ...(result.ok ? {} : { errorCode: result.error.code }),
+    });
     return result;
   } catch {
-    logOp(op, ctx.tenantId, "error", Date.now() - started);
+    logSeamOp({
+      op,
+      tenantId: ctx.tenantId,
+      correlationId,
+      status: "error",
+      ms: Date.now() - started,
+      errorCode: "seam.unavailable",
+    });
     // A thrown error never reaches the UI as a crash — it becomes a retryable SeamError.
     return { ok: false, error: seamError("seam.unavailable", "unavailable", "retry") };
   }

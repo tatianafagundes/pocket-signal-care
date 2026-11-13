@@ -1,5 +1,5 @@
 import { seamError, type SeamResult } from "@/services/seam-result";
-import { runRead, runWrite } from "@/services/seam-runtime";
+import { runRead, runWrite, seamCtx } from "@/services/seam-runtime";
 import { driverFor } from "@/services/driver-config";
 import type { ActivityItem, Balance, UsageBucket } from "@/services/model";
 import {
@@ -30,10 +30,15 @@ function invalid<T>(code: string): Promise<SeamResult<T>> {
   });
 }
 
-export function getBalance(customerIdRaw: string): Promise<SeamResult<Balance | null>> {
+export function getBalance(
+  customerIdRaw: string,
+  correlationId?: string,
+): Promise<SeamResult<Balance | null>> {
   const parsed = customerIdSchema.safeParse(customerIdRaw);
   if (!parsed.success) return invalid<Balance | null>("charging.customer.invalid");
-  return runRead({ tenantId: "ecev" }, "charging.getBalance", () => driver.getBalance(parsed.data));
+  return runRead(seamCtx("ecev", correlationId), "charging.getBalance", () =>
+    driver.getBalance(parsed.data),
+  );
 }
 
 export function topUp(input: unknown): Promise<SeamResult<Balance>> {
@@ -52,10 +57,15 @@ export function rateAndDeduct(input: unknown): Promise<SeamResult<{ ok: true }>>
   );
 }
 
-export function getUsage(customerIdRaw: string): Promise<SeamResult<UsageBucket[]>> {
+export function getUsage(
+  customerIdRaw: string,
+  correlationId?: string,
+): Promise<SeamResult<UsageBucket[]>> {
   const parsed = customerIdSchema.safeParse(customerIdRaw);
   if (!parsed.success) return invalid<UsageBucket[]>("charging.customer.invalid");
-  return runRead({ tenantId: "ecev" }, "charging.getUsage", () => driver.getUsage(parsed.data));
+  return runRead(seamCtx("ecev", correlationId), "charging.getUsage", () =>
+    driver.getUsage(parsed.data),
+  );
 }
 
 export function grantAllowance(input: unknown): Promise<SeamResult<UsageBucket>> {
@@ -67,10 +77,13 @@ export function grantAllowance(input: unknown): Promise<SeamResult<UsageBucket>>
   );
 }
 
-export function getActivity(customerIdRaw: string): Promise<SeamResult<ActivityItem[]>> {
+export function getActivity(
+  customerIdRaw: string,
+  correlationId?: string,
+): Promise<SeamResult<ActivityItem[]>> {
   const parsed = customerIdSchema.safeParse(customerIdRaw);
   if (!parsed.success) return invalid<ActivityItem[]>("charging.customer.invalid");
-  return runRead({ tenantId: "ecev" }, "charging.getActivity", () =>
+  return runRead(seamCtx("ecev", correlationId), "charging.getActivity", () =>
     driver.getActivity(parsed.data),
   );
 }
