@@ -29,11 +29,21 @@ let seq = 0;
 const nextId = (prefix) => `${prefix}-fake-${String(++seq).padStart(4, "0")}`;
 
 // --- helpers ----------------------------------------------------------------
+// CORS: the app runs on another origin (e.g. http://localhost:8080) and the browser sends a
+// preflight + requires Access-Control-Allow-Origin. Reflect any origin — this is a LOCAL dev fake.
+const CORS_HEADERS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "Content-Type, Authorization, X-Tenant-ID",
+  "access-control-max-age": "86400",
+};
+
 function send(res, status, bodyObj) {
   const body = bodyObj === undefined ? "" : JSON.stringify(bodyObj);
   res.writeHead(status, {
     "content-type": "application/json",
     "content-length": Buffer.byteLength(body),
+    ...CORS_HEADERS,
   });
   res.end(body);
 }
@@ -100,6 +110,12 @@ const server = http.createServer(async (req, res) => {
     body,
   });
   if (requestRing.length > RING_MAX) requestRing.shift();
+
+  // --- CORS preflight: answer OPTIONS before auth/routing (no body, just the headers) ---
+  if (method === "OPTIONS") {
+    res.writeHead(204, CORS_HEADERS);
+    return res.end();
+  }
 
   // --- debug (local only) ---
   if (method === "GET" && path === "/__debug/last") {

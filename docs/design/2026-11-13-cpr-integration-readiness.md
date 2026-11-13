@@ -171,3 +171,40 @@ Still open (needed before/at the matching plan step, not before coding starts):
    not for an end-user login. Needed at step 3.
 4. When the cluster opens: a real `{{CLUSTER_SERVER}}` + `{{tenantId}}` and a captured set of real
    responses, so we can diff our fake's shapes against reality and adjust mappers if needed.
+
+## 7. Phase A/B status — DONE against the fake (spec cpr-http-onboarding, 2026-11-13)
+
+The `cpr-http-onboarding` spec is implemented and verified against the local fake. **No real money,
+real auth, or real cluster** was involved — that is the honest, intended limit.
+
+**Proven end-to-end (manual E2E, Task 8.1):** with `.env.local` (`VITE_CPR_DRIVER=http`, base URL =
+the fake on 127.0.0.1, token = fake, `VITE_CPR_ACTIVE_BRAND=drei`) and the fake running, driving the
+onboarding wizard in the dev server created **party + customer + contract against the fake**, in
+order, through the real seam stack. The contract POST carried the real reserved MSISDN as
+`communicationId` (`+4368140000001`), `paymentContext: PREPAID`, `ContractActive`, with
+`X-Tenant-ID: TEN_FAKE` (the resolved DXP tenant). Seam log order confirmed:
+`payment.authorize → cpr.createParty → cpr.createCustomer → cpr.createContract → …`.
+
+**Where it stops (expected):** `cpr.createInteraction` returns `notConfigured` (interactions are
+out of scope for this spec), so onboarding ends on the graceful terminal-error screen after the
+contract is created. Party/customer/contract are real (fake-side); the rest is still mock. This is
+the designed partial state — mixed mock/http is non-transactional (debt below).
+
+**Fixed during the E2E:** the fake needed CORS (the app runs on another origin, the browser sends a
+preflight). Added `Access-Control-Allow-Origin: *` + OPTIONS handling to `tools/cpr-fake` — local
+dev only, still never-deploy.
+
+**Debts carried into later specs (no silent assumptions):**
+- Brand → DXP `TEN…` tenant map is a placeholder (`TEN_FAKE` / `VITE_CPR_TENANT_<BRAND>`).
+- `VITE_CPR_TOKEN` ships to the client — fake only; real auth + BFF is a later spec. The config
+  rail refuses a non-localhost base URL while the token is a client var.
+- `getCustomerAndParty` stamps the tenant from `VITE_CPR_ACTIVE_BRAND` (single-brand build);
+  multi-brand read would thread the tenant through the driver signature (D-360-tenant-on-http).
+- `communicationId` sent as E.164; the real CPR may want a bare national number — normalize in
+  `toTmfContract` once confirmed against the cluster.
+- Contract fields omitted (`agreementDocumentNumber`, `externalId`, specification, characteristics).
+- Contract-ownership vs the real order/cart flow (who creates the technical contract).
+- No cross-seam compensation during mixed mock/http onboarding.
+- `createInteraction` / `listInteractions` / `resolveTenant` on http are `notConfigured` (later specs).
+- Recharge (payment + monetaryRecharge) is a separate spec; the contract created here is what it
+  will reference.

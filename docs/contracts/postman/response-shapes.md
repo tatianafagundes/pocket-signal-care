@@ -49,6 +49,10 @@ GET /customerManagement/v1/customer/{id}:
   "characteristics": [{ "name": "...", "value": "..." }], "engagedPartyType": "Individual" }
 ```
 
+> **CORS note (Task 8):** when the app (another origin) calls these over the browser, the server
+> must answer the CORS preflight (`OPTIONS`) and send `Access-Control-Allow-Origin`. The local fake
+> now does (`tools/cpr-fake`, `*` — dev only). The real cluster/BFF must allow the app origin too.
+
 ## GET /customerManagement/v1/customerview/{id}  — captured from the fake (Task 5.1)
 
 The CPI doc's customerview sample is large and postpaid-flavored; the collection has none. So this
