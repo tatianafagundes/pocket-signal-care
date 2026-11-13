@@ -7,12 +7,19 @@ import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { useCurrentCustomerId } from "@/lib/current-customer";
 import type { Locale } from "@/lib/tenant-rules";
-import type { Balance, Customer360 } from "@/services/model";
+import type { AutoTopUpConfig, Balance } from "@/services/model";
 import { PageShell } from "@/components/page-shell";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { ResultHead, SummaryRow } from "@/components/result-summary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { api, asSeamFailure } from "@/services/api";
 import { queryKeys } from "@/lib/query-keys";
 import { shouldAutoTopUp } from "@/services/auto-top-up-rules";
@@ -68,10 +75,16 @@ function Page() {
     queryKey: queryKeys.customer360(tenant, customerId),
     queryFn: () => api.getCustomer360(customerId, tenant),
   });
+  const configQuery = useQuery({
+    queryKey: queryKeys.autoTopUp(tenant, customerId),
+    queryFn: () => api.getAutoTopUp(customerId),
+  });
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [consent, setConsent] = useState(false);
   const [working, setWorking] = useState(false);
+  const [turningOff, setTurningOff] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [firstCharge, setFirstCharge] = useState<FirstChargeData | null>(null);
 
   // Focus the result heading when the first-charge receipt appears (WCAG 2.4.3).
@@ -82,6 +95,26 @@ function Page() {
 
   const balance = query.data?.balance ?? null;
   const belowThreshold = balance !== null && balance.amountMinor < THRESHOLD_MINOR;
+  const config = configQuery.data ?? null;
+  // Show the on-state (P15) whenever auto top-up is enabled, unless we're mid-setup showing the
+  // opt-in result (which already confirms the on-state in context).
+  const showOnState = config?.enabled === true && phase !== "result";
+
+  async function turnOff() {
+    if (turningOff) return;
+    setTurningOff(true);
+    try {
+      await api.disableAutoTopUp(customerId);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.autoTopUp(tenant, customerId) });
+      setSheetOpen(false);
+      // Back to the off-state setup flow; a fresh opt-in starts at the intro.
+      setPhase("intro");
+      setConsent(false);
+      setFirstCharge(null);
+    } finally {
+      setTurningOff(false);
+    }
+  }
 
   async function turnOn() {
     if (working || !consent) return;
@@ -137,7 +170,7 @@ function Page() {
 
   return (
     <PageShell title={t("pages.autoTopUp.title", "Auto top-up")} flush>
-      {query.isPending ? (
+      {query.isPending || configQuery.isPending ? (
         <div className="grid gap-3" aria-hidden="true">
           <Skeleton className="h-20 w-full rounded-card" />
           <Skeleton className="h-40 w-full rounded-card" />
@@ -147,6 +180,13 @@ function Page() {
           error={asSeamFailure(query.error, "cpr.getCustomer360")}
           onRetry={() => void query.refetch()}
         />
+      ) : configQuery.isError ? (
+        <SeamErrorNotice
+          error={asSeamFailure(configQuery.error, "preferences.getAutoTopUp")}
+          onRetry={() => void configQuery.refetch()}
+        />
+      ) : showOnState && config ? (
+        <OnStep locale={locale} config={config} onTurnOffRequest={() => setSheetOpen(true)} />
       ) : phase === "intro" ? (
         <IntroStep locale={locale} onSetUp={() => setPhase("review")} />
       ) : phase === "review" ? (
@@ -162,6 +202,15 @@ function Page() {
       ) : (
         <ResultStep locale={locale} firstCharge={firstCharge} headingRef={headingRef} />
       )}
+
+      <TurnOffSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        locale={locale}
+        balance={balance}
+        working={turningOff}
+        onConfirm={() => void turnOff()}
+      />
     </PageShell>
   );
 }
@@ -426,5 +475,190 @@ function ResultStep({ locale, firstCharge, headingRef }: ResultStepProps) {
         </Button>
       </div>
     </div>
+  );
+}
+
+/** A config row on the on-state: a tinted tile + caption-above-value (sublabel-first) + badge. */
+function ConfigRow({
+  icon,
+  tileTone = "neutral",
+  caption,
+  value,
+  badge,
+  divider = false,
+}: {
+  icon: React.ReactNode;
+  tileTone?: "neutral" | "success";
+  caption: string;
+  value: string;
+  badge?: React.ReactNode;
+  divider?: boolean;
+}) {
+  const tile = tileTone === "success" ? "bg-success-tint" : "bg-surface-tint";
+  return (
+    <div
+      className={`flex min-h-[56px] items-center gap-3 p-3 ${divider ? "border-t border-hairline" : ""}`}
+    >
+      <span className={`flex size-10 shrink-0 items-center justify-center rounded-tile ${tile}`}>
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block type-body-sm text-text-secondary">{caption}</span>
+        <span className="mt-0.5 block type-body-sm-strong text-text-primary">{value}</span>
+      </span>
+      {badge ?? null}
+    </div>
+  );
+}
+
+/** P15 — auto top-up is on: status + config + how we notify + turn off (opens the sheet). */
+function OnStep({
+  locale,
+  config,
+  onTurnOffRequest,
+}: {
+  locale: Locale;
+  config: AutoTopUpConfig;
+  onTurnOffRequest: () => void;
+}) {
+  const { t } = useLocalizedTranslation();
+  const amount = formatPrice(config.amountMinor, "EUR", locale);
+  const threshold = formatPrice(config.thresholdMinor, "EUR", locale);
+
+  return (
+    <div className="grid gap-4">
+      {/* Status card — a single success row with an "On" badge. */}
+      <div className="overflow-hidden rounded-card border border-hairline bg-surface">
+        <ConfigRow
+          icon={<Repeat className="size-5 text-success" aria-hidden="true" />}
+          tileTone="success"
+          caption={t("pages.autoTopUp.on.title", "Auto top-up is on")}
+          value={t(
+            "pages.autoTopUp.on.summary",
+            "Tops up {{amount}} whenever your balance falls below {{threshold}}.",
+            { amount, threshold },
+          )}
+          badge={
+            <span className="shrink-0 rounded-pill bg-success-tint px-2 py-0.5 type-caption text-success">
+              {t("pages.autoTopUp.on.badge", "On")}
+            </span>
+          }
+        />
+      </div>
+
+      {/* Config card — the terms the backend actually holds (threshold, amount, method). */}
+      <section aria-label={t("pages.autoTopUp.on.configLabel", "Your auto top-up settings")}>
+        <div className="overflow-hidden rounded-card border border-hairline bg-surface">
+          <ConfigRow
+            icon={<Activity className="size-5 text-text-secondary" aria-hidden="true" />}
+            caption={t("pages.autoTopUp.row.whenCaption", "Tops up when")}
+            value={t("pages.autoTopUp.on.whenValue", "Balance falls below {{threshold}}", {
+              threshold,
+            })}
+          />
+          <ConfigRow
+            icon={<Zap className="size-5 text-text-secondary" aria-hidden="true" />}
+            caption={t("pages.autoTopUp.row.amountCaption", "Amount")}
+            value={t("pages.autoTopUp.row.amountValue", "{{amount}} each time", { amount })}
+            divider
+          />
+          <ConfigRow
+            icon={<CreditCard className="size-5 text-text-secondary" aria-hidden="true" />}
+            caption={t("pages.autoTopUp.row.payCaption", "Pays with")}
+            value={config.method.methodLabel}
+            divider
+          />
+        </div>
+      </section>
+
+      <p className="type-body-sm text-text-secondary">
+        {t(
+          "pages.autoTopUp.on.notify",
+          "We tell you by notification and SMS each time a top-up happens and if one fails. Turn it off any time; you then top up by hand before the plan renews.",
+        )}
+      </p>
+
+      {/* Destructive entry: secondary button with danger text (Figma button-secondary-danger). */}
+      <Button
+        variant="outline"
+        className="w-full text-danger hover:text-danger"
+        onClick={onTurnOffRequest}
+      >
+        {t("pages.autoTopUp.turnOff.cta", "Turn off auto top-up")}
+      </Button>
+    </div>
+  );
+}
+
+interface TurnOffSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  locale: Locale;
+  balance: Balance | null;
+  working: boolean;
+  onConfirm: () => void;
+}
+
+/** P15s — the turn-off confirmation bottom sheet (scrim + title + consequences + two buttons). */
+function TurnOffSheet({
+  open,
+  onOpenChange,
+  locale,
+  balance,
+  working,
+  onConfirm,
+}: TurnOffSheetProps) {
+  const { t } = useLocalizedTranslation();
+  // Only state the backend can back: the current balance and its validity. We deliberately do NOT
+  // echo the Figma's plan-renewal date/price — the mock doesn't hold a renewal the UI can trust —
+  // and keep that as generic copy instead (decisions/debt doc).
+  const body =
+    balance !== null
+      ? t(
+          "pages.autoTopUp.turnOff.bodyWithBalance",
+          "Auto top-up stops. Your balance stays {{balance}}{{validity}}. You'll top up by hand before your plan renews. No fee, and you can turn it back on any time.",
+          {
+            balance: formatPrice(balance.amountMinor, balance.currency, locale),
+            validity: balance.validUntil
+              ? t("pages.autoTopUp.turnOff.validitySuffix", ", valid until {{date}}", {
+                  date: formatShortDate(balance.validUntil, locale),
+                })
+              : "",
+          },
+        )
+      : t(
+          "pages.autoTopUp.turnOff.body",
+          "Auto top-up stops. You'll top up by hand before your plan renews. No fee, and you can turn it back on any time.",
+        );
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
+      <DrawerContent className="rounded-t-sheet border-0 bg-surface px-5 pb-[34px] pt-0 [&>div:first-child]:mt-3 [&>div:first-child]:h-1 [&>div:first-child]:w-9 [&>div:first-child]:bg-hairline">
+        <div className="grid gap-3 pt-2">
+          <DrawerTitle className="type-title text-text-primary">
+            {t("pages.autoTopUp.turnOff.title", "Turn off auto top-up?")}
+          </DrawerTitle>
+          <DrawerDescription className="type-body text-text-secondary">{body}</DrawerDescription>
+          <div className="mt-2 grid gap-2">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={onConfirm}
+              disabled={working}
+              aria-busy={working}
+            >
+              {working
+                ? t("pages.autoTopUp.turnOff.working", "Turning off…")
+                : t("pages.autoTopUp.turnOff.confirm", "Turn off auto top-up")}
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline" className="w-full" disabled={working}>
+                {t("pages.autoTopUp.turnOff.keep", "Keep it on")}
+              </Button>
+            </DrawerClose>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

@@ -253,6 +253,24 @@
         "rowReference": "Referenz",
         "rowNewBalance": "Neues Guthaben",
         "backHome": "Zurück zur Startseite"
+      },
+      "on": {
+        "title": "Automatische Aufladung ist ein",
+        "summary": "Lädt {{amount}} auf, sobald dein Guthaben unter {{threshold}} fällt.",
+        "badge": "Ein",
+        "configLabel": "Deine Einstellungen für die automatische Aufladung",
+        "whenValue": "Guthaben fällt unter {{threshold}}",
+        "notify": "Wir benachrichtigen dich per Mitteilung und SMS bei jeder Aufladung und wenn eine fehlschlägt. Du kannst sie jederzeit abschalten; dann lädst du vor der Verlängerung von Hand auf."
+      },
+      "turnOff": {
+        "cta": "Automatische Aufladung abschalten",
+        "title": "Automatische Aufladung abschalten?",
+        "bodyWithBalance": "Die automatische Aufladung stoppt. Dein Guthaben bleibt {{balance}}{{validity}}. Du lädst vor der Verlängerung deines Tarifs von Hand auf. Keine Gebühr, und du kannst sie jederzeit wieder einschalten.",
+        "validitySuffix": ", gültig bis {{date}}",
+        "body": "Die automatische Aufladung stoppt. Du lädst vor der Verlängerung deines Tarifs von Hand auf. Keine Gebühr, und du kannst sie jederzeit wieder einschalten.",
+        "confirm": "Automatische Aufladung abschalten",
+        "working": "Wird abgeschaltet…",
+        "keep": "Eingeschaltet lassen"
       }
     },
     "addOns": {
@@ -314,6 +332,10 @@
         "support": "Support",
         "pending": "Ausstehend",
         "failed": "Fehlgeschlagen"
+      },
+      "autoTopUp": {
+        "title": "Automatische Aufladung",
+        "sublabel": "Lade automatisch auf, wenn dein Guthaben zur Neige geht."
       }
     },
     "support": {

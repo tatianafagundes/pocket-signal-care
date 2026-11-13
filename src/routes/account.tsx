@@ -8,6 +8,7 @@ import { PageShell } from "@/components/page-shell";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DemoStateSwitcher } from "@/components/demo/demo-state-switcher";
+import { AutoTopUpRow } from "@/components/account/auto-top-up-row";
 import { RecentActivity } from "@/components/account/recent-activity";
 import { activityFeed } from "@/services/customer360-rules";
 import { api, asSeamFailure } from "@/services/api";
@@ -58,6 +59,8 @@ function Page() {
         ) : (
           <RecentActivity feed={activityFeed(query.data)} locale={locale} />
         )}
+
+        <AutoTopUpRow />
 
         {/* Dev-only demo tool; renders nothing in a real build or when signed out. */}
         <DemoStateSwitcher />

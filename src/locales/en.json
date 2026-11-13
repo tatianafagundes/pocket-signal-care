@@ -253,6 +253,24 @@
         "rowReference": "Reference",
         "rowNewBalance": "New balance",
         "backHome": "Back to Home"
+      },
+      "on": {
+        "title": "Auto top-up is on",
+        "summary": "Tops up {{amount}} whenever your balance falls below {{threshold}}.",
+        "badge": "On",
+        "configLabel": "Your auto top-up settings",
+        "whenValue": "Balance falls below {{threshold}}",
+        "notify": "We tell you by notification and SMS each time a top-up happens and if one fails. Turn it off any time; you then top up by hand before the plan renews."
+      },
+      "turnOff": {
+        "cta": "Turn off auto top-up",
+        "title": "Turn off auto top-up?",
+        "bodyWithBalance": "Auto top-up stops. Your balance stays {{balance}}{{validity}}. You'll top up by hand before your plan renews. No fee, and you can turn it back on any time.",
+        "validitySuffix": ", valid until {{date}}",
+        "body": "Auto top-up stops. You'll top up by hand before your plan renews. No fee, and you can turn it back on any time.",
+        "confirm": "Turn off auto top-up",
+        "working": "Turning off…",
+        "keep": "Keep it on"
       }
     },
     "addOns": {
@@ -314,6 +332,10 @@
         "support": "Support",
         "pending": "Pending",
         "failed": "Failed"
+      },
+      "autoTopUp": {
+        "title": "Auto top-up",
+        "sublabel": "Top up automatically when your balance runs low."
       }
     },
     "support": {
