@@ -152,5 +152,11 @@
     "nome": "14-redeem-filled",
     "preencher": { "#voucher-code": "447103928816" },
     "esperar": "text=Add to balance"
+  },
+  {
+    "nome": "15-support",
+    "clicar": "a:has-text('Support')",
+    "esperar": "text=Help topics",
+    "pausa": 400
   }
 ]
