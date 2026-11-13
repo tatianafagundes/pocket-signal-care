@@ -10,7 +10,9 @@ const DOT: Record<StatusTone, string> = {
 
 /** Small status mark that sits beside a state word — the colour half of "colour + word". */
 export function StatusDot({ tone }: { tone: StatusTone }) {
-  return <span className={`inline-block size-2 shrink-0 rounded-pill ${DOT[tone]}`} aria-hidden="true" />;
+  return (
+    <span className={`inline-block size-2 shrink-0 rounded-pill ${DOT[tone]}`} aria-hidden="true" />
+  );
 }
 
 /** Which status tone a metered bucket state carries, if any (ok/expired/pending carry none). */

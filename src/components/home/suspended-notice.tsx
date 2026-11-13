@@ -20,7 +20,10 @@ export function SuspendedNotice() {
           )}
         </p>
       </div>
-      <Link to="/support" className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-danger">
+      <Link
+        to="/support"
+        className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-danger"
+      >
         {t("pages.home.line.suspendedCta", "Pedir ajuda")}
       </Link>
     </div>

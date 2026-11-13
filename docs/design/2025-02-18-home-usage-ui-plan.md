@@ -153,3 +153,55 @@ export function primaryDataBucket(c360: Customer360): UsageBucket | null
 - Prefer `usage.find(b => b.type === "data" && b.offerId === primaryPlan(c360)?.offerId)`.
 - Else `usage.find(b => b.type === "data")`.
 - Else `null` (Data card → empty state). Pure, unit-tested, no I/O.
+
+---
+
+## Reconciliation addendum — after Lovable's Customer 360 review (2026-11-13)
+
+> STATUS: the Home shipped (commit `d5ef494`), then Lovable ran a full Customer 360 review and
+> substantially evolved **both** Home and My plan (commits `00d8c58`…`b942e7b`, +1681 lines). This
+> addendum records what changed so this plan matches `main`. Lovable's own plans live under
+> `.lovable/plan/` (notably `full-review-customer-360-home-my-plan-2026-11-13.md` and
+> `customer-360-próximo-passo-2026-11-13.md`).
+
+### What Lovable kept from my increment
+`DataRing`, `UsageSummaryCard`, `PlanSummaryCard`, `primaryDataBucket`, `usage-format.ts`, and the
+`PageShell` `flush`/optional-subtitle change all survived and were extended — not replaced. The
+`useSession()` Home-vs-prospect branch stands.
+
+### What Lovable added (now on main)
+- **Rules** (`customer360-rules.ts`): `renewalShortfall`, `lineSimType`, `planRenewsAt`, `lineStatus`,
+  `balanceState`, `activeAddOns`, `homeNotice`, `renewalCovered`, `daysUntil`,
+  `RELATIVE_RENEWAL_MAX_DAYS`, `renewalWhen`, `homeDataPrompt`, plus types `LineStatus`,
+  `BalanceState`, `HomeNotice`, `RenewalWhen`, `HomeDataPrompt`. All pure, `now` injectable, tested.
+- **Model**: `Party.msisdn?`, `Customer.status` adds `"suspended"` (`CustomerStatus`),
+  `SessionCustomer.givenName`.
+- **Home components**: `BalanceCard` (balance states + "covers your renewal" reassurance),
+  `LineHeader` (number + status badge + pending sentence), `RenewalNotice`, `SuspendedNotice`,
+  `AddDataCard` (appears only when data low/depleted). `UsageSummaryCard` now takes only `bucket`
+  (reads locale internally); `PlanSummaryCard` now takes `when: RenewalWhen` and shows the relative
+  renewal instead of a repeated Active badge.
+- **Shared**: `CopyNumberButton`, `LineStatusBadge`, `StatusDot` + `bucketTone`, `format-date.ts`
+  (`formatShortDate`, `formatRelativeDays`). `formatQuantity(value, locale?)` gained a locale arg.
+- **PageShell**: new `lead` prop (renders a block under the title; Home uses it for `LineHeader`).
+
+### The big change: My plan (P10) is ALREADY BUILT
+The increment this plan named as "next" (the multi-bucket My plan) now exists on main. `my-plan.tsx`
+renders, data-driven from `Customer360.usage`:
+- plan section (name, price, relative/dated renewal, auto-renew, one status badge),
+- **allowances** — all four types (data/voice/sms/roaming) via `components/my-plan/allowance-row.tsx`
+  in one grouped card with hairline dividers, each row a thin `Progress` bar + "x of y left" + state
+  word + `StatusDot`, a "Refill on {date}" line, and (data rows only) an "Add data" link,
+- active add-ons, and the line section (copy number + SIM type).
+
+So the planned next increment is **done**. This plan's scope is fully superseded.
+
+### Carried-over issues to address (see the reconciliation doc)
+1. **i18n inline fallbacks are Portuguese** across the new components while the en/de JSON is correct
+   English/German (parity holds). Users see English, but a missing key would render PT. Half-finished
+   localization pass — worth a cleanup sweep.
+2. **Dead `en.json` keys** from the prior My plan (`productsLabel`, `noProducts`, `statusActive`,
+   `number`, `loadError`, `retry`, `pages.home.lowBalance.*`) — unreferenced; prune.
+3. **No per-bucket CTA for voice/SMS/roaming** — only data has an "Add data" link. Likely intentional
+   (you don't top up minutes the same way), but there's no remedial-action story for the others.
+4. **Formatting**: Lovable left 16 prettier errors (all cosmetic, now fixed in this working tree).

@@ -16,7 +16,10 @@ export function CopyNumberButton({ msisdn }: { msisdn: string }) {
       onClick={() => {
         const failed = () =>
           toast.error(
-            t("pages.home.line.copyFailed", "Não deu para copiar agora — tente de novo em instantes."),
+            t(
+              "pages.home.line.copyFailed",
+              "Não deu para copiar agora — tente de novo em instantes.",
+            ),
           );
         if (!navigator.clipboard) {
           failed();

@@ -442,12 +442,23 @@ describe("planRenewsAt", () => {
     const c = composeCustomer360({
       ...base,
       balance: { amountMinor: 0, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" },
-      usage: [{ bucketId: "b", type: "data", unlimited: false, offerId: "o-plan", validFor: { end: "2026-12-01T00:00:00Z" } }],
+      usage: [
+        {
+          bucketId: "b",
+          type: "data",
+          unlimited: false,
+          offerId: "o-plan",
+          validFor: { end: "2026-12-01T00:00:00Z" },
+        },
+      ],
     });
     expect(planRenewsAt(c)).toBe("2026-12-01T00:00:00Z");
   });
   it("should fall back to balance validity when there is no cycle", () => {
-    const c = composeCustomer360({ ...base, balance: { amountMinor: 0, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" } });
+    const c = composeCustomer360({
+      ...base,
+      balance: { amountMinor: 0, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" },
+    });
     expect(planRenewsAt(c)).toBe("2026-12-31T00:00:00Z");
   });
   it("should return null when nothing is known", () => {
@@ -458,10 +469,16 @@ describe("planRenewsAt", () => {
 describe("lineStatus", () => {
   const base = { party, installedBase: [plan], balance };
   it("should be suspended when the customer is suspended", () => {
-    expect(lineStatus(composeCustomer360({ ...base, customer: { ...customer, status: "suspended" } }))).toBe("suspended");
+    expect(
+      lineStatus(composeCustomer360({ ...base, customer: { ...customer, status: "suspended" } })),
+    ).toBe("suspended");
   });
   it("should be pending when the plan is still pending", () => {
-    const c = composeCustomer360({ ...base, customer, installedBase: [{ ...plan, status: "pending" }] });
+    const c = composeCustomer360({
+      ...base,
+      customer,
+      installedBase: [{ ...plan, status: "pending" }],
+    });
     expect(lineStatus(c)).toBe("pending");
   });
   it("should be active when customer and plan are active", () => {
@@ -471,7 +488,8 @@ describe("lineStatus", () => {
 
 describe("balanceState", () => {
   const now = new Date("2026-11-13T00:00:00Z");
-  const make = (b: Balance | null) => composeCustomer360({ customer, party, installedBase: [], balance: b });
+  const make = (b: Balance | null) =>
+    composeCustomer360({ customer, party, installedBase: [], balance: b });
   it("should be none when there is no balance record", () => {
     expect(balanceState(make(null), now)).toBe("none");
   });
@@ -479,10 +497,20 @@ describe("balanceState", () => {
     expect(balanceState(make({ amountMinor: 0, currency: "EUR" }), now)).toBe("empty");
   });
   it("should be expired when validUntil is in the past, even with money left", () => {
-    expect(balanceState(make({ amountMinor: 500, currency: "EUR", validUntil: "2026-11-01T00:00:00Z" }), now)).toBe("expired");
+    expect(
+      balanceState(
+        make({ amountMinor: 500, currency: "EUR", validUntil: "2026-11-01T00:00:00Z" }),
+        now,
+      ),
+    ).toBe("expired");
   });
   it("should be ok when there is money and it is still valid", () => {
-    expect(balanceState(make({ amountMinor: 500, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" }), now)).toBe("ok");
+    expect(
+      balanceState(
+        make({ amountMinor: 500, currency: "EUR", validUntil: "2026-12-31T00:00:00Z" }),
+        now,
+      ),
+    ).toBe("ok");
   });
 });
 
@@ -557,10 +585,15 @@ describe("renewalWhen", () => {
       party,
       installedBase: [plan],
       balance,
-      usage: [{ bucketId: "b", type: "data", unlimited: false, offerId: "o-plan", validFor: { end } }],
+      usage: [
+        { bucketId: "b", type: "data", unlimited: false, offerId: "o-plan", validFor: { end } },
+      ],
     });
   it("should read relative 25 days for Dec 8 on Nov 13", () => {
-    expect(renewalWhen(withCycleEnd("2026-12-08T00:00:00Z"), now)).toMatchObject({ days: 25, relative: true });
+    expect(renewalWhen(withCycleEnd("2026-12-08T00:00:00Z"), now)).toMatchObject({
+      days: 25,
+      relative: true,
+    });
   });
   it("should still read relative at exactly 30 days", () => {
     expect(renewalWhen(withCycleEnd("2026-12-13T00:00:00Z"), now)?.relative).toBe(true);

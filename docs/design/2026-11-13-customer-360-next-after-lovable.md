@@ -1,0 +1,57 @@
+# Customer 360 — reconciled next steps (after Lovable's 2026-11-13 review)
+
+> STATUS: planning. Supersedes the "next increment = My plan" item in
+> `2025-02-18-home-usage-ui-plan.md`. Grounded in the current `main` (commit `b942e7b`), Lovable's
+> plans under `.lovable/plan/`, and a full-codebase reconciliation. No code in this doc.
+
+## What is DONE on main (so we don't rebuild it)
+- **Home (P1)**: line header (number + status + SIM), balance card with states + renewal
+  reassurance, data ring, plan card with relative renewal + auto-renew, conditional renewal/suspended
+  notices, conditional "Add data" card, neutral loading, screen-reader fixes.
+- **My plan (P10)**: plan section, **all four allowances** (data/voice/sms/roaming) data-driven with
+  progress bars + refill date, active add-ons, line section (copy number + SIM type).
+- **Rules**: a full pure layer (`lineStatus`, `balanceState`, `renewalWhen`, `homeDataPrompt`,
+  `renewalCovered`, `activeAddOns`, …), all tested (313 tests green).
+- **Backend**: TMF654 usage buckets + stateful mock + add-on refill + getCustomer360 composition.
+
+## Remaining work, in recommended order
+
+### 1. Hygiene sweep (small, do first — it's debt already on main)
+- **i18n fallbacks → English.** Every new component has a Portuguese inline fallback
+  (`t("...", "Olá {{name}}")`) while the locale JSON is correct English. Replace the fallbacks with
+  the English string so source and runtime agree and a missing key degrades to English, not PT.
+  (Rule: zero hardcoded strings; the fallback is the in-source default and must match en-US.)
+- **Prune dead `en.json`/`de-AT.json` keys**: `pages.myPlan.productsLabel`, `noProducts`,
+  `statusActive`, `number`, `loadError`, `retry`, `pages.home.lowBalance.*` — unreferenced after the
+  My plan rework. Keep locale parity (parity.test.ts enforces it).
+- Formatting already fixed in the working tree (Lovable left 16 prettier errors).
+
+### 2. Demo data for the unseen states (so the review states are reachable)
+Lovable's review notes several states that exist in code but can't be previewed because no demo
+customer exercises them. Seed demo fixtures for:
+- a **suspended** line (`Customer.status: "suspended"`) — proves `SuspendedNotice` + badge,
+- an **unlimited** data plan (DreiGo "Go Unlimited") — proves unlimited-as-word on ring + allowance,
+- an **expired / empty balance** — proves `balanceState` "expired"/"empty" copy,
+- a **pending** line — proves the pending sentence.
+Mock-only; the seams already carry the shapes. This is the cheapest way to make the design reviewable.
+
+### 3. Visual verification (not yet done for the signed-in dashboard)
+The signed-in Home + My plan have never been captured rendered (no Playwright in the project; the
+dashboard mounts client-side after sessionStorage). Options:
+- add the `ui-capture` tooling and drive login→Home / My plan screenshots in Drei + DreiGo, EN + DE,
+  across healthy / low / suspended; OR
+- hand it to the user to eyeball. Decide before calling the UI "done".
+
+### 4. Then — genuinely new scope (pick with the user)
+From Lovable's "Later" lists and the prototype map, none built yet:
+- **Recent activity** on Home/Account: last top-up + what the balance was spent on (needs a usage/
+  transaction history read — TMF635, currently out of scope).
+- **Tab count**: prototype/DESIGN.md say six tabs; Apple-review suggests five (move language to
+  Account). A navigation decision, not usage.
+- **Per-bucket remedial actions** for voice/SMS/roaming (today only data has "Add data").
+- **Assistant (V1+)** and **notifications (P21)** — large, separate features in the prototype.
+
+## Recommendation
+Do **1 (hygiene)** and **2 (demo states)** as one small increment — they make the already-shipped
+UI correct and reviewable — then **3 (capture)**, then bring **4** to the user as a scoped choice.
+Nothing here rebuilds what Lovable shipped; it finishes and verifies it.
