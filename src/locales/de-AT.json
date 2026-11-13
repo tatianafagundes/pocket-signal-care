@@ -55,18 +55,15 @@
         "none": "Keine Daten übrig",
         "unlimited": "Unbegrenzt",
         "empty": "Noch kein Datenvolumen.",
-        "cardAria": "Datenvolumen — Mein Tarif öffnen",
         "ofTotal": "von {{total}}",
         "leftCaption": "übrig"
       },
       "plan": {
         "title": "Tarif",
         "empty": "Noch kein Tarif.",
-        "cardAria": "Ihr Tarif — Mein Tarif öffnen",
-        "renews": "Verlängert sich am {{date}}"
-      },
-      "addOns": {
-        "subtitle": "Mehr Daten, Roaming oder Anrufe — vom Guthaben bezahlt."
+        "autoRenew": "Automatisch, vom Guthaben",
+        "renewsIn": "Verlängert sich {{when}}",
+        "renewsOn": "Verlängert sich am {{date}}"
       },
       "renewal": {
         "title": "Lade {{amount}} auf, um {{plan}} zu verlängern",
@@ -84,12 +81,22 @@
         "pending": "Ausstehend",
         "suspendedTitle": "Dein Anschluss ist gesperrt",
         "suspendedBody": "Telefonie und Daten sind gerade pausiert. Unser Team hilft dir, ihn wieder freizuschalten.",
-        "suspendedCta": "Hilfe holen"
+        "suspendedCta": "Hilfe holen",
+        "copyFailed": "Kopieren hat gerade nicht geklappt — bitte gleich noch einmal versuchen.",
+        "pendingBody": "Wir aktivieren deine Leitung — das dauert meist nur wenige Minuten."
       },
       "balance": {
         "emptyTitle": "Kein Guthaben",
         "emptyBody": "Lade auf, um deinen Anschluss weiter zu nutzen.",
-        "expired": "Abgelaufen am {{date}}"
+        "expired": "Abgelaufen am {{date}}",
+        "coversRenewalIn": "Deckt deine Verlängerung {{when}}",
+        "coversRenewalOn": "Deckt deine Verlängerung am {{date}}"
+      },
+      "openMyPlan": "— Mein Tarif öffnen",
+      "addData": {
+        "title": "Daten hinzufügen",
+        "low": "Noch {{amount}}. Du kannst jederzeit mehr hinzufügen.",
+        "depleted": "Dein Datenvolumen ist aufgebraucht. Du kannst jederzeit mehr hinzufügen."
       }
     },
     "myPlan": {
@@ -126,7 +133,11 @@
       "addOnsLabel": "Aktive Extras",
       "noAddOns": "Keine aktiven Extras.",
       "seeAddOns": "Extras ansehen",
-      "lineLabel": "Dein Anschluss"
+      "lineLabel": "Dein Anschluss",
+      "renewsInOn": "Verlängert sich {{when}} · {{date}}",
+      "autoRenew": "Verlängert sich automatisch über dein Guthaben.",
+      "refillsOn": "Auffüllung am {{date}}",
+      "addData": "Daten hinzufügen"
     },
     "topUp": {
       "title": "Aufladen",

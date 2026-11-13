@@ -14,9 +14,18 @@ export function CopyNumberButton({ msisdn }: { msisdn: string }) {
       className="focus-ring flex min-h-11 items-center gap-2 rounded-pill type-body-strong tabular-nums text-text-primary"
       aria-label={`${t("pages.home.line.copy", "Copiar número")}: ${pretty}`}
       onClick={() => {
-        void navigator.clipboard
-          ?.writeText(msisdn)
-          .then(() => toast.success(t("pages.home.line.copied", "Número copiado")));
+        const failed = () =>
+          toast.error(
+            t("pages.home.line.copyFailed", "Não deu para copiar agora — tente de novo em instantes."),
+          );
+        if (!navigator.clipboard) {
+          failed();
+          return;
+        }
+        navigator.clipboard
+          .writeText(msisdn)
+          .then(() => toast.success(t("pages.home.line.copied", "Número copiado")))
+          .catch(failed);
       }}
     >
       {pretty}

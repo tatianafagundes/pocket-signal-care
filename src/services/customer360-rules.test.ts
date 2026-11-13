@@ -6,7 +6,11 @@ import {
   bucketState,
   composeCustomer360,
   hasBalance,
+  daysUntil,
+  homeDataPrompt,
   homeNotice,
+  renewalCovered,
+  renewalWhen,
   lineStatus,
   LOW_REMAINING_RATIO,
   primaryDataBucket,
@@ -507,5 +511,94 @@ describe("homeNotice", () => {
   });
   it("should show nothing when an active line's balance covers the plan price", () => {
     expect(homeNotice(make("active", 1490))).toBeNull();
+  });
+});
+
+describe("renewalCovered", () => {
+  const offer = { offerId: "o-plan", priceMinor: 1490 } as unknown as Offer;
+  const make = (amountMinor: number, offers: Offer[] = [offer]) =>
+    composeCustomer360({
+      customer,
+      party,
+      installedBase: [plan],
+      balance: { amountMinor, currency: "EUR" },
+      offers,
+    });
+  it("should be covered when a €15.00 balance meets a €14.90 plan", () => {
+    expect(renewalCovered(make(1500))).toBe(true);
+  });
+  it("should not be covered when the balance is below the plan price", () => {
+    expect(renewalCovered(make(1000))).toBe(false);
+  });
+  it("should not claim coverage when the plan has no price", () => {
+    expect(renewalCovered(make(1500, []))).toBe(false);
+  });
+});
+
+describe("daysUntil", () => {
+  const now = new Date("2026-11-13T07:56:00Z");
+  it("should count 25 days from Nov 13 to Dec 8", () => {
+    expect(daysUntil("2026-12-08T00:00:00Z", now)).toBe(25);
+  });
+  it("should be 0 for later today and 1 for tomorrow", () => {
+    expect(daysUntil("2026-11-13T23:00:00Z", now)).toBe(0);
+    expect(daysUntil("2026-11-14T00:00:00Z", now)).toBe(1);
+  });
+  it("should be null for an unparseable date", () => {
+    expect(daysUntil("not-a-date", now)).toBeNull();
+  });
+});
+
+describe("renewalWhen", () => {
+  const now = new Date("2026-11-13T07:56:00Z");
+  const withCycleEnd = (end: string) =>
+    composeCustomer360({
+      customer,
+      party,
+      installedBase: [plan],
+      balance,
+      usage: [{ bucketId: "b", type: "data", unlimited: false, offerId: "o-plan", validFor: { end } }],
+    });
+  it("should read relative 25 days for Dec 8 on Nov 13", () => {
+    expect(renewalWhen(withCycleEnd("2026-12-08T00:00:00Z"), now)).toMatchObject({ days: 25, relative: true });
+  });
+  it("should still read relative at exactly 30 days", () => {
+    expect(renewalWhen(withCycleEnd("2026-12-13T00:00:00Z"), now)?.relative).toBe(true);
+  });
+  it("should show the date when more than 30 days away", () => {
+    expect(renewalWhen(withCycleEnd("2026-12-14T00:00:00Z"), now)?.relative).toBe(false);
+  });
+});
+
+describe("homeDataPrompt", () => {
+  const now = new Date("2026-11-13T07:56:00Z");
+  const withData = (remaining: number, unlimited = false) =>
+    composeCustomer360({
+      customer,
+      party,
+      installedBase: [plan],
+      balance,
+      usage: [
+        {
+          bucketId: "b",
+          type: "data",
+          unlimited,
+          offerId: "o-plan",
+          total: { value: 10, unit: "GB" },
+          remaining: { value: remaining, unit: "GB" },
+        },
+      ],
+    });
+  it("should prompt when 1.8 of 10 GB are left", () => {
+    expect(homeDataPrompt(withData(1.8), now)).toBe("low");
+  });
+  it("should prompt when data is used up", () => {
+    expect(homeDataPrompt(withData(0), now)).toBe("depleted");
+  });
+  it("should not prompt when plenty of data is left", () => {
+    expect(homeDataPrompt(withData(6), now)).toBeNull();
+  });
+  it("should not prompt on an unlimited plan", () => {
+    expect(homeDataPrompt(withData(0, true), now)).toBeNull();
   });
 });

@@ -3,23 +3,28 @@ import { Link } from "@tanstack/react-router";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
-import { formatShortDate } from "@/lib/format-date";
-import type { BalanceState } from "@/services/customer360-rules";
+import { formatRelativeDays, formatShortDate } from "@/lib/format-date";
+import { StatusDot } from "@/components/status/status-dot";
+import type { BalanceState, RenewalWhen } from "@/services/customer360-rules";
 import type { Balance } from "@/services/model";
 import type { Locale } from "@/lib/tenant-rules";
 
 /**
  * Home balance card — the money axis. Each state reads as words: no record yet → first top-up
  * prompt; zero → "No balance" (never a bare €0.00); expired → amount + "Expired on …" in danger.
+ * When the balance already covers the next renewal, a calm success line says so (reassurance).
  */
 export function BalanceCard({
   balance,
   state,
   locale,
+  coversRenewal,
 }: {
   balance: Balance | null;
   state: BalanceState;
   locale: Locale;
+  /** The next renewal, when the balance already covers it; null hides the reassurance line. */
+  coversRenewal: RenewalWhen | null;
 }) {
   const { t } = useLocalizedTranslation();
   return (
@@ -59,6 +64,18 @@ export function BalanceCard({
                 })}
               </p>
             )
+          ) : null}
+          {state === "ok" && coversRenewal ? (
+            <p className="mt-2 flex items-center gap-1.5 type-body-sm text-text-primary">
+              <StatusDot tone="success" />
+              {coversRenewal.relative
+                ? t("pages.home.balance.coversRenewalIn", "Cobre sua renovação {{when}}", {
+                    when: formatRelativeDays(coversRenewal.days, locale),
+                  })
+                : t("pages.home.balance.coversRenewalOn", "Cobre sua renovação em {{date}}", {
+                    date: formatShortDate(coversRenewal.iso, locale),
+                  })}
+            </p>
           ) : null}
         </>
       )}

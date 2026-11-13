@@ -15,13 +15,13 @@ import { LineStatusBadge } from "@/components/line/line-status-badge";
 import { StatusDot } from "@/components/status/status-dot";
 import { api, SeamFailure } from "@/services/api";
 import { formatPrice } from "@/lib/format";
-import { formatShortDate } from "@/lib/format-date";
+import { formatRelativeDays, formatShortDate } from "@/lib/format-date";
 import {
   activeAddOns,
   lineSimType,
   lineStatus,
-  planRenewsAt,
   primaryPlan,
+  renewalWhen,
 } from "@/services/customer360-rules";
 
 export const Route = createFileRoute("/my-plan")({
@@ -87,7 +87,7 @@ function Page() {
 function PlanDetail({ data, locale }: { data: Customer360; locale: Locale }) {
   const { t } = useLocalizedTranslation();
   const plan = primaryPlan(data);
-  const renewsAt = planRenewsAt(data);
+  const when = renewalWhen(data);
   const addOns = activeAddOns(data);
   const status = lineStatus(data);
 
@@ -111,11 +111,21 @@ function PlanDetail({ data, locale }: { data: Customer360; locale: Locale }) {
                   : formatPrice(plan.offer.priceMinor, plan.offer.currency, locale)}
               </p>
             ) : null}
-            {renewsAt ? (
-              <p className="mt-1 type-body-sm text-text-secondary">
-                {t("pages.myPlan.renewsOn", "Renova em {{date}}", {
-                  date: formatShortDate(renewsAt, locale),
-                })}
+            {when ? (
+              <p className="mt-1 type-body-sm text-text-primary">
+                {when.relative
+                  ? t("pages.myPlan.renewsInOn", "Renova {{when}} · {{date}}", {
+                      when: formatRelativeDays(when.days, locale),
+                      date: formatShortDate(when.iso, locale),
+                    })
+                  : t("pages.myPlan.renewsOn", "Renova em {{date}}", {
+                      date: formatShortDate(when.iso, locale),
+                    })}
+              </p>
+            ) : null}
+            {plan.offer?.autoRenew && plan.status !== "pending" ? (
+              <p className="mt-0.5 type-body-sm text-text-secondary">
+                {t("pages.myPlan.autoRenew", "Renova automaticamente com o seu saldo.")}
               </p>
             ) : null}
           </>
@@ -136,11 +146,21 @@ function PlanDetail({ data, locale }: { data: Customer360; locale: Locale }) {
             {t("pages.myPlan.noAllowances", "Ainda não há franquias na sua linha.")}
           </p>
         ) : (
-          <ul className="mt-2 grid gap-2">
-            {data.usage.map((b) => (
-              <AllowanceRow key={b.bucketId} bucket={b} />
-            ))}
-          </ul>
+          <>
+            {when ? (
+              <p className="mt-1 type-body-sm text-text-secondary">
+                {t("pages.myPlan.refillsOn", "Renovam em {{date}}", {
+                  date: formatShortDate(when.iso, locale),
+                })}
+              </p>
+            ) : null}
+            {/* One grouped card with hairline dividers — calmer than a box per allowance. */}
+            <ul className="mt-2 divide-y divide-hairline rounded-card border border-hairline bg-surface">
+              {data.usage.map((b) => (
+                <AllowanceRow key={b.bucketId} bucket={b} />
+              ))}
+            </ul>
+          </>
         )}
         {data.usage.some((b) => b.type === "roaming") ? (
           <p className="mt-2 type-caption text-text-secondary">

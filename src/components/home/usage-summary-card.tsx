@@ -131,18 +131,21 @@ export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
   }
 
   return (
-    <Link
-      to="/my-plan"
-      className="focus-ring block rounded-card border border-hairline bg-surface p-4"
-      aria-label={t("pages.home.data.cardAria", "Data allowance — open My plan")}
-    >
-      {head}
-      {body}
+    <>
+      <Link
+        to="/my-plan"
+        className="focus-ring block rounded-card border border-hairline bg-surface p-4"
+      >
+        {head}
+        {body}
+        <span className="sr-only">{t("pages.home.openMyPlan", "— abrir Meu plano")}</span>
+      </Link>
+      {/* Outside the link so the announcement is not repeated in the link's name. */}
       {liveMessage ? (
         <span role="status" aria-live="polite" className="sr-only">
           {liveMessage}
         </span>
       ) : null}
-    </Link>
+    </>
   );
 }

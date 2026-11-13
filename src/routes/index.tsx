@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { PackagePlus } from "lucide-react";
 
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
@@ -13,19 +12,24 @@ import { Button } from "@/components/ui/button";
 import { BalanceCard } from "@/components/home/balance-card";
 import { LineHeader } from "@/components/home/line-header";
 import { RenewalNotice } from "@/components/home/renewal-notice";
+import { SuspendedNotice } from "@/components/home/suspended-notice";
+import { AddDataCard } from "@/components/home/add-data-card";
 import { UsageSummaryCard } from "@/components/home/usage-summary-card";
 import { PlanSummaryCard } from "@/components/home/plan-summary-card";
 import { api, SeamFailure } from "@/services/api";
 import {
   balanceState,
-  lineSimType,
+  homeDataPrompt,
   homeNotice,
+  lineSimType,
   lineStatus,
-  planRenewsAt,
   primaryDataBucket,
   primaryPlan,
+  renewalCovered,
   renewalShortfall,
+  renewalWhen,
 } from "@/services/customer360-rules";
+import { formatQuantity } from "@/lib/usage-format";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -51,10 +55,11 @@ function Page() {
   return session ? <HomeDashboard /> : <OnboardingEntry />;
 }
 
-/** The logged-in Home — balance, data allowance and plan summary (Figma P1). */
+/** The logged-in Home — line, balance, data allowance and plan summary (Figma P1). */
 function HomeDashboard() {
   const { t } = useLocalizedTranslation();
   const { tenant, locale } = useTenant();
+  const { session } = useSession();
   const customerId = useCurrentCustomerId();
 
   const query = useQuery({
@@ -62,14 +67,39 @@ function HomeDashboard() {
     queryFn: () => api.getCustomer360(customerId),
   });
 
-  const greeting = query.data
-    ? t("pages.home.greeting", "Hi {{name}}", { name: query.data.party.givenName })
-    : t("pages.home.greetingPlain", "Hi there");
+  // The session already knows the name, so the greeting never flashes "Hi there" while loading.
+  const name = query.data?.party.givenName ?? session?.givenName ?? null;
+  const greeting = name
+    ? t("pages.home.greeting", "Olá {{name}}", { name })
+    : t("pages.home.greetingPlain", "Olá");
+
+  const data = query.data;
+  const when = data ? renewalWhen(data) : null;
+  const notice = data ? homeNotice(data) : null;
+  const dataPrompt = data ? homeDataPrompt(data) : null;
+  const dataBucket = data ? primaryDataBucket(data) : null;
 
   return (
-    <PageShell title={greeting} flush>
+    <PageShell
+      title={greeting}
+      flush
+      lead={
+        data ? (
+          <LineHeader
+            msisdn={data.party.msisdn}
+            simType={lineSimType(data)}
+            status={lineStatus(data)}
+          />
+        ) : query.isPending ? (
+          <div className="flex min-h-11 items-center justify-between gap-2" aria-hidden="true">
+            <Skeleton className="h-5 w-44" />
+            <Skeleton className="h-7 w-28 rounded-pill" />
+          </div>
+        ) : null
+      }
+    >
       {query.isPending ? (
-        <HomeSkeleton loadingLabel={t("pages.home.loading", "Loading your home…")} />
+        <HomeSkeleton loadingLabel={t("pages.home.loading", "Carregando seu início…")} />
       ) : query.isError ? (
         <SeamErrorNotice
           error={
@@ -85,17 +115,12 @@ function HomeDashboard() {
         />
       ) : (
         <div className="grid gap-4">
-          <LineHeader
-            msisdn={query.data.party.msisdn}
-            simType={lineSimType(query.data)}
-            status={lineStatus(query.data)}
-          />
-
-          {homeNotice(query.data) === "renewal" ? (
+          {notice === "suspended" ? <SuspendedNotice /> : null}
+          {notice === "renewal" ? (
             <RenewalNotice
               shortfallMinor={renewalShortfall(query.data)}
               planName={primaryPlan(query.data)?.offer?.name ?? primaryPlan(query.data)?.name ?? ""}
-              renewsAt={planRenewsAt(query.data)}
+              renewsAt={when?.iso ?? null}
               locale={locale}
             />
           ) : null}
@@ -104,44 +129,29 @@ function HomeDashboard() {
             balance={query.data.balance}
             state={balanceState(query.data)}
             locale={locale}
+            coversRenewal={renewalCovered(query.data) ? when : null}
           />
 
           {/* Data + Plan — the usage axis summary and the plan summary, side by side. */}
           <div className="grid grid-cols-2 gap-3">
-            <UsageSummaryCard bucket={primaryDataBucket(query.data)} />
-            <PlanSummaryCard
-              plan={primaryPlan(query.data)}
-              renewsAt={planRenewsAt(query.data)}
-              locale={locale}
-            />
+            <UsageSummaryCard bucket={dataBucket} />
+            <PlanSummaryCard plan={primaryPlan(query.data)} when={when} locale={locale} />
           </div>
 
-          {/* Add-ons entry. */}
-          <Link
-            to="/add-ons"
-            className="focus-ring flex items-center gap-3 rounded-card border border-hairline bg-surface p-4"
-          >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-tile bg-accent-tint">
-              <PackagePlus className="size-5 text-accent-ink" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block type-body-strong text-text-primary">
-                {t("nav.addOns", "Add-ons")}
-              </span>
-              <span className="block type-body-sm text-text-secondary">
-                {t(
-                  "pages.home.addOns.subtitle",
-                  "Extra data, roaming or calls — paid from your balance.",
-                )}
-              </span>
-            </span>
-          </Link>
+          {/* Add data — only when data is low or used up; the way out sits next to the problem. */}
+          {dataPrompt && dataBucket ? (
+            <AddDataCard
+              prompt={dataPrompt}
+              remainingLabel={`${formatQuantity(dataBucket.remaining?.value ?? 0, locale)}\u00a0${t("usage.unit.gb", "GB")}`}
+            />
+          ) : null}
         </div>
       )}
     </PageShell>
   );
 }
 
+/** Neutral placeholders shaped like the real Home (balance, then the Data + Plan pair). */
 function HomeSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
     <>
@@ -149,12 +159,11 @@ function HomeSkeleton({ loadingLabel }: { loadingLabel: string }) {
         {loadingLabel}
       </p>
       <div className="grid gap-4" aria-hidden="true">
-        <Skeleton className="h-28 w-full rounded-card" />
+        <Skeleton className="h-48 w-full rounded-card" />
         <div className="grid grid-cols-2 gap-3">
-          <Skeleton className="h-44 w-full rounded-card" />
-          <Skeleton className="h-44 w-full rounded-card" />
+          <Skeleton className="h-48 w-full rounded-card" />
+          <Skeleton className="h-48 w-full rounded-card" />
         </div>
-        <Skeleton className="h-16 w-full rounded-card" />
       </div>
     </>
   );

@@ -250,3 +250,50 @@ export function homeNotice(c360: Customer360): HomeNotice {
   if (renewalShortfall(c360) > 0) return "renewal";
   return null;
 }
+
+/** True when the balance already covers the next renewal of a priced plan. Pure. */
+export function renewalCovered(c360: Customer360): boolean {
+  const price = primaryPlan(c360)?.offer?.priceMinor;
+  if (price === undefined) return false;
+  return renewalShortfall(c360) === 0;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Whole calendar days (UTC) from `now` to `iso`: 0 = today, 1 = tomorrow, negative = past.
+ * Null when the date is unparseable. Pure.
+ */
+export function daysUntil(iso: string, now: Date = new Date()): number | null {
+  const target = parseIso(iso);
+  if (target === null) return null;
+  const t = new Date(target);
+  const startOf = (d: Date) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return Math.round((startOf(t) - startOf(now)) / DAY_MS);
+}
+
+/** Up to this many days ahead, a renewal reads relative ("in 25 days"); beyond it, as a date. */
+export const RELATIVE_RENEWAL_MAX_DAYS = 30;
+
+/** How to show the next renewal: relative days when soon, else the date. Null when unknown. */
+export type RenewalWhen = { iso: string; days: number; relative: boolean };
+
+/** The plan's next renewal, ready for display (see RELATIVE_RENEWAL_MAX_DAYS). Pure. */
+export function renewalWhen(c360: Customer360, now: Date = new Date()): RenewalWhen | null {
+  const iso = planRenewsAt(c360);
+  if (iso === null) return null;
+  const days = daysUntil(iso, now);
+  if (days === null) return null;
+  return { iso, days, relative: days >= 0 && days <= RELATIVE_RENEWAL_MAX_DAYS };
+}
+
+/** Home "Add data" prompt: shown only when the primary data allowance is low or used up. */
+export type HomeDataPrompt = "low" | "depleted" | null;
+
+/** Which Add data prompt Home shows, if any (unlimited / ok / expired / no data → none). Pure. */
+export function homeDataPrompt(c360: Customer360, now: Date = new Date()): HomeDataPrompt {
+  const bucket = primaryDataBucket(c360);
+  if (bucket === null || bucket.unlimited) return null;
+  const state = bucketState(bucket, now);
+  return state === "low" || state === "depleted" ? state : null;
+}

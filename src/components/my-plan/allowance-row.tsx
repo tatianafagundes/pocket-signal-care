@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { Progress } from "@/components/ui/progress";
@@ -40,7 +42,8 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
     ? t("pages.myPlan.unlimited", "Ilimitado")
     : bucket.remaining && bucket.total
       ? t("pages.myPlan.left", "{{remaining}} de {{total}} restantes", {
-          remaining: `${formatQuantity(bucket.remaining.value, locale)}\u00a0${unit}`,
+          // Unit once, on the total: "175 of 200 SMS left".
+          remaining: formatQuantity(bucket.remaining.value, locale),
           total: `${formatQuantity(bucket.total.value, locale)}\u00a0${unit}`,
         })
       : "";
@@ -58,7 +61,7 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
   const tone = bucketTone(state);
 
   return (
-    <li className="rounded-card border border-hairline bg-surface p-3">
+    <li className="p-3">
       <div className="flex items-baseline justify-between gap-2">
         <span className="type-body text-text-primary">
           {t(`pages.myPlan.type.${bucket.type}`, bucket.type)}
@@ -74,14 +77,24 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
         />
       ) : null}
       {stateWord ? (
-        <p
-          className={`mt-1.5 flex items-center gap-1.5 type-caption ${
-            tone ? "text-text-primary" : "text-text-secondary"
-          }`}
-        >
-          {tone ? <StatusDot tone={tone} /> : null}
-          {stateWord}
-        </p>
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <p
+            className={`flex items-center gap-1.5 type-caption ${
+              tone ? "text-text-primary" : "text-text-secondary"
+            }`}
+          >
+            {tone ? <StatusDot tone={tone} /> : null}
+            {stateWord}
+          </p>
+          {tone && bucket.type === "data" ? (
+            <Link
+              to="/add-ons"
+              className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
+            >
+              {t("pages.myPlan.addData", "Adicionar dados")}
+            </Link>
+          ) : null}
+        </div>
       ) : null}
     </li>
   );

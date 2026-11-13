@@ -18,14 +18,17 @@ interface PageShellProps {
    * single-card screen unchanged.
    */
   flush?: boolean;
+  /** Optional block right under the title (Home: the line number + status), part of the header. */
+  lead?: ReactNode;
   children?: ReactNode;
 }
 
-export function PageShell({ title, subtitle, flush = false, children }: PageShellProps) {
+export function PageShell({ title, subtitle, flush = false, lead, children }: PageShellProps) {
   return (
     <main className="mx-auto w-full max-w-[390px] px-5 pt-6 pb-28">
       <h1 className="type-title text-text-primary">{title}</h1>
       {subtitle ? <p className="type-body mt-1 text-text-secondary">{subtitle}</p> : null}
+      {lead ? <div className="mt-1">{lead}</div> : null}
       {flush ? (
         <div className="mt-6">{children}</div>
       ) : (

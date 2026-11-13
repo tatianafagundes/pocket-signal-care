@@ -4,7 +4,8 @@ import { ChevronRight } from "lucide-react";
 import type { EnrichedProduct } from "@/services/model";
 import type { Locale } from "@/lib/tenant-rules";
 import { formatPrice } from "@/lib/format";
-import { formatShortDate } from "@/lib/format-date";
+import { formatRelativeDays, formatShortDate } from "@/lib/format-date";
+import type { RenewalWhen } from "@/services/customer360-rules";
 import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { StatusDot } from "@/components/status/status-dot";
 import { Badge } from "@/components/ui/badge";
@@ -18,12 +19,12 @@ import { Badge } from "@/components/ui/badge";
 
 export interface PlanSummaryCardProps {
   plan: EnrichedProduct | null;
-  /** When the plan next renews (ISO); shown instead of a repeated "Active" badge. */
-  renewsAt: string | null;
+  /** When the plan next renews; shown instead of a repeated "Active" badge. */
+  when: RenewalWhen | null;
   locale: Locale;
 }
 
-export function PlanSummaryCard({ plan, renewsAt, locale }: PlanSummaryCardProps) {
+export function PlanSummaryCard({ plan, when, locale }: PlanSummaryCardProps) {
   const { t } = useLocalizedTranslation();
 
   const head = (
@@ -37,7 +38,6 @@ export function PlanSummaryCard({ plan, renewsAt, locale }: PlanSummaryCardProps
     <Link
       to="/my-plan"
       className="focus-ring block rounded-card border border-hairline bg-surface p-4"
-      aria-label={t("pages.home.plan.cardAria", "Your plan — open My plan")}
     >
       {head}
       {plan === null ? (
@@ -52,6 +52,17 @@ export function PlanSummaryCard({ plan, renewsAt, locale }: PlanSummaryCardProps
               {formatPrice(plan.offer.priceMinor, plan.offer.currency, locale)}
             </p>
           ) : null}
+          {plan.status !== "pending" && when ? (
+            <p className="mt-3 type-body-sm text-text-primary">
+              {when.relative
+                ? t("pages.home.plan.renewsIn", "Renova {{when}}", {
+                    when: formatRelativeDays(when.days, locale),
+                  })
+                : t("pages.home.plan.renewsOn", "Renova em {{date}}", {
+                    date: formatShortDate(when.iso, locale),
+                  })}
+            </p>
+          ) : null}
           {plan.status === "pending" ? (
             <div className="mt-3">
               <Badge className="gap-1.5 border-transparent bg-warning-tint text-text-primary">
@@ -59,15 +70,14 @@ export function PlanSummaryCard({ plan, renewsAt, locale }: PlanSummaryCardProps
                 {t("pages.myPlan.statusPending", "Pendente")}
               </Badge>
             </div>
-          ) : renewsAt ? (
-            <p className="mt-3 type-body-sm text-text-secondary">
-              {t("pages.home.plan.renews", "Renova em {{date}}", {
-                date: formatShortDate(renewsAt, locale),
-              })}
+          ) : plan.offer?.autoRenew && when ? (
+            <p className="mt-0.5 type-caption text-text-secondary">
+              {t("pages.home.plan.autoRenew", "Automaticamente, do seu saldo")}
             </p>
           ) : null}
         </>
       )}
+      <span className="sr-only">{t("pages.home.openMyPlan", "— abrir Meu plano")}</span>
     </Link>
   );
 }

@@ -55,18 +55,15 @@
         "none": "No data left",
         "unlimited": "Unlimited",
         "empty": "No data allowance yet.",
-        "cardAria": "Data allowance — open My plan",
         "ofTotal": "of {{total}}",
         "leftCaption": "left"
       },
       "plan": {
         "title": "Plan",
         "empty": "No plan yet.",
-        "cardAria": "Your plan — open My plan",
-        "renews": "Renews {{date}}"
-      },
-      "addOns": {
-        "subtitle": "Extra data, roaming or calls — paid from your balance."
+        "autoRenew": "Automatically, from your balance",
+        "renewsIn": "Renews {{when}}",
+        "renewsOn": "Renews {{date}}"
       },
       "renewal": {
         "title": "Top up {{amount}} to renew {{plan}}",
@@ -84,12 +81,22 @@
         "pending": "Pending",
         "suspendedTitle": "Your line is suspended",
         "suspendedBody": "Calls and data are paused for now. Our team can help you get it back.",
-        "suspendedCta": "Get help"
+        "suspendedCta": "Get help",
+        "copyFailed": "Couldn't copy just now — please try again in a moment.",
+        "pendingBody": "We're activating your line — this usually takes a few minutes."
       },
       "balance": {
         "emptyTitle": "No balance",
         "emptyBody": "Top up to keep using your line.",
-        "expired": "Expired on {{date}}"
+        "expired": "Expired on {{date}}",
+        "coversRenewalIn": "Covers your renewal {{when}}",
+        "coversRenewalOn": "Covers your renewal on {{date}}"
+      },
+      "openMyPlan": "— open My plan",
+      "addData": {
+        "title": "Add data",
+        "low": "{{amount}} left. You can add more anytime.",
+        "depleted": "Your data is used up. You can add more anytime."
       }
     },
     "myPlan": {
@@ -126,7 +133,11 @@
       "addOnsLabel": "Active add-ons",
       "noAddOns": "No active add-ons.",
       "seeAddOns": "See add-ons",
-      "lineLabel": "Your line"
+      "lineLabel": "Your line",
+      "renewsInOn": "Renews {{when}} · {{date}}",
+      "autoRenew": "Renews automatically from your balance.",
+      "refillsOn": "Refill on {{date}}",
+      "addData": "Add data"
     },
     "topUp": {
       "title": "Top up",

@@ -4,3 +4,8 @@ export function formatShortDate(iso: string, locale: string): string {
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
 }
+
+/** Localized relative day ("in 25 days" / "tomorrow" / "in 25 Tagen" / "morgen"). */
+export function formatRelativeDays(days: number, locale: string): string {
+  return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(days, "day");
+}
