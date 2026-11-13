@@ -1,0 +1,612 @@
+{
+  "info": {
+    "name": "Multi-tenant-customer",
+    "description": null,
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Customer - Create party",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "description": "",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "",
+            "url": {
+              "raw": "https://{{CLUSTER_SERVER}}/customerManagement/v1/party",
+              "protocol": "https",
+              "host": [
+                "{{CLUSTER_SERVER}}"
+              ],
+              "path": [
+                "customerManagement",
+                "v1",
+                "party"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"Individual\",\n  \"aliveDuring\": {\n    \"birthDate\": \"1978-02-24T05:02:37.990Z\"\n  },\n  \"characteristics\": [\n    {\n      \"name\": \"identityVerificationId\",\n      \"value\": \"characterstics-value\"\n    }\n  ],\n  \"countryOfBirth\": \"IND\",\n  \"maritalStatus\": [\n    {\n      \"status\": \"Married\"\n    }\n  ],\n  \"gender\": \"Male\",\n  \"nationality\": \"Indian\",\n  \"languages\": [\n    \"en\"\n  ],\n  \"partyNames\": [\n    {\n      \"givenName\": \"{{customer_name}}\",\n      \"preferredGivenName\": \"{{customer_name}}\",\n      \"familyName\": \"Dhoni\",\n      \"familyNamePrefix\": \"Singh\",\n      \"middleName\": \"Singh\",\n      \"formattedName\": \"MSD\",\n      \"formOfAddress\": \"MR\",\n      \"aristocraticTitle\": \"Sir\",\n      \"qualification\": \"Dr\",\n      \"language\": \"en\",\n      \"spouseName\": \"Sakshi Dhoni\",\n      \"anniversary\": \"2010-02-24T05:02:37.990Z\",\n      \"annualIncome\": 10000000\n    }\n  ],\n  \"partyIdentifications\": [\n    {\n      \"description\": \"DL\",\n      \"commonName\": \"DRIVING LICENCE\",\n      \"idNumber\": \"123456\",\n      \"idType\": \"DL\",\n      \"issuingDate\": \"2020-02-24T05:02:37.990Z\",\n      \"issuingCountry\": \"AUS\",\n      \"issuingState\": \"VIC\",\n      \"statuses\": [\n        {\n          \"status\": \"ACTIVE\",\n          \"reason\": \"DRIVING LICENCE\"\n        }\n      ]\n    }\n  ],\n  \"contactMedia\": [\n    {\n      \"contactMediumValue\": [\n        {\n          \"value\": \"813627378382\",\n          \"purpose\": \"Telephone\"\n        }\n      ],\n      \"statuses\": [\n        {\n          \"status\": \"INIT\",\n          \"reason\": \"Email_Reason\"\n        }\n      ],\n      \"contactMediumType\": \"PhoneContact\"\n    },\n    {\n      \"contactMediumValue\": [\n        {\n          \"value\": \"{{customer_mail}}\",\n          \"purpose\": \"EmailContact\"\n        }\n      ],\n      \"statuses\": [\n        {\n          \"status\": \"INIT\",\n          \"reason\": \"Email_Reason\"\n        }\n      ],\n      \"contactMediumType\": \"EmailContact\"\n    },\n    {\n      \"contactMediumValue\": [\n        {\n          \"value\": \"ASF Insignia  3rd \",\n          \"purpose\": \"STREET_NUMBER_OR_PLOT\"\n        },\n        {\n          \"value\": \"New Delhi\",\n          \"purpose\": \"CITY\"\n        },\n        {\n          \"value\": \"122002\",\n          \"purpose\": \"POSTCODE_COMMUNICATION_ID\"\n        },\n        {\n          \"value\": \"240150536\",\n          \"purpose\": \"ADDRESS_EXTERNAL_ID\"\n        }\n      ],\n      \"statuses\": [\n        {\n          \"status\": \"INIT\",\n          \"reason\": \"Home Shifted\"\n        }\n      ],\n      \"contactMediumType\": \"PostalContact\"\n    }\n  ],\n  \"paymentMethod\": [\n    {\n      \"paymentMethodType\": \"CreditCard\",\n      \"paymentGwProviderId\": \"PayUMoney\",\n      \"token\": \"New_Token\",\n      \"useForAutoRefill\": true,\n      \"statuses\": [\n        {\n          \"status\": \"ACTIVE\",\n          \"reason\": \"PAyment_Reason\"\n        }\n      ]\n    }\n  ],\n  \"gdprPreferences\": {\n    \"versionNumber\": \"string\",\n    \"concent\": 0\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const moment = require(\"moment\");",
+                  "pm.globals.set(\"date_now\", moment().toISOString());",
+                  "const customerName = pm.variables.replaceIn(\"{{$randomFirstName}}\");",
+                  "pm.globals.set(\"customer_name\", customerName);",
+                  "pm.globals.set(\"customer_mail\", customerName+\"@mail.com\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "var responseData = pm.response.json();",
+                  "pm.globals.set(\"partyId\", responseData.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer - Create customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "description": "",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "",
+            "url": {
+              "raw": "https://{{CLUSTER_SERVER}}/customerManagement/v1/customer",
+              "protocol": "https",
+              "host": [
+                "{{CLUSTER_SERVER}}"
+              ],
+              "path": [
+                "customerManagement",
+                "v1",
+                "customer"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"engagedPartyId\": \"{{partyId}}\",\n  \"engagedPartyType\": \"Individual\",\n  \"statuses\": [\n    {\n      \"status\": \"CustomerCreated\",\n      \"reason\": \"CustomerCreated\",\n      \"validFor\": {\n        \"start\": \"{{date_now}}\",\n        \"end\": \"{{future_date}}\"\n      }\n    }\n  ],\n  \"contactMediumAssociations\": [],\n  \"homeTimeZones\": [\n    {\n      \"timeZone\": \"IST\",\n      \"validFor\": {\n        \"start\": \"{{date_now}}\",\n        \"end\": \"{{future_date}}\"\n      }\n    }\n  ],\n  \"customerSegment\": [\n    {\n      \"segmentId\": \"VIP\",\n      \"validFor\": {\n        \"start\": \"{{date_now}}\",\n        \"end\": \"{{future_date}}\"\n      }\n    }\n  ],\n  \"preferredPaymentMethod\": [],\n  \"customerType\": \"Residential\",\n  \"customerSubType\": \"VIP\",\n  \"characteristics\": [\n    {\n      \"name\": \"externalCustomerId\",\n      \"value\": \"characteristics-value\"\n    }\n  ],\n  \"relatedParties\": [],\n  \"externalId\": \"54643\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const moment = require(\"moment\");",
+                  "pm.globals.set(\"date_now\", moment().toISOString());",
+                  "pm.globals.set(\"future_date\", moment().add(12, 'months').toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "var responseData = pm.response.json();",
+                  "pm.globals.set(\"customerId\", responseData.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer - Create contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "description": "",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "",
+            "url": {
+              "raw": "https://{{CLUSTER_SERVER}}/customerManagement/v1/contract",
+              "protocol": "https",
+              "host": [
+                "{{CLUSTER_SERVER}}"
+              ],
+              "path": [
+                "customerManagement",
+                "v1",
+                "contract"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"communicationId\": \"{{communicationId}}\",\n  \"paymentContext\": \"PREPAID\",\n  \"agreementDocumentNumber\": \"23123123212342342432310\",\n  \"statuses\": [\n    {\n      \"status\": \"ContractActive\",\n      \"reason\": \"readasdasda asdasdasd\",\n      \"validFor\": {\n        \"start\": \"{{date_now}}\"\n      }\n    }\n  ],\n  \"contractSpecification\": {\n    \"id\": \"\",\n    \"href\": \"string\"\n  },\n  \"characteristics\": [\n    {\n      \"name\": \"string\",\n      \"value\": \"string\"\n    }\n  ],\n  \"externalId\": \"27042021002\",\n  \"relatedParty\": [],\n  \"relatedEntity\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "let communicationId = pm.globals.get(\"communicationId\") ?? \"814552030000\";",
+                  "communicationId = parseInt(communicationId, 10) + 1;",
+                  "pm.globals.set(\"communicationId\",String(communicationId));",
+                  "",
+                  "const moment = require(\"moment\");",
+                  "pm.globals.set(\"date_now\", moment().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "var responseData = pm.response.json();",
+                  "pm.globals.set(\"contractId\", responseData.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer - Get contract",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "description": "",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "",
+            "url": {
+              "raw": "https://{{CLUSTER_SERVER}}/customerManagement/v1/contract/{{contractId}}",
+              "protocol": "https",
+              "host": [
+                "{{CLUSTER_SERVER}}"
+              ],
+              "path": [
+                "customerManagement",
+                "v1",
+                "contract",
+                "{{contractId}}"
+              ],
+              "query": [],
+              "variable": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recharge",
+      "item": [
+        {
+          "name": "Create payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "description": "",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "",
+            "url": {
+              "raw": "https://{{CLUSTER_SERVER}}/payment/v4/payment",
+              "protocol": "https",
+              "host": [
+                "{{CLUSTER_SERVER}}"
+              ],
+              "path": [
+                "payment",
+                "v4",
+                "payment"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authorizationCode\": \"Payer-AuthCode_{{$timestamp}}\",\n  \"paymentDate\": \"{{payment_date}}\",\n  \"account\": {\n    \"id\": \"{{communicationId}}\",\n    \"@referredType\": \"MSISDN\"\n  },\n  \"amount\": {\n    \"unit\": \"EUR\",\n    \"value\": 11.01\n  },\n  \"payer\": {\n    \"id\": \"{{customerId}}\",\n    \"role\": \"Customer\",\n    \"@referredType\": \"Customer\"\n  },\n  \"paymentMethod\": {\n    \"account\": [\n      {\n        \"id\": \"{{communicationId}}\",\n        \"@referredType\": \"MSISDN\"\n      }\n    ],\n    \"relatedParty\": {\n      \"id\": \"{{customerId}}\",\n      \"@referredType\": \"Customer\"\n    },\n    \"@type\": \"cash\",\n    \"payerName\": \"PayerName\",\n    \"paymentReason\": \"Any\"\n  },\n  \"totalAmount\": {\n    \"unit\": \"EUR\",\n    \"value\": 11.01\n  },\n  \"characteristics\": [\n    {\n      \"name\": \"paymentContext\",\n      \"value\": \"PREPAID\"\n    }\n  ],\n  \"relatedEntity\": [\n    {\n      \"@referredType\": \"Journey\",\n      \"id\": \"monetaryRecharge\"\n    }\n  ],\n  \"status\": \"SUCCESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const moment = require('moment');",
+                  "pm.globals.set(\"payment_date\", moment().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "var responseData = pm.response.json();  ",
+                  "pm.globals.set(\"paymentId\", responseData.id);",
+                  "pm.globals.set(\"authorizationCode\", responseData.authorizationCode);",
+                  "pm.globals.set(\"transactionDateTime\", responseData.transactionDateTime);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create MonetaryRecharge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Tenant-ID",
+                "value": "{{tenantId}}",
+                "description": "",
+                "disabled": false,
+                "type": "default"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "",
+            "url": {
+              "raw": "https://{{CLUSTER_SERVER}}/xCACcore/v1/customerInteraction",
+              "protocol": "https",
+              "host": [
+                "{{CLUSTER_SERVER}}"
+              ],
+              "path": [
+                "xCACcore",
+                "v1",
+                "customerInteraction"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"userId\": \"\",\n    \"customerId\": \"{{customerId}}\",\n    \"contractId\": \"{{contractId}}\",\n    \"journeyId\": \"monetaryRecharge\",\n    \"type\": \"PurchaseOrder\",\n    \"status\": \"InProgress\",\n    \"channelName\": \"CSR\",\n    \"customerPurchaseOrder\": {\n        \"createdBy\": \"dxpcsr1\",\n        \"description\": \"Monetary Recharge\"\n    },\n    \"journeyData\": {\n        \"msisdn\": \"{{communicationId}}\",\n        \"walletName\": \"Main Account\",\n        \"monetaryRechargeDetails\": {\n            \"amount\": \"11.01\",\n            \"unit\": \"EUR\"\n        },\n        \"payment\": {\n            \"resourceNumber\": \"{{communicationId}}\",\n            \"merchantRefNum\": \"{{paymentId}}\",\n            \"paymentGwTransactionId\": \"{{authorizationCode}}\",\n            \"paymentReferenceId\": \"{{authorizationCode}}\",\n            \"payer\": \"NA\",\n            \"status\": \"success\",\n            \"paymentType\": \"cash\",\n            \"transactionDateTime\": \"{{payment_date}}\",\n            \"paymentToken\": \"\",\n            \"paymentMethod\": \"CC\",\n            \"expiryDate\": \"2022-04-09 02:46:45\",\n            \"cardNumber\": \"512345XXXXXX2346\",\n            \"amount\": \"11.01\",\n            \"unit\": \"EUR\"\n        }\n    },\n    \"createDate\": \"{{date_now}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "var responseData = pm.response.json();",
+                  "pm.globals.set(\"partyInteractionId\", responseData.partyInteractionId);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Get token - MasterAdmin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded",
+            "description": "",
+            "disabled": false,
+            "type": "default"
+          }
+        ],
+        "auth": {
+          "type": "noauth"
+        },
+        "description": "",
+        "url": {
+          "raw": "https://{{CLUSTER_SERVER}}/auth/realms/dxp/protocol/openid-connect/token",
+          "protocol": "https",
+          "host": [
+            "{{CLUSTER_SERVER}}"
+          ],
+          "path": [
+            "auth",
+            "realms",
+            "dxp",
+            "protocol",
+            "openid-connect",
+            "token"
+          ],
+          "query": [],
+          "variable": []
+        },
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "client_id",
+              "value": "dxp-frontend",
+              "disabled": false,
+              "type": "default",
+              "description": ""
+            },
+            {
+              "key": "grant_type",
+              "value": "password",
+              "disabled": false,
+              "type": "default",
+              "description": ""
+            },
+            {
+              "key": "username",
+              "value": "masteradmin",
+              "disabled": false,
+              "type": "default",
+              "description": "# Master Tenant"
+            },
+            {
+              "key": "password",
+              "value": "Dxp_CLI@1234",
+              "disabled": false,
+              "type": "default",
+              "description": ""
+            },
+            {
+              "key": "username",
+              "value": "dxpupadmin",
+              "disabled": true,
+              "type": "default",
+              "description": "# Alternative user"
+            },
+            {
+              "key": "password",
+              "value": "dxpupadmin",
+              "disabled": true,
+              "type": "default",
+              "description": "# Pass of alternative user"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              "var responseData = pm.response.json();",
+              "pm.globals.set(\"token\", responseData.access_token);"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "CLUSTER_SERVER",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "tenantId",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "partyId",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "date_now",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "future_date",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "communicationId",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "customer_name",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "customer_mail",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "$randomFirstName",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "contractId",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "$timestamp",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "payment_date",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "paymentId",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "authorizationCode",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
