@@ -46,7 +46,7 @@ function Page() {
 
   const query = useQuery({
     queryKey: queryKeys.customer360(tenant, customerId),
-    queryFn: () => api.getCustomer360(customerId),
+    queryFn: () => api.getCustomer360(customerId, tenant),
   });
 
   // Whether this tenant's catalogue actually sells a roaming top-up (an add-on with euRoaming).

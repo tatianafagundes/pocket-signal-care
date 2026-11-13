@@ -66,7 +66,7 @@ function HomeDashboard() {
 
   const query = useQuery({
     queryKey: queryKeys.customer360(tenant, customerId),
-    queryFn: () => api.getCustomer360(customerId),
+    queryFn: () => api.getCustomer360(customerId, tenant),
   });
 
   // The session already knows the name, so the greeting never flashes "Hi there" while loading.

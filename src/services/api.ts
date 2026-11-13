@@ -1,4 +1,5 @@
 import type { SeamError, SeamResult } from "@/services/seam-result";
+import type { TenantId } from "@/lib/tenant-rules";
 import * as cpr from "@/services/cpr.functions";
 import * as catalog from "@/services/catalog.functions";
 import * as order from "@/services/order.functions";
@@ -62,7 +63,8 @@ export const api = {
   resolveTenant: (tenantId: string) => unwrap(cpr.resolveTenant(tenantId)),
   createParty: (input: unknown) => unwrap(cpr.createParty(input)),
   createCustomer: (input: unknown) => unwrap(cpr.createCustomer(input)),
-  getCustomer360: (customerId: string) => unwrap(cpr.getCustomer360(customerId)),
+  getCustomer360: (customerId: string, expectedTenant?: TenantId) =>
+    unwrap(cpr.getCustomer360(customerId, expectedTenant)),
   createInteraction: (input: unknown) => unwrap(cpr.createInteraction(input)),
   listInteractions: (customerId: string) => unwrap(cpr.listInteractions(customerId)),
 

@@ -3,6 +3,7 @@ import { runRead, runWrite, seamCtx } from "@/services/seam-runtime";
 import { newCorrelationId } from "@/services/seam-logger";
 import { driverFor } from "@/services/driver-config";
 import { composeCustomer360 } from "@/services/customer360-rules";
+import type { TenantId } from "@/lib/tenant-rules";
 import type { Customer360 } from "@/services/model";
 import {
   partyInputSchema,
@@ -69,7 +70,10 @@ export function createCustomer(input: unknown) {
   );
 }
 
-export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Customer360>> {
+export function getCustomer360(
+  customerIdRaw: string,
+  expectedTenant?: TenantId,
+): Promise<SeamResult<Customer360>> {
   const parsed = customerIdSchema.safeParse(customerIdRaw);
   if (!parsed.success) {
     return Promise.resolve<SeamResult<Customer360>>({
@@ -94,6 +98,18 @@ export function getCustomer360(customerIdRaw: string): Promise<SeamResult<Custom
     if (!cpr.ok) return cpr;
     // The customer's tenant drives the catalogue fetch — known only after the CPR read resolves.
     const tenantId = cpr.data.customer.tenantId;
+
+    // Defence-in-depth tenant check (NOT the real authorization boundary — that is server-side RLS,
+    // Fase 8; see docs/design fase8-security-debt). The caller states which tenant it is acting for
+    // (expectedTenant, from the active brand); if the resolved customer belongs to another tenant,
+    // refuse rather than serve a cross-tenant 360. Reported as notFound so it never reveals that the
+    // id exists under a different brand. Omitting expectedTenant (tests, server-internal) skips it.
+    if (expectedTenant !== undefined && tenantId !== expectedTenant) {
+      return {
+        ok: false,
+        error: seamError("cpr.customer.notFound", "notFound", "contactSupport"),
+      };
+    }
 
     const [baseRes, balanceRes, usageRes, activityRes, interactionsRes, offersRes, addOnsRes] =
       await Promise.all([

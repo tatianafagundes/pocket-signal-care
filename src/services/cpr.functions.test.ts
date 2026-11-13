@@ -65,6 +65,23 @@ describe("cpr seam (mock driver)", () => {
       }
     });
 
+    it("defence-in-depth: refuses a cross-tenant 360 when expectedTenant mismatches", async () => {
+      // A caller acting for drei must not receive dreigo's customer, even with the right id.
+      const cross = await getCustomer360("demo-dreigo", "drei");
+      expect(cross.ok).toBe(false);
+      // Reported as notFound — never reveals the id exists under another brand.
+      if (!cross.ok) expect(cross.error.category).toBe("notFound");
+
+      // The matching tenant passes.
+      const same = await getCustomer360("demo-dreigo", "dreigo");
+      expect(same.ok).toBe(true);
+      if (same.ok) expect(same.data.customer.tenantId).toBe("dreigo");
+
+      // Omitting expectedTenant (server-internal / tests) skips the check — back-compatible.
+      const unscoped = await getCustomer360("demo-dreigo");
+      expect(unscoped.ok).toBe(true);
+    });
+
     it("degrades gracefully when the catalogue (ECM) fails — products present, offer null", async () => {
       forceError("catalog.listOffers");
       forceError("catalog.listAddOns");
