@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { authDriverOrThrow, driverFor } from "@/services/driver-config";
+import { assertDriverConfig, authDriverOrThrow, driverFor } from "@/services/driver-config";
 
 /*
  * The auth PROD fail-safe is the security control of Fase A (the mock login accepts any
@@ -47,5 +47,51 @@ describe("driver-config.driverFor", () => {
     expect(driverFor("auth")).toBe("http");
     vi.stubEnv("VITE_AUTH_DRIVER", "keycloak"); // anything not "http" → mock
     expect(driverFor("auth")).toBe("mock");
+  });
+});
+
+describe("driver-config.assertDriverConfig (boot fail-fast)", () => {
+  it("passes with the all-mock default (the zero-config demo)", () => {
+    expect(() => assertDriverConfig()).not.toThrow();
+  });
+
+  it("THROWS when CPR is http but its required config is missing (incoherent deploy)", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_BASE_URL", "");
+    vi.stubEnv("VITE_CPR_TOKEN", "");
+    expect(() => assertDriverConfig()).toThrow(/VITE_CPR_BASE_URL/);
+  });
+
+  it("passes when CPR is http AND its config is present", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_BASE_URL", "https://cpr.example");
+    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    expect(() => assertDriverConfig()).not.toThrow();
+  });
+
+  it("WARNS (does not throw) when a real-able seam is on mock in a PROD build", () => {
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_CPR_DRIVER", "mock");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      expect(() => assertDriverConfig()).not.toThrow();
+      const warned = warn.mock.calls.some((c) => String(c[0]).includes("config-warning"));
+      expect(warned).toBe(true);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("does NOT warn about mock in a dev build (mock is the intended demo default)", () => {
+    vi.stubEnv("PROD", false);
+    vi.stubEnv("VITE_CPR_DRIVER", "mock");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      assertDriverConfig();
+      const warned = warn.mock.calls.some((c) => String(c[0]).includes("config-warning"));
+      expect(warned).toBe(false);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

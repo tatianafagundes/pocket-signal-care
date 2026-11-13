@@ -2,8 +2,13 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { SeamFailure } from "@/services/api";
+import { assertDriverConfig } from "@/services/driver-config";
 
 export const getRouter = () => {
+  // Fail-fast on seam config at boot (runs on both server and client, before any seam is used):
+  // throws on an incoherent http config, warns if a real-able seam is still on mock in prod.
+  assertDriverConfig();
+
   // One client per request: a module-level QueryClient leaks cached data between SSR requests.
   const queryClient = new QueryClient({
     // Caching defaults live here (not on the router). Tuned for a self-care app where the data

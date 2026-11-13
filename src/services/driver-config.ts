@@ -46,3 +46,81 @@ export function authDriverOrThrow(): SeamDriver {
   }
   return d;
 }
+
+/*
+ * Config fail-fast. (Code-review P2: operability)
+ *
+ * Called once at startup. Two independent checks, scaled to what's actually true today:
+ *
+ *  1. COHERENCE (hard — throws): if a seam is set to "http" but the env vars its client needs are
+ *     missing, that's a broken deploy, not a valid state — fail the boot loudly rather than let
+ *     every call fail at runtime with notConfigured. Only CPR has such vars today (base URL +
+ *     token); the other http drivers are pure stubs with nothing to validate yet.
+ *
+ *  2. PROD-READINESS (soft — warns): a seam that is "intended to go real" but is still on "mock" in
+ *     a PROD build is serving demo data as if real. That is NOT a throw today, because no http
+ *     driver except auth is production-ready (CPR's endpoints still need reconciling — see
+ *     cpr-http.ts / the contracts KB), so mock is a legitimate interim state. We surface it as a
+ *     structured warning so an operator sees it; turning it into a throw is a Fase-8 decision for
+ *     when the CPR http driver is complete. Auth is exempt — authDriverOrThrow already hard-fails.
+ */
+
+/** Env vars a seam's http client REQUIRES. Only CPR reads config today (see cpr-http readConfig). */
+const REQUIRED_HTTP_ENV: Partial<Record<SeamName, readonly string[]>> = {
+  cpr: ["VITE_CPR_BASE_URL", "VITE_CPR_TOKEN"],
+};
+
+/** Seams intended to run against a real backend in production (today: only CPR). Auth is handled
+ *  separately by authDriverOrThrow. */
+const PROD_SHOULD_BE_HTTP: readonly SeamName[] = ["cpr"];
+
+function warnConfig(detail: Record<string, unknown>): void {
+  // Structured, so a collector can catch it; boot-time, so no seam-logger dependency.
+  console.warn(JSON.stringify({ kind: "config-warning", ...detail }));
+}
+
+/**
+ * Validate driver configuration at startup. Throws on an incoherent http config; warns (never
+ * throws) when a prod build leaves a real-able seam on mock. Safe to call in any environment.
+ */
+export function assertDriverConfig(): void {
+  const seams: SeamName[] = [
+    "cpr",
+    "ecm",
+    "eoc",
+    "ecev",
+    "resource",
+    "auth",
+    "payment",
+    "logistics",
+  ];
+
+  for (const seam of seams) {
+    const driver = driverFor(seam);
+
+    // 1. Coherence: http selected but its required env is missing → hard failure.
+    if (driver === "http") {
+      const required = REQUIRED_HTTP_ENV[seam] ?? [];
+      const missing = required.filter((key) => {
+        const v = import.meta.env[key];
+        return v === undefined || v === "";
+      });
+      if (missing.length > 0) {
+        throw new Error(
+          `${seam} driver is "http" but required config is missing: ${missing.join(", ")}. ` +
+            `Set them or switch ${ENV_KEY[seam]} back to "mock".`,
+        );
+      }
+    }
+
+    // 2. Prod-readiness: a real-able seam still on mock in a prod build → warn (not auth; that
+    //    seam hard-fails in authDriverOrThrow).
+    if (import.meta.env.PROD && driver === "mock" && PROD_SHOULD_BE_HTTP.includes(seam)) {
+      warnConfig({
+        seam,
+        message: `${seam} is on the mock driver in a production build — serving demo data, not a real backend`,
+        envKey: ENV_KEY[seam],
+      });
+    }
+  }
+}
