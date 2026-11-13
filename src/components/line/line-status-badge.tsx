@@ -21,10 +21,10 @@ export function LineStatusBadge({
   const { t } = useLocalizedTranslation();
   const word =
     status === "suspended"
-      ? t("pages.home.line.suspended", "Suspensa")
+      ? t("pages.home.line.suspended", "Suspended")
       : status === "pending"
-        ? t("pages.home.line.pending", "Pendente")
-        : t("pages.home.line.active", "Ativa");
+        ? t("pages.home.line.pending", "Pending")
+        : t("pages.home.line.active", "Active");
   const sim =
     simType === "esim"
       ? t("pages.home.line.esim", "eSIM")

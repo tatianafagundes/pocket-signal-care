@@ -39,9 +39,9 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
   })();
 
   const amount = bucket.unlimited
-    ? t("pages.myPlan.unlimited", "Ilimitado")
+    ? t("pages.myPlan.unlimited", "Unlimited")
     : bucket.remaining && bucket.total
-      ? t("pages.myPlan.left", "{{remaining}} de {{total}} restantes", {
+      ? t("pages.myPlan.left", "{{remaining}} of {{total}} left", {
           // Unit once, on the total: "175 of 200 SMS left".
           remaining: formatQuantity(bucket.remaining.value, locale),
           total: `${formatQuantity(bucket.total.value, locale)}\u00a0${unit}`,
@@ -50,13 +50,13 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
 
   const stateWord =
     state === "low"
-      ? t("usage.state.low", "Acabando")
+      ? t("usage.state.low", "Running low")
       : state === "depleted"
-        ? t("usage.state.depleted", "Esgotado")
+        ? t("usage.state.depleted", "Used up")
         : state === "expired"
-          ? t("usage.state.expired", "Expirado")
+          ? t("usage.state.expired", "Expired")
           : state === "pending"
-            ? t("usage.state.pending", "Ainda não começou")
+            ? t("usage.state.pending", "Not started yet")
             : null;
   const tone = bucketTone(state);
 
@@ -91,7 +91,7 @@ export function AllowanceRow({ bucket }: { bucket: UsageBucket }) {
               to="/add-ons"
               className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-accent-ink"
             >
-              {t("pages.myPlan.addData", "Adicionar dados")}
+              {t("pages.myPlan.addData", "Add data")}
             </Link>
           ) : null}
         </div>

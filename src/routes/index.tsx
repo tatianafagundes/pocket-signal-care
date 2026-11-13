@@ -70,8 +70,8 @@ function HomeDashboard() {
   // The session already knows the name, so the greeting never flashes "Hi there" while loading.
   const name = query.data?.party.givenName ?? session?.givenName ?? null;
   const greeting = name
-    ? t("pages.home.greeting", "Olá {{name}}", { name })
-    : t("pages.home.greetingPlain", "Olá");
+    ? t("pages.home.greeting", "Hi {{name}}", { name })
+    : t("pages.home.greetingPlain", "Hi there");
 
   const data = query.data;
   const when = data ? renewalWhen(data) : null;
@@ -99,7 +99,7 @@ function HomeDashboard() {
       }
     >
       {query.isPending ? (
-        <HomeSkeleton loadingLabel={t("pages.home.loading", "Carregando seu início…")} />
+        <HomeSkeleton loadingLabel={t("pages.home.loading", "Loading your home…")} />
       ) : query.isError ? (
         <SeamErrorNotice
           error={

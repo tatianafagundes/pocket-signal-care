@@ -28,7 +28,7 @@ export function LineHeader({
         <p className="type-body-sm text-text-secondary">
           {t(
             "pages.home.line.pendingBody",
-            "Estamos ativando sua linha — isso costuma levar poucos minutos.",
+            "We're activating your line — this usually takes a few minutes.",
           )}
         </p>
       ) : null}

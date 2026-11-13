@@ -46,10 +46,6 @@
       "greetingPlain": "Hallo",
       "loading": "Startseite wird geladen…",
       "validUntil": "Gültig bis {{date}}",
-      "lowBalance": {
-        "title": "Guthaben ist niedrig",
-        "body": "Laden Sie auf, damit Tarif und Zusatzpakete weiterlaufen."
-      },
       "data": {
         "title": "Daten",
         "none": "Keine Daten übrig",
@@ -102,14 +98,9 @@
     "myPlan": {
       "title": "Mein Tarif",
       "subtitle": "Was dein Tarif enthält und wann er sich verlängert.",
-      "loadError": "Wir konnten deinen Tarif nicht laden.",
-      "retry": "Erneut versuchen",
       "loading": "Dein Tarif wird geladen…",
       "balanceLabel": "Guthaben",
       "balanceEmpty": "Noch kein Guthaben — lad zum ersten Mal auf.",
-      "productsLabel": "Deine Produkte",
-      "noProducts": "Noch keine Produkte in deinem Tarif.",
-      "statusActive": "Aktiv",
       "statusPending": "Ausstehend",
       "simType": {
         "esim": "eSIM",
@@ -117,7 +108,6 @@
       },
       "allowancesLabel": "Inklusivleistungen",
       "renewsOn": "Verlängert sich am {{date}}",
-      "number": "Deine Nummer",
       "fairUse": "EU-Roaming gemäß Fair-Use-Regelung.",
       "unlimited": "Unbegrenzt",
       "left": "{{remaining}} von {{total}} übrig",
@@ -177,7 +167,19 @@
     },
     "account": {
       "title": "Mein Konto",
-      "subtitle": "Deine Daten und Einstellungen findest du hier."
+      "subtitle": "Deine Daten und Einstellungen findest du hier.",
+      "demo": {
+        "title": "Demo: Leitungsstatus",
+        "body": "Vorschau, wie Startseite und Mein Tarif in jedem Status aussehen.",
+        "variant": {
+          "healthy": "Aktiv",
+          "suspended": "Gesperrt",
+          "unlimited": "Unbegrenzte Daten",
+          "expired": "Abgelaufenes Guthaben",
+          "empty": "Leeres Guthaben",
+          "pending": "Leitung in Aktivierung"
+        }
+      }
     },
     "support": {
       "title": "Hilfe",
@@ -348,11 +350,7 @@
       }
     },
     "addons": {
-      "title": "Extras hinzufügen",
-      "subtitle": "Optional — erweitere deinen Tarif jetzt oder überspring und füg sie später hinzu.",
-      "empty": "Zurzeit sind keine Zusatzpakete für deinen Tarif verfügbar.",
-      "listLabel": "Verfügbare Zusatzpakete",
-      "skip": "Überspringen"
+      "listLabel": "Verfügbare Zusatzpakete"
     },
     "account": {
       "title": "Konto erstellen",
@@ -445,8 +443,6 @@
       "title": "Prüfen und aktivieren",
       "subtitle": "Prüf alles, bevor du bestätigst — du kannst noch zurück und ändern.",
       "plan": "Tarif",
-      "addOns": "Zusatzpakete",
-      "noAddOns": "Keine",
       "number": "Nummer",
       "account": "Konto",
       "name": "Name",

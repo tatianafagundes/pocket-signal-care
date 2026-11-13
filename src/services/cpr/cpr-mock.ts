@@ -4,6 +4,12 @@ import type { PartyInput, CustomerInput, CreateInteractionInput } from "@/schema
 import { tenantName, type TenantId } from "@/lib/tenant-rules";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 import { withMock } from "@/services/mock-support";
+import {
+  DEMO_VARIANTS,
+  DEMO_VARIANT_SPECS,
+  demoCustomerId,
+  type DemoVariant,
+} from "@/services/demo-variants";
 
 /*
  * CPR mock driver — in-memory party + customer store, per-tenant demo seed. (Spec Fase 3.3)
@@ -26,61 +32,63 @@ const store = new Map<string, MockRecord>();
 const interactions = new Map<string, PartyInteraction[]>();
 let seeded = false;
 
-/** Seed one demo customer per tenant, once. Ids are stable so the demo can deep-link. */
+/**
+ * Seed the demo customers per tenant, once. CPR owns party + customer, so per variant it only
+ * varies `customer.status` (from the variant spec); the plan/balance/usage deltas are applied by
+ * the order and charging mocks from the same spec. Ids are stable so the demo can deep-link.
+ */
 function seed(): void {
   if (seeded) return;
   seeded = true;
   const tenants: TenantId[] = ["drei", "dreigo"];
   for (const tenantId of tenants) {
-    const partyId = `demo-party-${tenantId}`;
-    const customerId = `demo-${tenantId}`;
-    const party: Party = {
+    for (const variant of DEMO_VARIANTS) {
+      seedVariant(tenantId, variant);
+    }
+  }
+}
+
+function seedVariant(tenantId: TenantId, variant: DemoVariant): void {
+  const customerId = demoCustomerId(tenantId, variant);
+  const partyId = `demo-party-${tenantId}${variant === "healthy" ? "" : `-${variant}`}`;
+  const spec = DEMO_VARIANT_SPECS[variant];
+  const party: Party = {
+    partyId,
+    tenantId,
+    givenName: "Alex",
+    familyName: "Demo",
+    email: `alex.${variant}@${tenantId}.example`,
+    msisdn: msisdnFor(tenantId, variant),
+  };
+  const customer: Customer = {
+    customerId,
+    tenantId,
+    partyId,
+    status: spec.customerStatus,
+    createdAt: "2026-01-15T10:00:00Z",
+  };
+  store.set(customerId, { party, customer });
+  // The demo customer onboarded once — seed the matching Party Interaction so the 360 timeline
+  // has the same history a freshly onboarded customer gets (a completed onboarding interaction).
+  interactions.set(customerId, [
+    {
+      interactionId: `pi-seed-${tenantId}-${variant}`,
       partyId,
-      tenantId,
-      givenName: "Alex",
-      familyName: "Demo",
-      email: `alex.demo@${tenantId}.example`,
-      msisdn: tenantId === "drei" ? "+4368120000001" : "+4368120000002",
-    };
-    const customer: Customer = {
       customerId,
       tenantId,
-      partyId,
-      status: "active",
-      createdAt: "2026-01-15T10:00:00Z",
-    };
-    store.set(customerId, { party, customer });
-    // A second demo line per tenant in the suspended state, so the 360 can show it.
-    const suspendedId = `${customerId}-suspended`;
-    store.set(suspendedId, {
-      party: {
-        ...party,
-        partyId: `${partyId}-suspended`,
-        email: `alex.suspended@${tenantId}.example`,
-        msisdn: tenantId === "drei" ? "+4368120000009" : "+4368120000008",
-      },
-      customer: {
-        ...customer,
-        customerId: suspendedId,
-        partyId: `${partyId}-suspended`,
-        status: "suspended",
-      },
-    });
-    // The demo customer onboarded once — seed the matching Party Interaction so the 360 timeline
-    // has the same history a freshly onboarded customer gets (a completed onboarding interaction).
-    interactions.set(customerId, [
-      {
-        interactionId: `pi-seed-${tenantId}`,
-        partyId,
-        customerId,
-        tenantId,
-        type: "onboarding",
-        status: "completed",
-        occurredAt: "2026-01-15T10:00:00Z",
-        relatedEntities: { msisdn: party.msisdn },
-      },
-    ]);
-  }
+      type: "onboarding",
+      status: "completed",
+      occurredAt: "2026-01-15T10:00:00Z",
+      relatedEntities: { msisdn: party.msisdn },
+    },
+  ]);
+}
+
+/** Distinct demo numbers per tenant+variant so each line reads as its own. */
+function msisdnFor(tenantId: TenantId, variant: DemoVariant): string {
+  const base = tenantId === "drei" ? 4368120000001 : 4368120000002;
+  const offset = DEMO_VARIANTS.indexOf(variant) * 10;
+  return `+${base + offset}`;
 }
 
 export function createCprMock(): CprDriver {

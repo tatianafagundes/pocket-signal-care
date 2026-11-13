@@ -3,6 +3,12 @@ import type { Balance, UsageBucket, UsageUnit } from "@/services/model";
 import type { TenantId } from "@/lib/tenant-rules";
 import { withMock } from "@/services/mock-support";
 import type { AllowanceGrant, ChargingDriver } from "@/services/charging/charging-driver";
+import {
+  DEMO_VARIANTS,
+  DEMO_VARIANT_SPECS,
+  demoCustomerId,
+  type DemoVariant,
+} from "@/services/demo-variants";
 
 /*
  * Charging (ECEV) mock driver. (Spec Fase 4.4 + usage buckets)
@@ -14,8 +20,10 @@ import type { AllowanceGrant, ChargingDriver } from "@/services/charging/chargin
  * Top-up moves money only (decision A1): credit is not allowance. An add-on moves usage only.
  */
 
-// customerId -> balance in minor units (euro cents).
+// customerId -> balance in minor units (euro cents). Absent = no balance record (balanceState none).
 const balances = new Map<string, number>();
+// customerId -> balance validity (ISO). Lets a variant be "expired" (past) independent of amount.
+const balanceValidUntil = new Map<string, string>();
 // customerId -> allowance buckets (TMF654), the usage axis.
 const usage = new Map<string, UsageBucket[]>();
 let seeded = false;
@@ -31,36 +39,53 @@ function seed(): void {
   seeded = true;
   const tenants: TenantId[] = ["drei", "dreigo"];
   for (const tenantId of tenants) {
-    const customerId = `demo-${tenantId}`;
-    balances.set(customerId, 1500); // €15.00 starting balance
-    balances.set(`${customerId}-suspended`, 0); // the suspended demo line has run out of credit
-    // Plan offer id the demo customer onboarded on — correlates the seeded buckets to the plan
-    // (= DMP productOfferingId). drei → "drei-up"; dreigo → "dreigo-go-8".
-    const planOfferId = tenantId === "drei" ? "drei-up" : "dreigo-go-8";
-    const planName = tenantId === "drei" ? "Drei Up" : "Go 8";
-    usage.set(customerId, [
-      // Data near the low threshold (1.8 of 10 GB = 18% ⇒ "low") so the demo shows the warning.
-      bucket("data", 10, 1.8, "GB", planOfferId, planName, {
-        start: isoFromNow(-5),
-        end: isoFromNow(25),
-      }),
-      // Voice: healthy.
-      bucket("voice", 500, 420, "min", planOfferId, planName, {
-        start: isoFromNow(-5),
-        end: isoFromNow(25),
-      }),
-      // SMS: healthy.
-      bucket("sms", 200, 175, "sms", planOfferId, planName, {
-        start: isoFromNow(-5),
-        end: isoFromNow(25),
-      }),
-      // Roaming data: a smaller EU bucket.
-      bucket("roaming", 2, 2, "GB", planOfferId, planName, {
-        start: isoFromNow(-5),
-        end: isoFromNow(25),
-      }),
-    ]);
+    for (const variant of DEMO_VARIANTS) {
+      seedVariant(tenantId, variant);
+    }
   }
+}
+
+function seedVariant(tenantId: TenantId, variant: DemoVariant): void {
+  const customerId = demoCustomerId(tenantId, variant);
+  const spec = DEMO_VARIANT_SPECS[variant];
+
+  // Balance: amount always set (so getBalance returns a record); validity varies so "expired" is
+  // reachable. balanceValidDays === null → leave no record at all (balanceState "none").
+  if (spec.balanceValidDays !== null) {
+    balances.set(customerId, spec.balanceMinor);
+    balanceValidUntil.set(customerId, isoFromNow(spec.balanceValidDays));
+  }
+
+  if (!spec.seedUsage) return; // suspended line: no usage buckets
+
+  // Plan offer id the line onboarded on — correlates the buckets to the plan (DMP productOfferingId).
+  const planOfferId = spec.unlimitedData
+    ? tenantId === "drei"
+      ? "drei-up-unlimited"
+      : "dreigo-go-unlimited"
+    : tenantId === "drei"
+      ? "drei-up"
+      : "dreigo-go-8";
+  const planName = tenantId === "drei" ? "Drei Up" : "Go 8";
+  const window = { start: isoFromNow(-5), end: isoFromNow(25) };
+
+  const buckets: UsageBucket[] = spec.unlimitedData
+    ? [
+        // Unlimited data: the word, no number. Voice/SMS stay metered (a real unlimited-data plan
+        // still meters calls/texts); roaming kept too so all four rows show.
+        unlimitedBucket("data", planOfferId, planName, window),
+        bucket("voice", 500, 420, "min", planOfferId, planName, window),
+        bucket("sms", 200, 175, "sms", planOfferId, planName, window),
+        bucket("roaming", 2, 2, "GB", planOfferId, planName, window),
+      ]
+    : [
+        // Data near the low threshold (1.8 of 10 GB = 18% ⇒ "low") so the demo shows the warning.
+        bucket("data", 10, 1.8, "GB", planOfferId, planName, window),
+        bucket("voice", 500, 420, "min", planOfferId, planName, window),
+        bucket("sms", 200, 175, "sms", planOfferId, planName, window),
+        bucket("roaming", 2, 2, "GB", planOfferId, planName, window),
+      ];
+  usage.set(customerId, buckets);
 }
 
 /** Build a metered bucket with a fresh id. */
@@ -85,8 +110,23 @@ function bucket(
   };
 }
 
-function toBalance(amountMinor: number): Balance {
-  return { amountMinor, currency: "EUR", validUntil: "2026-12-31T23:59:59Z" };
+/** An unlimited bucket: the word, no total/remaining (TMF654 unlimited allowance). */
+function unlimitedBucket(
+  type: UsageBucket["type"],
+  offerId: string,
+  offerName: string,
+  validFor: { start?: string; end?: string },
+): UsageBucket {
+  return { bucketId: `bkt-${++bucketSeq}`, type, unlimited: true, offerId, offerName, validFor };
+}
+
+/** Build a Balance for a customer, reading its seeded/last-known validity (default far future). */
+function toBalance(customerId: string, amountMinor: number): Balance {
+  return {
+    amountMinor,
+    currency: "EUR",
+    validUntil: balanceValidUntil.get(customerId) ?? "2026-12-31T23:59:59Z",
+  };
 }
 
 export function createChargingMock(): ChargingDriver {
@@ -96,7 +136,7 @@ export function createChargingMock(): ChargingDriver {
       return withMock("charging.getBalance", () => {
         const amount = balances.get(customerId);
         // A customer with no balance record yet (brand-new) returns null, not zero.
-        return ok(amount == null ? null : toBalance(amount));
+        return ok(amount == null ? null : toBalance(customerId, amount));
       });
     },
 
@@ -105,7 +145,7 @@ export function createChargingMock(): ChargingDriver {
         const current = balances.get(customerId) ?? 0;
         const next = current + amountMinor;
         balances.set(customerId, next);
-        return ok(toBalance(next));
+        return ok(toBalance(customerId, next));
       });
     },
 

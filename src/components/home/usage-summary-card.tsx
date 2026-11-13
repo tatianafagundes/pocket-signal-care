@@ -138,7 +138,7 @@ export function UsageSummaryCard({ bucket }: UsageSummaryCardProps) {
       >
         {head}
         {body}
-        <span className="sr-only">{t("pages.home.openMyPlan", "— abrir Meu plano")}</span>
+        <span className="sr-only">{t("pages.home.openMyPlan", "— open My plan")}</span>
       </Link>
       {/* Outside the link so the announcement is not repeated in the link's name. */}
       {liveMessage ? (

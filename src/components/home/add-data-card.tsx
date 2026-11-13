@@ -26,21 +26,14 @@ export function AddDataCard({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block type-body-strong text-text-primary">
-          {t("pages.home.addData.title", "Adicionar dados")}
+          {t("pages.home.addData.title", "Add data")}
         </span>
         <span className="block type-body-sm text-text-secondary">
           {prompt === "depleted"
-            ? t(
-                "pages.home.addData.depleted",
-                "Seus dados acabaram. Você pode adicionar mais quando quiser.",
-              )
-            : t(
-                "pages.home.addData.low",
-                "Restam {{amount}}. Você pode adicionar mais quando quiser.",
-                {
-                  amount: remainingLabel,
-                },
-              )}
+            ? t("pages.home.addData.depleted", "Your data is used up. You can add more anytime.")
+            : t("pages.home.addData.low", "{{amount}} left. You can add more anytime.", {
+                amount: remainingLabel,
+              })}
         </span>
       </span>
       <ChevronRight className="size-5 shrink-0 text-text-tertiary" aria-hidden="true" />

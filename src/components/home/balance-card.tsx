@@ -30,19 +30,19 @@ export function BalanceCard({
   return (
     <section className="rounded-card border border-hairline bg-surface p-4">
       <h2 className="type-caption text-text-secondary">
-        {t("pages.myPlan.balanceLabel", "Saldo")}
+        {t("pages.myPlan.balanceLabel", "Balance")}
       </h2>
       {balance === null || state === "none" ? (
         <p className="mt-1 type-body-sm text-text-secondary">
-          {t("pages.myPlan.balanceEmpty", "Ainda sem saldo — faça sua primeira recarga.")}
+          {t("pages.myPlan.balanceEmpty", "No balance yet — make your first top up.")}
         </p>
       ) : state === "empty" ? (
         <>
           <p className="mt-1 type-heading text-text-primary">
-            {t("pages.home.balance.emptyTitle", "Sem saldo")}
+            {t("pages.home.balance.emptyTitle", "No balance")}
           </p>
           <p className="mt-1 type-body-sm text-text-secondary">
-            {t("pages.home.balance.emptyBody", "Recarregue para continuar usando sua linha.")}
+            {t("pages.home.balance.emptyBody", "Top up to keep using your line.")}
           </p>
         </>
       ) : (
@@ -53,13 +53,13 @@ export function BalanceCard({
           {balance.validUntil ? (
             state === "expired" ? (
               <p className="mt-1 type-body-sm-strong text-danger">
-                {t("pages.home.balance.expired", "Expirou em {{date}}", {
+                {t("pages.home.balance.expired", "Expired on {{date}}", {
                   date: formatShortDate(balance.validUntil, locale),
                 })}
               </p>
             ) : (
               <p className="mt-1 type-body-sm text-text-secondary">
-                {t("pages.home.validUntil", "Válido até {{date}}", {
+                {t("pages.home.validUntil", "Valid until {{date}}", {
                   date: formatShortDate(balance.validUntil, locale),
                 })}
               </p>
@@ -69,10 +69,10 @@ export function BalanceCard({
             <p className="mt-2 flex items-center gap-1.5 type-body-sm text-text-primary">
               <StatusDot tone="success" />
               {coversRenewal.relative
-                ? t("pages.home.balance.coversRenewalIn", "Cobre sua renovação {{when}}", {
+                ? t("pages.home.balance.coversRenewalIn", "Covers your renewal {{when}}", {
                     when: formatRelativeDays(coversRenewal.days, locale),
                   })
-                : t("pages.home.balance.coversRenewalOn", "Cobre sua renovação em {{date}}", {
+                : t("pages.home.balance.coversRenewalOn", "Covers your renewal on {{date}}", {
                     date: formatShortDate(coversRenewal.iso, locale),
                   })}
             </p>
@@ -80,7 +80,7 @@ export function BalanceCard({
         </>
       )}
       <Button asChild className="mt-4 min-h-11 w-full">
-        <Link to="/top-up">{t("nav.topUp", "Recarregar")}</Link>
+        <Link to="/top-up">{t("nav.topUp", "Top up")}</Link>
       </Button>
     </section>
   );

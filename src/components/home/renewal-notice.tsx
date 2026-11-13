@@ -31,27 +31,27 @@ export function RenewalNotice({
           {renewsAt
             ? t(
                 "pages.home.renewal.titleDated",
-                "Recarregue {{amount}} para renovar {{plan}} em {{date}}",
+                "Top up {{amount}} to renew {{plan}} on {{date}}",
                 {
                   amount,
                   plan: planName,
                   date: formatShortDate(renewsAt, locale),
                 },
               )
-            : t("pages.home.renewal.title", "Recarregue {{amount}} para renovar {{plan}}", {
+            : t("pages.home.renewal.title", "Top up {{amount}} to renew {{plan}}", {
                 amount,
                 plan: planName,
               })}
         </p>
         <p className="mt-0.5 type-body-sm text-text-secondary">
-          {t("pages.home.renewal.body", "Seu saldo ainda não cobre a próxima renovação.")}
+          {t("pages.home.renewal.body", "Your balance doesn't cover the next renewal yet.")}
         </p>
       </div>
       <Link
         to="/top-up"
         className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-text-primary underline underline-offset-2"
       >
-        {t("pages.home.renewal.cta", "Recarregar {{amount}}", { amount })}
+        {t("pages.home.renewal.cta", "Top up {{amount}}", { amount })}
       </Link>
     </div>
   );

@@ -46,10 +46,6 @@
       "greetingPlain": "Hi there",
       "loading": "Loading your home…",
       "validUntil": "Valid until {{date}}",
-      "lowBalance": {
-        "title": "Balance is low",
-        "body": "Top up to keep your plan and add-ons running."
-      },
       "data": {
         "title": "Data",
         "none": "No data left",
@@ -102,14 +98,9 @@
     "myPlan": {
       "title": "My plan",
       "subtitle": "What your plan includes and when it renews.",
-      "loadError": "We couldn't load your plan.",
-      "retry": "Try again",
       "loading": "Loading your plan…",
       "balanceLabel": "Balance",
       "balanceEmpty": "No balance yet — make your first top up.",
-      "productsLabel": "Your products",
-      "noProducts": "No products on your plan yet.",
-      "statusActive": "Active",
       "statusPending": "Pending",
       "simType": {
         "esim": "eSIM",
@@ -117,7 +108,6 @@
       },
       "allowancesLabel": "Allowances",
       "renewsOn": "Renews on {{date}}",
-      "number": "Your number",
       "fairUse": "EU roaming under fair use policy.",
       "unlimited": "Unlimited",
       "left": "{{remaining}} of {{total}} left",
@@ -177,7 +167,19 @@
     },
     "account": {
       "title": "My account",
-      "subtitle": "Your details and preferences will live here."
+      "subtitle": "Your details and preferences will live here.",
+      "demo": {
+        "title": "Demo: line state",
+        "body": "Preview how the Home and My plan screens look in each state.",
+        "variant": {
+          "healthy": "Healthy",
+          "suspended": "Suspended",
+          "unlimited": "Unlimited data",
+          "expired": "Expired balance",
+          "empty": "Empty balance",
+          "pending": "Pending line"
+        }
+      }
     },
     "support": {
       "title": "Support",
@@ -348,11 +350,7 @@
       }
     },
     "addons": {
-      "title": "Add extras",
-      "subtitle": "Optional — boost your plan now, or skip and add them later.",
-      "empty": "No add-ons are available for your plan right now.",
-      "listLabel": "Available add-ons",
-      "skip": "Skip"
+      "listLabel": "Available add-ons"
     },
     "account": {
       "title": "Create your account",
@@ -445,8 +443,6 @@
       "title": "Review and activate",
       "subtitle": "Check everything before you confirm — you can still go back and change it.",
       "plan": "Plan",
-      "addOns": "Add-ons",
-      "noAddOns": "None",
       "number": "Number",
       "account": "Account",
       "name": "Name",

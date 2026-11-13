@@ -3,6 +3,7 @@ import type { Product, SimChoice } from "@/services/model";
 import type { TenantId } from "@/lib/tenant-rules";
 import { withMock } from "@/services/mock-support";
 import type { OrderDriver } from "@/services/order/order-driver";
+import { DEMO_VARIANTS, DEMO_VARIANT_SPECS, demoCustomerId } from "@/services/demo-variants";
 
 /*
  * Order (EOC) mock driver. (Spec Fase 4.3)
@@ -33,22 +34,32 @@ const DEMO_PLAN_OFFER: Record<TenantId, { offerId: string; name: string }> = {
   drei: { offerId: "drei-up", name: "up" },
   dreigo: { offerId: "dreigo-go-8", name: "Go 8" },
 };
+// The unlimited-plan variant points at the catalogue's unlimited offer, so My plan / Home read
+// "Unlimited" from the resolved offer and the data bucket shows the word.
+const DEMO_PLAN_OFFER_UNLIMITED: Record<TenantId, { offerId: string; name: string }> = {
+  drei: { offerId: "drei-up-unlimited", name: "up unlimited" },
+  dreigo: { offerId: "dreigo-go-unlimited", name: "Go Unlimited" },
+};
 
 function seed(): void {
   if (seeded) return;
   seeded = true;
   const tenants: TenantId[] = ["drei", "dreigo"];
   for (const tenantId of tenants) {
-    // demo-<tenant> is the healthy demo line; demo-<tenant>-suspended exercises the suspended state.
-    for (const customerId of [`demo-${tenantId}`, `demo-${tenantId}-suspended`]) {
-      const plan = DEMO_PLAN_OFFER[tenantId];
+    for (const variant of DEMO_VARIANTS) {
+      const customerId = demoCustomerId(tenantId, variant);
+      const spec = DEMO_VARIANT_SPECS[variant];
+      const plan = spec.unlimitedData
+        ? DEMO_PLAN_OFFER_UNLIMITED[tenantId]
+        : DEMO_PLAN_OFFER[tenantId];
       installedBase.set(customerId, [
         {
           productId: `${customerId}-plan`,
           offerId: plan.offerId,
           name: plan.name,
           kind: "plan",
-          status: "active",
+          // "pending" here drives lineStatus "pending" (the line is still activating).
+          status: spec.planStatus,
         },
         {
           // The SIM is a provisioning artifact (a SIM product order), NOT a catalogue offer — it

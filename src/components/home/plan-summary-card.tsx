@@ -55,10 +55,10 @@ export function PlanSummaryCard({ plan, when, locale }: PlanSummaryCardProps) {
           {plan.status !== "pending" && when ? (
             <p className="mt-3 type-body-sm text-text-primary">
               {when.relative
-                ? t("pages.home.plan.renewsIn", "Renova {{when}}", {
+                ? t("pages.home.plan.renewsIn", "Renews {{when}}", {
                     when: formatRelativeDays(when.days, locale),
                   })
-                : t("pages.home.plan.renewsOn", "Renova em {{date}}", {
+                : t("pages.home.plan.renewsOn", "Renews {{date}}", {
                     date: formatShortDate(when.iso, locale),
                   })}
             </p>
@@ -67,17 +67,17 @@ export function PlanSummaryCard({ plan, when, locale }: PlanSummaryCardProps) {
             <div className="mt-3">
               <Badge className="gap-1.5 border-transparent bg-warning-tint text-text-primary">
                 <StatusDot tone="warning" />
-                {t("pages.myPlan.statusPending", "Pendente")}
+                {t("pages.myPlan.statusPending", "Pending")}
               </Badge>
             </div>
           ) : plan.offer?.autoRenew && when ? (
             <p className="mt-0.5 type-caption text-text-secondary">
-              {t("pages.home.plan.autoRenew", "Automaticamente, do seu saldo")}
+              {t("pages.home.plan.autoRenew", "Automatically, from your balance")}
             </p>
           ) : null}
         </>
       )}
-      <span className="sr-only">{t("pages.home.openMyPlan", "— abrir Meu plano")}</span>
+      <span className="sr-only">{t("pages.home.openMyPlan", "— open My plan")}</span>
     </Link>
   );
 }

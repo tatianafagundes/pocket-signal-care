@@ -11,12 +11,12 @@ export function SuspendedNotice() {
       <AlertOctagon className="mt-0.5 size-5 shrink-0 text-danger" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="type-body-sm-strong text-text-primary">
-          {t("pages.home.line.suspendedTitle", "Sua linha está suspensa")}
+          {t("pages.home.line.suspendedTitle", "Your line is suspended")}
         </p>
         <p className="mt-0.5 type-body-sm text-text-secondary">
           {t(
             "pages.home.line.suspendedBody",
-            "Chamadas e dados estão pausados. Nossa equipe pode ajudar a reativar.",
+            "Calls and data are paused for now. Our team can help you get it back.",
           )}
         </p>
       </div>
@@ -24,7 +24,7 @@ export function SuspendedNotice() {
         to="/support"
         className="focus-ring type-body-sm-strong shrink-0 rounded-pill text-danger"
       >
-        {t("pages.home.line.suspendedCta", "Pedir ajuda")}
+        {t("pages.home.line.suspendedCta", "Get help")}
       </Link>
     </div>
   );
