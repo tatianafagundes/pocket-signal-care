@@ -76,11 +76,9 @@ export function composeCustomer360(parts: Customer360Parts): Customer360 {
     // regardless of the order the seam returned buckets in.
     usage: [...(parts.usage ?? [])].sort((a, b) => usageTypeRank(a.type) - usageTypeRank(b.type)),
     // Financial activity, newest first — the "recent activity / last top-ups" feed.
-    activity: [...(parts.activity ?? [])].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
+    activity: [...(parts.activity ?? [])].sort(byOccurredAtDesc((a) => a.activityId)),
     // Newest first, so the activity timeline reads top-down regardless of source order.
-    interactions: [...(parts.interactions ?? [])].sort((a, b) =>
-      b.occurredAt.localeCompare(a.occurredAt),
-    ),
+    interactions: [...(parts.interactions ?? [])].sort(byOccurredAtDesc((i) => i.interactionId)),
   };
 }
 
@@ -106,6 +104,23 @@ function productKindRank(kind: Product["kind"]): number {
     case "sim":
       return 2;
   }
+}
+
+/**
+ * Compare two timelined records newest-first by `occurredAt`, with a DETERMINISTIC tie-breaker.
+ *
+ * `occurredAt` alone isn't enough: when two events share the same timestamp (two records created in
+ * the same millisecond — common in the mock, possible in a real feed), a plain `localeCompare` on
+ * the timestamp returns 0 and the result order falls back to the input order. That made the sort
+ * unstable and a "newest-first" assertion flaky. We break the tie on the record's id, descending —
+ * a stable, reproducible order. It does NOT claim the higher id is "newer" (ids aren't a clock);
+ * it only guarantees the SAME order every time two timestamps are equal.
+ */
+function byOccurredAtDesc<T extends { occurredAt: string }>(idOf: (x: T) => string) {
+  return (a: T, b: T): number => {
+    const byTime = b.occurredAt.localeCompare(a.occurredAt);
+    return byTime !== 0 ? byTime : idOf(b).localeCompare(idOf(a));
+  };
 }
 
 /** Does the customer have a usable prepaid balance? (UI: show balance vs. "no balance yet".) */
@@ -388,5 +403,5 @@ export function activityFeed(c360: Customer360): FeedItem[] {
     occurredAt: it.occurredAt,
     status: interactionStatus(it.status),
   }));
-  return [...money, ...relationship].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+  return [...money, ...relationship].sort(byOccurredAtDesc((f) => f.feedId));
 }

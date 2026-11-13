@@ -739,6 +739,23 @@ describe("activityFeed", () => {
     ]);
   });
 
+  it("orders equal-timestamp rows deterministically (feedId desc), not by input order", () => {
+    // The flaky-test root cause: three rows sharing one timestamp. Without a tie-breaker the order
+    // fell back to input order and the assertion flickered. The order must be identical regardless
+    // of the order the sources are composed in.
+    const sameTime = "2026-02-01T10:00:00Z";
+    const build = (activityIds: string[]) =>
+      composeCustomer360({
+        ...base,
+        activity: activityIds.map((id) => money({ activityId: id, occurredAt: sameTime })),
+      });
+    const forward = activityFeed(build(["ftx-1", "ftx-2", "ftx-3"])).map((f) => f.feedId);
+    const reversed = activityFeed(build(["ftx-3", "ftx-2", "ftx-1"])).map((f) => f.feedId);
+    // feedId descending: money:ftx-3 > money:ftx-2 > money:ftx-1, whatever the input order.
+    expect(forward).toEqual(["money:ftx-3", "money:ftx-2", "money:ftx-1"]);
+    expect(reversed).toEqual(forward);
+  });
+
   it("prefixes feedIds by source so keys never collide", () => {
     // Same raw id on both axes must still produce two distinct feed rows.
     const c360 = composeCustomer360({

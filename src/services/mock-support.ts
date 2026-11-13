@@ -13,8 +13,17 @@ import { err, seamError, type SeamResult } from "@/services/seam-result";
  *    a failure is armed (e.g. from a dev control or a test).
  */
 
-/** 300–900ms simulated network latency. */
+/**
+ * 300–900ms simulated network latency, so loading/skeleton states are real in the demo.
+ *
+ * Skipped under test (`MODE === "test"`): the artificial delay has no value in a unit test and
+ * actively harms it — a test that chains several seam ops sequentially (e.g. createParty →
+ * createCustomer → listInteractions → createInteraction → listInteractions) accumulated up to
+ * ~5×900ms and intermittently blew past Vitest's 5s timeout. That was the real cause of the flaky
+ * "newest-first" test, not sort order. Latency still runs in dev/demo/prod builds.
+ */
 export function simulateLatency(): Promise<void> {
+  if (import.meta.env.MODE === "test") return Promise.resolve();
   const ms = 300 + Math.floor(Math.random() * 600);
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
