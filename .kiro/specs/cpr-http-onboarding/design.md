@@ -79,6 +79,14 @@ Implement `createContract`: deterministic id `contract-<8hex>`, stored in a modu
 matching the createCustomer-requires-party guard already there. No behavioural change to other ops.
 
 ### 5. HTTP driver — `src/services/cpr/cpr-http.ts` (the core edit)
+- **Injectable `fetch` (R-F7/F12):** `createCprHttp()` accepts an optional `{ fetch }` that defaults
+  to the global `fetch`. Production passes nothing; the contract test injects a recording shim. This
+  is the test-only seam that lets the contract test exercise the http driver without env-flipping or
+  a live server. No behaviour change in production.
+- **No request-body logging (R-F10):** the seam logger stays metadata-only (op/tenant/ms, never
+  payloads). Party/contract bodies carry PII (name, email, MSISDN); the new http path MUST NOT log
+  bodies. Asserted indirectly by keeping all logging on the existing metadata-only `runWrite`/
+  `runRead` path and adding none in the mappers.
 - **Fix paths** (Req 2.7): party `POST /customerManagement/v1/party`; customer
   `POST /customerManagement/v1/customer`; (remove `/tmf-api/party/v5/...`).
 - **Add** `createContract` → `POST /customerManagement/v1/contract`, body `toTmfContract(input)`,
@@ -120,13 +128,19 @@ Insert a new step **after createCustomer (step 3), before the order block (step 
 ```ts
 // 3b. Contract (prepaid) — created before order items so the contract exists for fulfilment and
 //     is referenced by the recharge later. Idempotent on state.contractId.
+//     communicationId is REQUIRED: fail fast if the MSISDN was not reserved.
 let contractId = state.contractId;
 if (!contractId) {
   onStep("createContract");
+  if (!state.reservedMsisdn) {
+    throw new SeamFailure(
+      seamError("onboarding.contract.noMsisdn", "validation", "contactSupport"),
+    );
+  }
   const c = await api.createContract({
     tenantId: tenant,
     customerId,
-    communicationId: state.reservedMsisdn ?? "",   // MSISDN reserved earlier
+    communicationId: state.reservedMsisdn,   // E.164, reserved earlier via the resource seam
     paymentContext: "PREPAID",
   });
   contractId = c.contractId;
@@ -137,11 +151,18 @@ if (!contractId) {
   `onboarding.review.progress.createContract` (both locales, keep parity) — the review button
   already renders the live step, so this surfaces as "Setting up your contract…" (copy TBD).
 - Add `contractId?: string` to onboarding state + persistence (mirror `interactionId`/`orderId`).
-- Guard: if `state.reservedMsisdn` is absent, the contract step still runs with empty
-  communicationId against the fake, but a real contract needs the MSISDN — record as a precondition
-  (onboarding reserves the number before review, so it's present in practice).
-- Failure path: a thrown `SeamFailure` from `api.createContract` is caught by the existing
-  `confirm()` try/catch in `review.tsx` → terminal error (no silent success).
+- **`communicationId` is required (R-F17).** If `state.reservedMsisdn` is absent the step FAILS with
+  a clear `SeamError` (`onboarding.contract.noMsisdn`) instead of sending an empty value — a real
+  contract keys on the MSISDN and an empty one is meaningless. Onboarding reserves the number before
+  review, so this is a defensive precondition, not an expected path. (If the exact throw shape is
+  awkward in `onboarding-submit.ts`, surface the same error via the existing step-failure channel —
+  the invariant is "never create a contract with an empty communicationId".)
+- **MSISDN format (R-F1).** We hold E.164 (`+43…`); the real CPR may want a bare national number
+  (`814552030000`). The `toTmfContract` mapper is the ONE place to normalize for the wire (strip
+  `+`/spaces if the real API requires it); the domain keeps E.164. Against the fake, accept as-is.
+  Recorded as a shape-to-confirm debt.
+- Failure path: a thrown `SeamFailure` from `api.createContract` (or the missing-MSISDN guard) is
+  caught by the existing `confirm()` try/catch in `review.tsx` → terminal error (no silent success).
 
 ### 9. Fake server — `tools/cpr-fake/` (new, tooling only)
 - `tools/cpr-fake/server.mjs`: Node `http` server, port from `CPR_FAKE_PORT` (default 8787).
@@ -149,18 +170,30 @@ if (!contractId) {
   Deterministic ids (`party-fake-<n>`, `cust-fake-<n>`, `contract-fake-<n>`). Keeps an in-memory
   ring of the last N requests; exposes `GET /__debug/last` for the contract tests (Req 4.5).
   Responses exactly per `response-shapes.md`.
-- `tools/cpr-fake/README.md`: curl examples; how to run; what each route returns.
+- **PII note (R-F10):** `/__debug/last` holds request bodies (name/email/MSISDN) in an in-memory
+  ring ONLY — no disk, no log file. Acceptable for a local dev fake; the README MUST state it is
+  never to be deployed and the ring is memory-only.
+- `tools/cpr-fake/README.md`: curl examples; how to run; what each route returns; the PII-ring note.
 - `package.json` script: `"cpr:fake": "node tools/cpr-fake/server.mjs"`. No new dependency.
 - NOT imported by the app; NOT in the build.
 
 ### 10. Contract tests — `src/services/cpr/cpr-http.contract.test.ts` (new)
-- Construct `createCprHttp()` directly with a test config (base URL = the fake, token = "fake").
-  Options: (A) start the fake in a test `beforeAll` via `child_process` and hit it over HTTP, or
-  (B) a thin fetch shim that replays `response-shapes.md` fixtures and records the request. Pick (A)
-  if it's reliable in CI; else (B). Decide in the task and document.
+- **Transport = fetch-shim fixtures (B), the default (R-F12).** The test constructs
+  `createCprHttp({ fetch })` with an **injected `fetch`** that replays `response-shapes.md` fixtures
+  and records the request. This is deterministic in CI, has no port contention, and no
+  `child_process`. The fake-over-HTTP path (A) is reserved for an optional, non-CI "live-fake smoke"
+  only. This requires `createCprHttp()` to accept an injectable `fetch` (a small, test-only seam;
+  defaults to global `fetch`) — see §5 / Task 4.1.
+- **Never env-flip (R-F7).** The driver is resolved once at module load (`cpr.functions.ts:32`), so
+  the test MUST construct `createCprHttp()` directly and MUST NOT rely on setting `VITE_CPR_DRIVER`
+  after import — that would test the wrong driver. This is a hard rule, not a preference.
 - Assert, per method: request path, method, headers (`X-Tenant-Id` resolved, `Authorization`
   Bearer), body shape; and the parsed domain result (`partyId`/`customerId`/`contractId`/
-  `{customer,party}`). Assert a 4041 response → `SeamError` category `conflict`.
+  `{customer,party}`).
+- **Error-mapping cases cover the whole table (R-F13), not just one code:** 404 → `notFound`;
+  4041/409 → `conflict`; 4040/5031/5032 → `rejected`; 5xx / network / timeout → `unavailable`;
+  malformed/missing-id body → `badResponse` (`unknown`). Each asserts the `SeamError` category and
+  that the driver never throws.
 - Keep the existing `cpr.functions.test.ts` (mock) untouched and green.
 
 ### 11. Config docs — `.env.example` (additive)
@@ -212,8 +245,20 @@ real map is a follow-up.
 - **D-recharge-later:** payment + monetaryRecharge (and the authorize/capture vs one-POST-capture
   reconciliation) are OUT of scope here; separate spec. Contract created here is what recharge will
   reference.
-- **D-contract-tests-transport:** fake-over-HTTP (A) vs fetch-shim fixtures (B) — pick per CI
-  reliability; document in the task.
+- **D-contract-tests-transport:** DECIDED — fetch-shim fixtures (B) via an injected `fetch`, for CI
+  determinism and no port contention (R-F12). Fake-over-HTTP (A) is an optional non-CI smoke only.
+- **D-non-transactional (R-F16):** with `VITE_CPR_DRIVER=http` but payment/charging still mock,
+  onboarding creates a REAL (fake-side) party/customer/contract then runs MOCK authorize/capture/
+  topUp. There is NO cross-seam saga/compensation: if the contract POST succeeds and a later mock
+  step fails, a fake-side contract exists with no finished order. Harmless against the fake (it is
+  resettable; idempotent retry resumes), but stated honestly. Real cross-seam compensation is a
+  later concern, out of scope.
+- **D-communicationId-format (R-F1):** we hold E.164; the real CPR may want a bare national number.
+  Normalize in `toTmfContract` only when the real cluster confirms it; confirm-against-cluster debt.
+- **D-contract-ownership (R-F3):** in the real DXP the technical contract is often created by the
+  order/cart flow, not a standalone `POST /contract`. We follow the collection (standalone POST),
+  which is consistent while our order block is mock. Reconcile who owns contract creation when the
+  real order seam lands.
 
 ## Out of scope (explicit)
 

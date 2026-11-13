@@ -79,7 +79,10 @@ right place, so the account is correctly formed before order and interaction.
 
 #### Acceptance criteria
 1. WHEN `runOnboardingSubmit` runs THEN it SHALL create the contract AFTER `createCustomer` and
-   BEFORE the order block, carrying the reserved MSISDN as `communicationId`.
+   BEFORE the order block, carrying the reserved MSISDN as `communicationId`. The `communicationId`
+   SHALL be required: IF `state.reservedMsisdn` is absent THEN the step SHALL fail with a clear
+   `SeamError` rather than send an empty `communicationId` (onboarding guarantees the number before
+   review, so this is a defensive precondition, not an expected path).
 2. WHEN the contract step succeeds THEN its `contractId` SHALL be persisted via `patch` and the
    step SHALL be idempotent (skipped on retry if `contractId` already present), matching the
    existing idempotency pattern of the other submit steps.
@@ -156,3 +159,19 @@ cluster cut-over is safe.
    map is a placeholder, OR auth token still ships to the client (fake only) THEN these SHALL be
    recorded as explicit Fase-8/next-spec debts (no silent assumptions).
 3. WHEN `.env.example` is read THEN it SHALL document the CPR http flags and the tenant placeholder.
+
+## Definition of done
+
+This spec is DONE when ALL of the following hold, and NOTHING beyond them is claimed:
+
+- Onboarding creates **party + customer + contract** against the local fake with
+  `VITE_CPR_DRIVER=http` + a localhost base URL + the fake token.
+- Contract tests (http driver vs fixtures) and the extended mock `createContract` tests are green.
+- The full suite stays green and the **mock default demo is byte-for-byte unaffected** with the
+  flag off (no `.env.local`).
+- The debts are recorded (tenant placeholder, client-token/fake-only, customerview shape choice,
+  `communicationId` format vs real cluster, contract-ownership-vs-order, no cross-seam compensation,
+  recharge-later).
+
+It is explicitly NOT done-and-shipped-to-real: **no real money, no real Keycloak auth, no real
+cluster traffic** is in scope. Those are later specs (recharge, auth/BFF, cluster cut-over).

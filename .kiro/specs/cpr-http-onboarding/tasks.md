@@ -9,8 +9,9 @@ only ever exercised locally via gitignored `.env.local` + the fake. Requirement 
     token, `POST party|customer|contract`, `GET customer/{id}`, `GET customerview/{id}`; require
     `X-Tenant-ID` + `Authorization` (else 401 + `{code,reason,message}`); deterministic ids;
     responses per `docs/contracts/postman/response-shapes.md`; keep last-N requests + expose
-    `GET /__debug/last`.
-  - Add `tools/cpr-fake/README.md` (curl examples, how to run) and `package.json` script `cpr:fake`.
+    `GET /__debug/last` (in-memory ring ONLY — holds PII bodies; no disk, no log file). (R-F10)
+  - Add `tools/cpr-fake/README.md` (curl examples, how to run, the PII-ring never-deploy note) and
+    `package.json` script `cpr:fake`.
   - Verify by hand with curl (document the commands). Commit (tooling).
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
@@ -33,16 +34,24 @@ only ever exercised locally via gitignored `.env.local` + the fake. Requirement 
   - [ ] 3.2 Add `contractId?: string` to onboarding state + persistence (mirror `interactionId`). (3.2)
   - [ ] 3.3 Insert step 3b in `runOnboardingSubmit` after createCustomer, before the order block:
         `api.createContract({ tenantId, customerId, communicationId: reservedMsisdn, paymentContext:"PREPAID" })`,
-        persist `contractId`, idempotent on `state.contractId`. (3.1, 3.2)
+        persist `contractId`, idempotent on `state.contractId`. **Require `reservedMsisdn`:** fail
+        the step with a clear `SeamError` if it is absent (never send an empty communicationId). (3.1, 3.2)
   - [ ] 3.4 Confirm failure surfaces via the existing terminal-error path (no new handling). (3.3)
-  - Verify with the EXISTING onboarding unit/flow coverage; mock produces a `contractId`, demo
+  - [ ] 3.5 Add a unit test for the new step (R-F15): asserts it runs AFTER createCustomer and
+        BEFORE the order block, persists `contractId`, is SKIPPED on retry when `contractId` is
+        already present, and FAILS when `reservedMsisdn` is absent — mirror the existing submit
+        idempotency tests. (3.1, 3.2, 3.3)
+  - Verify with the EXISTING onboarding coverage plus 3.5; mock produces a `contractId`, demo
     unchanged beyond the intended new step. (3.4)
   - Verify + commit `feat(onboarding): create prepaid contract after customer (mock)`.
   - _Requirements: 3.1–3.4, 6.1_
 
 - [ ] 4. HTTP driver: fix paths + party/customer/contract create + error envelope
   - [ ] 4.1 In `cpr-http.ts`, correct party/customer paths to `/customerManagement/v1/*`; update
-        `toTmfParty`/`toTmfCustomer` to the collection body shapes. (2.1, 2.2, 2.7, 2.5)
+        `toTmfParty`/`toTmfCustomer` to the collection body shapes. Add an **injectable `fetch`** to
+        `createCprHttp()` (defaults to global `fetch`; production passes nothing) so the contract
+        test can record requests without env-flip or a live server. Add NO request-body logging in
+        the mappers. (2.1, 2.2, 2.7, 2.5, R-F7, R-F10)
   - [ ] 4.2 Implement `createContract` http (`POST /customerManagement/v1/contract`) +
         `toTmfContract`/`fromTmfContractCreate`. (2.3, 2.5)
   - [ ] 4.3 Add the brand→DXP-tenant resolver (`VITE_CPR_TENANT_<BRAND>`, `TEN_FAKE` placeholder);
@@ -54,19 +63,24 @@ only ever exercised locally via gitignored `.env.local` + the fake. Requirement 
   - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6, 2.7, 6.4_
 
 - [ ] 5. HTTP driver: customer360 read (`getCustomerAndParty`)
-  - Implement `getCustomerAndParty` → `GET /customerManagement/v1/customerview/{id}` +
-    `fromTmfCustomerView` → `{ customer, party }` (collapse `statuses[]`→status). If customerview is
-    awkward against the fake, fall back to customer GET + party GET; document the choice. (2.4, 2.5)
+  - [ ] 5.1 FIRST capture the fake's `GET /customerview/{id}` response in `response-shapes.md` (the
+        CPI doc sample is large/postpaid-flavored; the prepaid shape may differ) so the mapper is
+        written against a concrete shape, not a guess. (R-F6)
+  - [ ] 5.2 Implement `getCustomerAndParty` → `GET /customerManagement/v1/customerview/{id}` +
+        `fromTmfCustomerView` → `{ customer, party }` (collapse `statuses[]`→status). If customerview
+        is awkward against the fake, fall back to customer GET + party GET; document the choice. (2.4, 2.5)
   - Verify + commit.
   - _Requirements: 2.4, 2.5_
 
 - [ ] 6. Contract tests (http driver vs fake)
-  - [ ] 6.1 Add `src/services/cpr/cpr-http.contract.test.ts`: construct `createCprHttp()` with test
-        config; decide transport (A: fake over HTTP via `child_process` in `beforeAll`; B: fetch-shim
-        fixtures) by CI reliability and document. (5.4)
+  - [ ] 6.1 Add `src/services/cpr/cpr-http.contract.test.ts`: construct `createCprHttp({ fetch })`
+        with an **injected recording fetch** that replays `response-shapes.md` fixtures (transport B,
+        decided — deterministic, no port/`child_process`). NEVER env-flip the driver. (5.4, R-F7, R-F12)
   - [ ] 6.2 Assert request fidelity (path/method/headers incl. resolved `X-Tenant-Id` + Bearer /
         body) and parsed result for createParty/createCustomer/createContract/getCustomerAndParty. (5.1)
-  - [ ] 6.3 Assert a 4041 response maps to `SeamError` category `conflict` (never throws). (5.2)
+  - [ ] 6.3 Assert the WHOLE error-mapping table (R-F13), not just one code: 404→notFound,
+        4041/409→conflict, 4040/5031/5032→rejected, 5xx/network→unavailable, malformed-body→badResponse
+        (unknown). Each asserts the `SeamError` category and that the driver never throws. (5.2)
   - Verify full suite green (mock tests unaffected). Commit.
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
@@ -74,7 +88,10 @@ only ever exercised locally via gitignored `.env.local` + the fake. Requirement 
   - [ ] 7.1 Update `.env.example` with the CPR http flags + `VITE_CPR_TENANT_*` placeholder + note. (6.4, 7.3)
   - [ ] 7.2 Confirm fail-fast: with `VITE_CPR_DRIVER=http` and missing base URL/token, boot throws
         via `assertDriverConfig`/`getRouter` (existing) — add a test or a documented manual check. (6.2)
-  - [ ] 7.3 Confirm no `.env.local` ⇒ mock default ⇒ demo/CI unaffected. (6.1, 6.3)
+  - [ ] 7.3 Safety rail (R-F9): while the token is a client `VITE_CPR_TOKEN`, REFUSE a non-localhost
+        `VITE_CPR_BASE_URL` (throw at config/boot if host ∉ {localhost, 127.0.0.1}) so nobody points
+        the client-token driver at a real host before the BFF exists. Cover with a small test. (6.3)
+  - [ ] 7.4 Confirm no `.env.local` ⇒ mock default ⇒ demo/CI unaffected. (6.1, 6.3)
   - Commit.
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 7.3_
 
