@@ -10,6 +10,7 @@ import { WizardPage } from "@/components/onboarding/wizard-page";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import type { SimChoice } from "@/services/model";
 
 export const Route = createFileRoute("/onboarding/success")({
@@ -185,7 +186,7 @@ function EsimSection({ esimProfileId }: { esimProfileId: string | null }) {
   const { t } = useLocalizedTranslation();
 
   const profileQuery = useQuery({
-    queryKey: ["esim-profile", esimProfileId],
+    queryKey: queryKeys.esimProfile(esimProfileId),
     queryFn: () => api.getEsimProfile(esimProfileId as string),
     enabled: esimProfileId != null,
   });

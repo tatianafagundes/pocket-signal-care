@@ -16,6 +16,7 @@ import { AssistPanel } from "@/components/onboarding/assist-panel";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import type { Recommendation } from "@/services/recommendation-rules";
 
 export const Route = createFileRoute("/onboarding/plan")({
@@ -40,7 +41,7 @@ function PlanPage() {
   useSyncOnboardingStep("plan");
 
   const offersQuery = useQuery({
-    queryKey: ["offers", tenant],
+    queryKey: queryKeys.offers(tenant),
     queryFn: () => api.listOffers(tenant),
   });
 

@@ -13,6 +13,7 @@ import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import type { SimChoice } from "@/services/model";
 
 /*
@@ -54,7 +55,7 @@ function SimPage() {
 
   // The offer constrains which SIM forms are available (simTypes absent = both allowed).
   const offersQuery = useQuery({
-    queryKey: ["offers", tenant],
+    queryKey: queryKeys.offers(tenant),
     queryFn: () => api.listOffers(tenant),
   });
   const offer = offersQuery.data?.find((o) => o.offerId === state.selectedOfferId);

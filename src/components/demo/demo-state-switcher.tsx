@@ -4,6 +4,7 @@ import { useLocalizedTranslation } from "@/hooks/use-localized-translation";
 import { useTenant } from "@/hooks/use-tenant";
 import { useSession } from "@/hooks/use-session";
 import { useCurrentCustomerId } from "@/lib/current-customer";
+import { queryKeys } from "@/lib/query-keys";
 import {
   DEMO_VARIANTS,
   demoCustomerId,
@@ -35,7 +36,7 @@ export function DemoStateSwitcher() {
     if (variant === current) return;
     setSession({ ...session, customerId: demoCustomerId(tenant, variant) });
     // The 360 is cached per customerId; drop it so the new line's data loads.
-    void queryClient.invalidateQueries({ queryKey: ["customer360"] });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.customer360All() });
   };
 
   const label = (v: DemoVariant): string => t(`pages.account.demo.variant.${v}`, DEFAULT_LABELS[v]);

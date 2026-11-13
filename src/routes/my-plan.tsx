@@ -14,6 +14,7 @@ import { CopyNumberButton } from "@/components/line/copy-number-button";
 import { LineStatusBadge } from "@/components/line/line-status-badge";
 import { StatusDot } from "@/components/status/status-dot";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import { formatPrice } from "@/lib/format";
 import { formatRelativeDays, formatShortDate } from "@/lib/format-date";
 import {
@@ -44,7 +45,7 @@ function Page() {
   const customerId = useCurrentCustomerId();
 
   const query = useQuery({
-    queryKey: ["customer360", tenant, customerId],
+    queryKey: queryKeys.customer360(tenant, customerId),
     queryFn: () => api.getCustomer360(customerId),
   });
 
@@ -53,7 +54,7 @@ function Page() {
   // (drei has one; dreigo has none). A catalogue capability — no customer, so its own cache key,
   // distinct from the add-ons page's per-customer offer+qualify list.
   const roamingQuery = useQuery({
-    queryKey: ["add-ons-catalog", tenant],
+    queryKey: queryKeys.addOnsCatalog(tenant),
     queryFn: () => api.listAddOns(tenant),
   });
   const canAddRoaming = (roamingQuery.data ?? []).some((o) => o.euRoaming === true);

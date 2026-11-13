@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import { formatMsisdn, formatPrice, offerPriceLabel } from "@/lib/format";
 import { runOnboardingSubmit, type SubmitStep } from "@/lib/onboarding-submit";
 import { onboardingTodayTotal } from "@/lib/onboarding-total";
@@ -75,7 +76,7 @@ function ReviewPage() {
   // The summary is rebuilt from state at RENDER (B1): the offer is looked up fresh from the grid,
   // so changing the plan upstream can never leave a stale price/plan in the summary.
   const offersQuery = useQuery({
-    queryKey: ["offers", tenant],
+    queryKey: queryKeys.offers(tenant),
     queryFn: () => api.listOffers(tenant),
   });
   const offer = offersQuery.data?.find((o) => o.offerId === state.selectedOfferId);
@@ -86,7 +87,7 @@ function ReviewPage() {
 
   // Add-on catalogue for the optional extras section.
   const addOnsQuery = useQuery({
-    queryKey: ["add-ons", tenant],
+    queryKey: queryKeys.addOnsOnboarding(tenant),
     queryFn: () => api.listAddOns(tenant),
   });
   // What is paid today: plan + ticked extras. Rebuilt at render from the catalogue (same B1 rule).

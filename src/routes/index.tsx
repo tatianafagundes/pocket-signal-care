@@ -17,6 +17,7 @@ import { AddDataCard } from "@/components/home/add-data-card";
 import { UsageSummaryCard } from "@/components/home/usage-summary-card";
 import { PlanSummaryCard } from "@/components/home/plan-summary-card";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import {
   balanceState,
   homeDataPrompt,
@@ -64,7 +65,7 @@ function HomeDashboard() {
   const customerId = useCurrentCustomerId();
 
   const query = useQuery({
-    queryKey: ["customer360", tenant, customerId],
+    queryKey: queryKeys.customer360(tenant, customerId),
     queryFn: () => api.getCustomer360(customerId),
   });
 

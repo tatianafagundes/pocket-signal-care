@@ -11,6 +11,7 @@ import { DemoStateSwitcher } from "@/components/demo/demo-state-switcher";
 import { RecentActivity } from "@/components/account/recent-activity";
 import { activityFeed } from "@/services/customer360-rules";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -35,7 +36,7 @@ function Page() {
   const customerId = useCurrentCustomerId();
 
   const query = useQuery({
-    queryKey: ["customer360", tenant, customerId],
+    queryKey: queryKeys.customer360(tenant, customerId),
     queryFn: () => api.getCustomer360(customerId),
   });
 

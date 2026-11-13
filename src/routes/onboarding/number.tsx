@@ -14,6 +14,7 @@ import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import { formatMsisdn } from "@/lib/format";
 
 export const Route = createFileRoute("/onboarding/number")({
@@ -41,7 +42,7 @@ function NumberPage() {
   const [reserveError, setReserveError] = useState<SeamFailure | null>(null);
 
   const numbersQuery = useQuery({
-    queryKey: ["msisdns", tenant],
+    queryKey: queryKeys.msisdns(tenant),
     queryFn: () => api.listAvailableMsisdn(tenant),
   });
 

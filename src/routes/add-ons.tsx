@@ -9,6 +9,7 @@ import { AddOnCard, type BuyStatus } from "@/components/add-ons/add-on-card";
 import { SeamErrorNotice } from "@/components/onboarding/seam-error-notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, SeamFailure } from "@/services/api";
+import { queryKeys } from "@/lib/query-keys";
 import { useCurrentCustomerId } from "@/lib/current-customer";
 import { purchaseAddOn } from "@/lib/addon-purchase";
 import type { Offer } from "@/services/model";
@@ -45,7 +46,7 @@ function Page() {
   // Fetch the add-ons, then qualify each against the current customer's balance (TMF679). One
   // query keeps the list and its qualifications consistent (no flicker of cards without a state).
   const query = useQuery<AddOnWithQualify[]>({
-    queryKey: ["add-ons", tenant, customerId],
+    queryKey: queryKeys.addOns(tenant, customerId),
     queryFn: async () => {
       const offers = await api.listAddOns(tenant);
       return Promise.all(
@@ -68,8 +69,8 @@ function Page() {
       setBoughtOfferId(offer.offerId);
       // Refresh the customer's plan so the add-on shows in My plan, and the usage buckets so the
       // granted allowance shows, and re-qualify the list against the (now-charged) balance.
-      void queryClient.invalidateQueries({ queryKey: ["customer360", tenant, customerId] });
-      void queryClient.invalidateQueries({ queryKey: ["add-ons", tenant, customerId] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.customer360(tenant, customerId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.addOns(tenant, customerId) });
     },
   });
 
