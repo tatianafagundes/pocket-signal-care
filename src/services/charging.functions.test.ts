@@ -43,6 +43,33 @@ describe("charging seam (mock)", () => {
     if (!r.ok) expect(r.error.category).toBe("validation");
   });
 
+  it("extends balance validity on top-up (CBEV FC34)", async () => {
+    // A still-valid balance: top-up pushes validUntil further into the future.
+    const before = await getBalance("demo-drei");
+    const beforeUntil =
+      before.ok && before.data?.validUntil ? Date.parse(before.data.validUntil) : 0;
+
+    const r = await topUp({ customerId: "demo-drei", amountMinor: 1000 });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      const after = Date.parse(r.data.validUntil!);
+      expect(after).toBeGreaterThan(beforeUntil); // pushed out
+      expect(after).toBeGreaterThan(Date.now()); // and in the future
+    }
+  });
+
+  it("recovers an expired balance's validity on top-up (FC34)", async () => {
+    // demo-drei-expired seeds validUntil in the past; a top-up must bring it back to the future.
+    const before = await getBalance("demo-drei-expired");
+    const beforeUntil =
+      before.ok && before.data?.validUntil ? Date.parse(before.data.validUntil) : 0;
+    expect(beforeUntil).toBeLessThan(Date.now()); // precondition: expired
+
+    const r = await topUp({ customerId: "demo-drei-expired", amountMinor: 500 });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(Date.parse(r.data.validUntil!)).toBeGreaterThan(Date.now()); // recovered
+  });
+
   it("deducts, and refuses to go negative (insufficient balance)", async () => {
     // Fresh customer, top up a known amount, then over-deduct.
     await topUp({ customerId: "deduct-test", amountMinor: 500 });

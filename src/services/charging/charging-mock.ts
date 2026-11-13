@@ -47,6 +47,31 @@ function isoFromNow(days: number): string {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
+/**
+ * Days a top-up adds to the monetary balance's validity. Grounded in CBEV "Monetary Balance
+ * Validity Control" (FC34): a refill extends the balance's validity, and recovers it if already
+ * expired. 30 is a typical prepaid cycle; the REAL extension is driven by the recharge PO config in
+ * the catalogue, not a flat constant — this mock approximates it. (Fase 8: read from the PO.)
+ */
+const TOPUP_VALIDITY_EXTENSION_DAYS = 30;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Extend a customer's balance validity on top-up (FC34). New validity = the later of now or the
+ * current validUntil, plus the extension — so a still-valid balance has its end pushed out, and an
+ * expired (or absent) one is recovered from now. Writes `balanceValidUntil`; returns the new ISO.
+ */
+function extendValidity(customerId: string): string {
+  const now = Date.now();
+  const currentIso = balanceValidUntil.get(customerId);
+  const currentMs = currentIso ? Date.parse(currentIso) : NaN;
+  const base = Number.isNaN(currentMs) ? now : Math.max(now, currentMs);
+  const next = new Date(base + TOPUP_VALIDITY_EXTENSION_DAYS * DAY_MS).toISOString();
+  balanceValidUntil.set(customerId, next);
+  return next;
+}
+
 function seed(): void {
   if (seeded) return;
   seeded = true;
@@ -184,6 +209,9 @@ export function createChargingMock(): ChargingDriver {
         const current = balances.get(customerId) ?? 0;
         const next = current + amountMinor;
         balances.set(customerId, next);
+        // Extend the balance's validity (CBEV FC34): a top-up pushes the expiry out and recovers an
+        // expired balance. This is what makes the UI's "new balance valid until …" honest.
+        extendValidity(customerId);
         // A top-up is a financial transaction — record it so it shows in recent activity.
         recordActivity(customerId, {
           kind: "topUp",

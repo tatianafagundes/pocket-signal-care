@@ -22,20 +22,12 @@ import { queryKeys } from "@/lib/query-keys";
 import { formatMsisdn, formatPrice, offerPriceLabel } from "@/lib/format";
 import { runOnboardingSubmit, type SubmitStep } from "@/lib/onboarding-submit";
 import { onboardingTodayTotal } from "@/lib/onboarding-total";
+import { tokenizeCardMock } from "@/lib/card-token";
 
 /*
  * Turn the (mock) entered card number into an opaque method token. In the real flow a PSP SDK
- * tokenizes the card in the browser and we only ever see the token — the PAN never reaches our
- * code or state. Here we mimic that: keep only the digits' last 4 for a label-ish token, and
- * preserve a "4000" marker so the payment mock's deterministic decline path stays reachable
- * (a card number containing 4000 declines; 4242 authorizes). NEVER stored in onboarding state.
+ * tokenizes the card in the browser and we only ever see the token (see lib/card-token).
  */
-function tokenizeCardMock(cardNumber: string): string {
-  const digits = cardNumber.replace(/\D/g, "");
-  if (digits.includes("4000")) return "tok-visa-4000";
-  const last4 = digits.slice(-4) || "0000";
-  return `tok-visa-${last4}`;
-}
 
 export const Route = createFileRoute("/onboarding/review")({
   head: () => ({
