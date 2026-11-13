@@ -86,13 +86,20 @@ only ever exercised locally via gitignored `.env.local` + the fake. Requirement 
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
 - [ ] 7. Config, env fail-fast, docs
-  - [ ] 7.1 Update `.env.example` with the CPR http flags + `VITE_CPR_TENANT_*` placeholder + note. (6.4, 7.3)
+  - [ ] 7.1 Update `.env.example` with the CPR http flags + `VITE_CPR_TENANT_*` placeholder + note.
+        Also document `VITE_CPR_ACTIVE_BRAND` (D1/D-360-tenant-on-http): it stamps the tenant on
+        getCustomerAndParty and MUST match the build's brand when `VITE_CPR_DRIVER=http` — a
+        mismatch makes getCustomer360's cross-tenant check reject EVERY 360 as notFound. (6.4, 7.3)
   - [ ] 7.2 Confirm fail-fast: with `VITE_CPR_DRIVER=http` and missing base URL/token, boot throws
         via `assertDriverConfig`/`getRouter` (existing) — add a test or a documented manual check. (6.2)
   - [ ] 7.3 Safety rail (R-F9): while the token is a client `VITE_CPR_TOKEN`, REFUSE a non-localhost
         `VITE_CPR_BASE_URL` (throw at config/boot if host ∉ {localhost, 127.0.0.1}) so nobody points
         the client-token driver at a real host before the BFF exists. Cover with a small test. (6.3)
-  - [ ] 7.4 Confirm no `.env.local` ⇒ mock default ⇒ demo/CI unaffected. (6.1, 6.3)
+  - [ ] 7.4 Boot warning (D1): when `VITE_CPR_DRIVER=http` but `VITE_CPR_ACTIVE_BRAND` is absent or
+        not a valid brand, warn (structured, like `warnConfig`) that getCustomerAndParty will stamp
+        the DEFAULT brand and every cross-tenant 360 check may reject — a silent-in-boot,
+        fails-in-runtime misconfig. Warn, don't throw (single-brand default is a valid dev state). (6.2)
+  - [ ] 7.5 Confirm no `.env.local` ⇒ mock default ⇒ demo/CI unaffected. (6.1, 6.3)
   - Commit.
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 7.3_
 
