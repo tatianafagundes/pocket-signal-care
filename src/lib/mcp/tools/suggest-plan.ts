@@ -7,7 +7,8 @@ import { recommend, type ReasonCode } from "@/services/recommendation-rules";
 
 const REASONS: Record<ReasonCode, string> = {
   "assist.reason.fits": "Its data comfortably covers the estimated monthly use.",
-  "assist.reason.closeFit": "Its data covers the estimate, but only just — extra data may help in busy months.",
+  "assist.reason.closeFit":
+    "Its data covers the estimate, but only just — extra data may help in busy months.",
   "assist.reason.unlimited": "Only an unlimited plan covers this much use.",
   "assist.reason.biggest": "No plan fully covers the estimate, so this is the largest allowance.",
   "assist.reason.default": "This is the brand's most popular plan.",
@@ -17,7 +18,7 @@ export default defineTool({
   name: "suggest_plan",
   title: "Suggest a plan",
   description:
-    "Suggest one prepaid plan from four everyday usage answers, using the same rules as the app's \"Help me choose\".",
+    'Suggest one prepaid plan from four everyday usage answers, using the same rules as the app\'s "Help me choose".',
   inputSchema: {
     brand: brandSchema,
     video: z
@@ -63,6 +64,9 @@ export default defineTool({
         : null,
       "This is a suggestion, not a guarantee.",
     ].filter(Boolean);
-    return { content: [{ type: "text", text: lines.join("\n") }], structuredContent: { brand, suggestion } };
+    return {
+      content: [{ type: "text", text: lines.join("\n") }],
+      structuredContent: { brand, suggestion },
+    };
   },
 });

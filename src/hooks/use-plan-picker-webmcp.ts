@@ -31,7 +31,8 @@ export function usePlanPickerWebMCP({
 }) {
   useWebMCP({
     name: "list_plans",
-    description: "List the prepaid plans shown on this onboarding step, with ids, data, price and which one is selected.",
+    description:
+      "List the prepaid plans shown on this onboarding step, with ids, data, price and which one is selected.",
     annotations: { readOnlyHint: true },
     enabled: offers !== undefined,
     execute: () =>
@@ -43,7 +44,8 @@ export function usePlanPickerWebMCP({
 
   useWebMCP<{ offerId: unknown }, string>({
     name: "select_plan",
-    description: "Select one of the shown plans by its id (from list_plans). It does not continue or pay.",
+    description:
+      "Select one of the shown plans by its id (from list_plans). It does not continue or pay.",
     inputSchema: {
       type: "object",
       properties: {

@@ -50,7 +50,11 @@ export type OfferJson = ReturnType<typeof toOfferJson>;
 
 export function offerLine(o: OfferJson): string {
   const cycle = o.validityDays ? ` every ${o.validityDays} days` : "";
-  const extras = [o.network, o.euRoaming ? "EU roaming" : null, o.mostPopular ? "most popular" : null]
+  const extras = [
+    o.network,
+    o.euRoaming ? "EU roaming" : null,
+    o.mostPopular ? "most popular" : null,
+  ]
     .filter(Boolean)
     .join(", ");
   const goodFor = o.goodFor ? ` — ${o.goodFor}` : "";
