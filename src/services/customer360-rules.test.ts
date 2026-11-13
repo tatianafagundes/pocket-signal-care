@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   activeAddOns,
   activityFeed,
+  ACTIVITY_FEED_MAX,
   balanceState,
   bucketState,
   composeCustomer360,
@@ -737,6 +738,27 @@ describe("activityFeed", () => {
       "rel:int-mid",
       "money:ftx-old",
     ]);
+  });
+
+  it("caps the feed at ACTIVITY_FEED_MAX, keeping the newest rows across both sources", () => {
+    // More rows than the cap: 30 money events spread over 30 days, plus one old onboarding.
+    const activity = Array.from({ length: 30 }, (_, i) =>
+      money({
+        activityId: `ftx-${String(i).padStart(2, "0")}`,
+        // i=0 oldest … i=29 newest (ISO sorts lexically here).
+        occurredAt: `2026-03-${String(i + 1).padStart(2, "0")}T10:00:00Z`,
+      }),
+    );
+    const c360 = composeCustomer360({
+      ...base,
+      activity,
+      interactions: [interaction({ interactionId: "int-old", occurredAt: "2026-01-01T10:00:00Z" })],
+    });
+    const feed = activityFeed(c360);
+    expect(feed).toHaveLength(ACTIVITY_FEED_MAX);
+    // The newest row survives; the old onboarding (beyond the cap) is dropped.
+    expect(feed[0]?.feedId).toBe("money:ftx-29");
+    expect(feed.some((f) => f.feedId === "rel:int-old")).toBe(false);
   });
 
   it("orders equal-timestamp rows deterministically (feedId desc), not by input order", () => {

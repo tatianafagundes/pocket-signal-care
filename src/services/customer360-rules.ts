@@ -373,13 +373,26 @@ function interactionStatus(s: PartyInteraction["status"]): FeedItem["status"] {
 }
 
 /**
+ * How many recent-activity rows the feed shows. A prepaid line accrues top-ups/refills/interactions
+ * indefinitely; without a cap the Account screen would materialise and render a customer's ENTIRE
+ * financial + relationship history at once. 20 is a "recent activity" window, not a ledger.
+ *
+ * ⚠️ FASE 8: this is a DISPLAY cap on an already-fetched list — the mock returns everything. When a
+ * real backend lands, the limit belongs on the READ (a `limit`/pagination param on charging
+ * getActivity + cpr listInteractions) so the full history never crosses the wire. This constant
+ * then becomes the page size, and the feed gains "show more". Capping here is the honest interim:
+ * it bounds the render today without pretending the fetch is paginated.
+ */
+export const ACTIVITY_FEED_MAX = 20;
+
+/**
  * The merged recent-activity feed — a PURE rule, no I/O, no throw. (Step 2)
  *
  * Unions the money feed (`c360.activity`) and the relationship timeline (`c360.interactions`) into
- * one list of `FeedItem`, newest first. Both sub-sources are already individually newest-first from
- * `composeCustomer360`, but they must be re-sorted together once interleaved. The UI reads THIS,
- * not the raw axes — so when a connector starts recording new interaction or transaction kinds, the
- * feed grows with no UI change.
+ * one list of `FeedItem`, newest first, capped at ACTIVITY_FEED_MAX. Both sub-sources are already
+ * individually newest-first from `composeCustomer360`, but they must be re-sorted together once
+ * interleaved. The UI reads THIS, not the raw axes — so when a connector starts recording new
+ * interaction or transaction kinds, the feed grows with no UI change.
  *
  * No de-duplication today: the only interaction recorded is `onboarding`, which never coincides with
  * a money row. If a `topUp`/`planChange` interaction ever lands that mirrors a money transaction,
@@ -403,5 +416,9 @@ export function activityFeed(c360: Customer360): FeedItem[] {
     occurredAt: it.occurredAt,
     status: interactionStatus(it.status),
   }));
-  return [...money, ...relationship].sort(byOccurredAtDesc((f) => f.feedId));
+  // Sort first, THEN cap — so the cap keeps the newest rows across both sources, not whichever
+  // source happened to be concatenated first.
+  return [...money, ...relationship]
+    .sort(byOccurredAtDesc((f) => f.feedId))
+    .slice(0, ACTIVITY_FEED_MAX);
 }
