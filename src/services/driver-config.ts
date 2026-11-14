@@ -84,40 +84,50 @@ function warnConfig(detail: Record<string, unknown>): void {
 }
 
 /**
- * Safety rail (cpr-bff-auth Task 3, replaces the old localhost rail): the CPR token now lives
- * SERVER-side (the BFF injects it). A `VITE_CPR_TOKEN` in a build using the http driver would put a
- * token back on the client — the exact thing the BFF removed. Throw so that misconfiguration can
- * never ship. (The old rail checked localhost BECAUSE the token was on the client; that premise is
- * gone, so the base URL — now a same-origin BFF prefix — is no longer constrained here.)
+ * Safety rail (cpr-bff-auth Task 3, generalized to recharge in cpr-recharge Task 6.2): a seam that
+ * goes real through a same-origin BFF holds its token SERVER-side (the BFF injects it). A
+ * `VITE_<SEAM>_TOKEN` in a build using that seam's http driver would put a token back on the
+ * client — the exact thing the BFF removed. Throw so the misconfiguration can never ship. (The old
+ * CPR rail checked localhost BECAUSE the token was on the client; that premise is gone, so the base
+ * URL — now a same-origin BFF prefix — is no longer constrained here.)
+ *
+ * `seam` is the seam name; `viteKey` is the client token var it must NOT have; `serverKey` is the
+ * server-only var to use instead. Both CPR and recharge (ecev) are BFF-fronted, so both are railed.
  */
-function assertCprClientHasNoToken(): void {
-  const token = import.meta.env["VITE_CPR_TOKEN"] as string | undefined;
+function assertClientHasNoToken(seam: SeamName, viteKey: string, serverKey: string): void {
+  const token = import.meta.env[viteKey] as string | undefined;
   if (token !== undefined && token !== "") {
     throw new Error(
-      "VITE_CPR_TOKEN is set, but the CPR token now lives server-side (the BFF injects it). A " +
-        "client token would undo the BFF. Remove VITE_CPR_TOKEN; set CPR_TOKEN as a server-only " +
-        "(non-VITE) var for the BFF instead.",
+      `${viteKey} is set, but the ${seam} token now lives server-side (the BFF injects it). A ` +
+        `client token would undo the BFF. Remove ${viteKey}; set ${serverKey} as a server-only ` +
+        `(non-VITE) var for the BFF instead.`,
     );
   }
 }
 
 /**
- * D1 warning: getCustomerAndParty stamps the DXP tenant from VITE_CPR_ACTIVE_BRAND, and
- * getCustomer360 rejects a 360 whose tenant ≠ the route brand. If the active brand is absent or
- * invalid while CPR is http, every 360 may be rejected as notFound — a silent-at-boot,
- * fails-at-runtime misconfig. Warn (don't throw: the default brand is a valid single-brand state).
+ * D1 warning: VITE_CPR_ACTIVE_BRAND names the brand this build acts as. Two seams now depend on it:
+ *  - CPR: getCustomerAndParty stamps the DXP tenant from it, and getCustomer360 rejects a 360 whose
+ *    tenant ≠ the route brand — an invalid brand can reject every 360 as notFound.
+ *  - recharge (ecev, Task 6.2): charging-http sends it as X-App-Brand so the BFF resolves the DXP
+ *    X-Tenant-ID — an invalid brand routes the recharge to the TEN_FAKE placeholder, not the real
+ *    tenant.
+ * Warn (don't throw: the default brand is a valid single-brand state) when EITHER seam is http and
+ * the brand is unset/invalid.
  */
-function warnCprActiveBrand(): void {
-  if (driverFor("cpr") !== "http") return;
+function warnActiveBrand(): void {
+  const brandSeamIsHttp = driverFor("cpr") === "http" || driverFor("ecev") === "http";
+  if (!brandSeamIsHttp) return;
   const brand = import.meta.env["VITE_CPR_ACTIVE_BRAND"] as string | undefined;
   const valid = brand === "drei" || brand === "dreigo";
   if (!valid) {
     warnConfig({
-      seam: "cpr",
+      seam: driverFor("cpr") === "http" ? "cpr" : "ecev",
       message:
-        "VITE_CPR_ACTIVE_BRAND is unset/invalid while CPR is http — getCustomerAndParty will stamp " +
-        "the default brand, and getCustomer360 may reject every 360 as notFound if the build's " +
-        "brand differs. Set VITE_CPR_ACTIVE_BRAND to the build's brand.",
+        "VITE_CPR_ACTIVE_BRAND is unset/invalid while CPR or recharge is http — CPR stamps the " +
+        "default brand on the 360 (getCustomer360 may reject every 360 as notFound) and recharge " +
+        "sends the default brand as X-App-Brand (the BFF resolves it to the TEN_FAKE tenant). Set " +
+        "VITE_CPR_ACTIVE_BRAND to the build's brand.",
       envKey: "VITE_CPR_ACTIVE_BRAND",
     });
   }
@@ -158,11 +168,14 @@ export function assertDriverConfig(): void {
       }
     }
 
-    // 1b. CPR safety rail (Task 3): the token lives server-side (BFF). Refuse a client VITE_CPR_TOKEN
-    //     so a token can never be put back on the client. (Replaces the old localhost rail, whose
-    //     premise — token on the client — no longer holds.)
+    // 1b. BFF-fronted safety rail: the token lives server-side (the BFF injects it). Refuse a client
+    //     VITE_<SEAM>_TOKEN so a token can never be put back on the client. CPR (Task 3) and recharge
+    //     (ecev, Task 6.2) both go real through a same-origin BFF.
     if (seam === "cpr" && driver === "http") {
-      assertCprClientHasNoToken();
+      assertClientHasNoToken("cpr", "VITE_CPR_TOKEN", "CPR_TOKEN");
+    }
+    if (seam === "ecev" && driver === "http") {
+      assertClientHasNoToken("ecev", "VITE_ECEV_TOKEN", "RECHARGE_TOKEN");
     }
 
     // 2. Prod-readiness: a real-able seam still on mock in a prod build → warn (not auth; that
@@ -176,7 +189,7 @@ export function assertDriverConfig(): void {
     }
   }
 
-  // 3. CPR active-brand sanity (D1) — warn if http but the brand that stamps the 360 tenant is
-  //    unset/invalid. After the loop so it runs once, regardless of seam order.
-  warnCprActiveBrand();
+  // 3. Active-brand sanity (D1) — warn if CPR or recharge is http but the brand that stamps the 360
+  //    tenant / the recharge X-App-Brand is unset/invalid. After the loop so it runs once.
+  warnActiveBrand();
 }

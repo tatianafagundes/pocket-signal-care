@@ -76,6 +76,37 @@ describe("driver-config.assertDriverConfig (boot fail-fast)", () => {
     expect(() => assertDriverConfig()).not.toThrow();
   });
 
+  it("safety rail (recharge, 6.2): THROWS when ECEV is http AND a client VITE_ECEV_TOKEN is set", () => {
+    // The recharge token lives server-side (RECHARGE_TOKEN, injected by the recharge BFF). A client
+    // VITE_ECEV_TOKEN would undo that — the same rail CPR has, generalized to recharge.
+    vi.stubEnv("VITE_ECEV_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_ACTIVE_BRAND", "drei");
+    vi.stubEnv("VITE_ECEV_TOKEN", "a-client-token");
+    expect(() => assertDriverConfig()).toThrow(/VITE_ECEV_TOKEN/);
+  });
+
+  it("safety rail (recharge, 6.2): does NOT throw on a client ECEV token when ECEV is mock", () => {
+    vi.stubEnv("VITE_ECEV_DRIVER", "mock");
+    vi.stubEnv("VITE_ECEV_TOKEN", "a-client-token"); // harmless while the driver is mock
+    expect(() => assertDriverConfig()).not.toThrow();
+  });
+
+  it("D1 (recharge, 6.2): WARNS when ECEV is http but the active brand is unset, even with CPR mock", () => {
+    // Recharge now depends on VITE_CPR_ACTIVE_BRAND too (charging-http sends it as X-App-Brand), so
+    // the brand warning must fire for an ecev-http build, not only a cpr-http one.
+    vi.stubEnv("VITE_CPR_DRIVER", "mock");
+    vi.stubEnv("VITE_ECEV_DRIVER", "http");
+    vi.stubEnv("VITE_CPR_ACTIVE_BRAND", ""); // unset
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      assertDriverConfig();
+      const warned = warn.mock.calls.some((c) => String(c[0]).includes("VITE_CPR_ACTIVE_BRAND"));
+      expect(warned).toBe(true);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it("D1: WARNS when CPR is http but VITE_CPR_ACTIVE_BRAND is unset/invalid", () => {
     vi.stubEnv("VITE_CPR_DRIVER", "http");
     vi.stubEnv("VITE_CPR_ACTIVE_BRAND", ""); // unset
