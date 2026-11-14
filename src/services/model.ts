@@ -99,6 +99,16 @@ export interface VoucherRedemption {
 }
 
 /**
+ * Result of a real DXP recharge (payment direct-capture → monetaryRecharge journey). The journey
+ * returns a `partyInteractionId`, NOT a balance — so the `balance` here comes from a follow-up
+ * read (or the mock's credited balance), and is null when that read is unavailable. (Recharge spec.)
+ */
+export interface RechargeResult {
+  partyInteractionId: string;
+  balance: Balance | null;
+}
+
+/**
  * A saved payment method (demo surrogate). Auto top-up charges an unattended, stored instrument —
  * unlike the manual top-up's inline one-off card. There is no real instrument vault here: this is
  * the already-tokenized demo card, "saved" so the recurring charge has something to reference. The

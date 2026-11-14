@@ -84,6 +84,7 @@ export const api = {
   // Charging seam (ECEV, mock)
   getBalance: (customerId: string) => unwrap(charging.getBalance(customerId)),
   topUp: (input: unknown) => unwrap(charging.topUp(input)),
+  recharge: (input: unknown) => unwrap(charging.recharge(input)),
   redeemVoucher: (input: unknown) => unwrap(charging.redeemVoucher(input)),
   rateAndDeduct: (input: unknown) => unwrap(charging.rateAndDeduct(input)),
   getUsage: (customerId: string) => unwrap(charging.getUsage(customerId)),

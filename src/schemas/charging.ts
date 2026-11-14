@@ -52,7 +52,22 @@ export const grantAllowanceSchema = z
     message: "a metered grant requires amount and unit",
   });
 
+/**
+ * Real DXP recharge input (payment direct-capture → monetaryRecharge journey). Unlike topUp, it
+ * carries the `contractId` + MSISDN the journey requires. `methodToken` is the mock's tokenized
+ * method; the real payment uses paymentMethod.@type:"cash" + refs, so the http mapper does NOT put
+ * methodToken on the wire (recharge spec, M3).
+ */
+export const rechargeSchema = z.object({
+  customerId: customerIdSchema,
+  contractId: z.string().trim().min(1),
+  communicationId: z.string().trim().min(1),
+  amountMinor: z.number().int().positive(),
+  methodToken: z.string().trim().min(1),
+});
+
 export type TopUpInput = z.infer<typeof topUpSchema>;
 export type DeductInput = z.infer<typeof deductSchema>;
+export type RechargeInput = z.infer<typeof rechargeSchema>;
 export type GrantAllowanceInput = z.infer<typeof grantAllowanceSchema>;
 export type RedeemVoucherInput = z.infer<typeof redeemVoucherSchema>;

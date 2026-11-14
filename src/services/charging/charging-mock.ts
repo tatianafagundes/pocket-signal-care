@@ -1,11 +1,13 @@
-import { ok, err, seamError } from "@/services/seam-result";
+import { ok, err, seamError, type SeamResult } from "@/services/seam-result";
 import type {
   ActivityItem,
   Balance,
+  RechargeResult,
   UsageBucket,
   UsageUnit,
   VoucherRedemption,
 } from "@/services/model";
+import type { RechargeInput } from "@/schemas/charging";
 import type { TenantId } from "@/lib/tenant-rules";
 import { TOPUP_VALIDITY_EXTENSION_DAYS } from "@/services/customer360-rules";
 import { withMock } from "@/services/mock-support";
@@ -67,6 +69,7 @@ let seeded = false;
 let bucketSeq = 0;
 let activitySeq = 0;
 let voucherSeq = 0;
+let interactionSeq = 0;
 
 /** Append a financial activity entry for a customer (newest appended; getActivity sorts). */
 function recordActivity(customerId: string, entry: Omit<ActivityItem, "activityId">): ActivityItem {
@@ -277,6 +280,27 @@ export function createChargingMock(): ChargingDriver {
           status: "completed",
         });
         return ok(toBalance(customerId, next));
+      });
+    },
+
+    recharge(input: RechargeInput): Promise<SeamResult<RechargeResult>> {
+      return withMock("charging.recharge", () => {
+        // Mock: behave like a credit (the money moment), then mint the journey's interaction id.
+        // The real http path does payment direct-capture → monetaryRecharge; the mock collapses
+        // that to the same balance credit + a PIN-style id, so the demo top-up path is unchanged.
+        const current = balances.get(input.customerId) ?? 0;
+        const next = current + input.amountMinor;
+        balances.set(input.customerId, next);
+        extendValidity(input.customerId);
+        recordActivity(input.customerId, {
+          kind: "topUp",
+          occurredAt: new Date().toISOString(),
+          amountMinor: input.amountMinor,
+          currency: "EUR",
+          status: "completed",
+        });
+        const partyInteractionId = `pin-${(++interactionSeq).toString(16).padStart(6, "0")}`;
+        return ok({ partyInteractionId, balance: toBalance(input.customerId, next) });
       });
     },
 

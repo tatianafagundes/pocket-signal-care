@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   getBalance,
   topUp,
+  recharge,
   redeemVoucher,
   rateAndDeduct,
   getUsage,
@@ -86,6 +87,50 @@ describe("charging seam (mock)", () => {
     // Balance unchanged after the refused deduction.
     const after = await getBalance("deduct-test");
     if (after.ok) expect(after.data?.amountMinor).toBe(200);
+  });
+});
+
+describe("charging recharge (mock — real DXP flow stand-in)", () => {
+  it("credits the balance and returns a partyInteractionId", async () => {
+    const before = await getBalance("recharge-test");
+    const start = before.ok && before.data ? before.data.amountMinor : 0;
+
+    const r = await recharge({
+      customerId: "recharge-test",
+      contractId: "contract-1",
+      communicationId: "+4368140000001",
+      amountMinor: 1101,
+      methodToken: "tok-visa-4242",
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.partyInteractionId).toMatch(/^pin-/);
+      expect(r.data.balance?.amountMinor).toBe(start + 1101);
+    }
+  });
+
+  it("rejects a missing contractId as a validation error (journey needs it)", async () => {
+    const r = await recharge({
+      customerId: "recharge-test",
+      contractId: "",
+      communicationId: "+4368140000001",
+      amountMinor: 1101,
+      methodToken: "tok-visa-4242",
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("validation");
+  });
+
+  it("rejects a non-positive amount (validation)", async () => {
+    const r = await recharge({
+      customerId: "recharge-test",
+      contractId: "contract-1",
+      communicationId: "+4368140000001",
+      amountMinor: 0,
+      methodToken: "tok-visa-4242",
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.category).toBe("validation");
   });
 });
 

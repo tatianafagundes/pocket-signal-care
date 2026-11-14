@@ -2,10 +2,12 @@ import type { SeamResult } from "@/services/seam-result";
 import type {
   ActivityItem,
   Balance,
+  RechargeResult,
   UsageBucket,
   UsageUnit,
   VoucherRedemption,
 } from "@/services/model";
+import type { RechargeInput } from "@/schemas/charging";
 
 /**
  * A grant/refill of a non-monetary allowance (TMF654). The ECEV op that an add-on fulfilment
@@ -36,6 +38,12 @@ export interface AllowanceGrant {
 export interface ChargingDriver {
   getBalance(customerId: string): Promise<SeamResult<Balance | null>>;
   topUp(customerId: string, amountMinor: number): Promise<SeamResult<Balance>>;
+  /**
+   * Real DXP recharge: direct-capture payment then the monetaryRecharge journey (keyed by
+   * contractId + MSISDN). Returns the journey's partyInteractionId + a balance (from a follow-up
+   * read; null if unavailable). The mock implements it as a credit + a minted interaction id.
+   */
+  recharge(input: RechargeInput): Promise<SeamResult<RechargeResult>>;
   /**
    * Redeem a voucher (CBEV monetary voucher recharge). The driver resolves the face value from the
    * code SERVER-SIDE, credits the balance, and extends validity only above a threshold. Domain
