@@ -32,6 +32,7 @@ import { Route as OnboardingSimRouteImport } from './routes/onboarding/sim'
 import { Route as OnboardingSuccessRouteImport } from './routes/onboarding/success'
 import { Route as OnboardingWelcomeRouteImport } from './routes/onboarding/welcome'
 import { Route as BffCprSplatRouteImport } from './routes/bff.cpr.$'
+import { Route as BffRechargeSplatRouteImport } from './routes/bff.recharge.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -149,6 +150,11 @@ const BffCprSplatRoute = BffCprSplatRouteImport.update({
   path: '/bff/cpr/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BffRechargeSplatRoute = BffRechargeSplatRouteImport.update({
+  id: '/bff/recharge/$',
+  path: '/bff/recharge/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/bff/cpr/$': typeof BffCprSplatRoute
+  '/bff/recharge/$': typeof BffRechargeSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/bff/cpr/$': typeof BffCprSplatRoute
+  '/bff/recharge/$': typeof BffRechargeSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/onboarding/welcome': typeof OnboardingWelcomeRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/bff/cpr/$': typeof BffCprSplatRoute
+  '/bff/recharge/$': typeof BffRechargeSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/onboarding/welcome'
     | '/onboarding/'
     | '/bff/cpr/$'
+    | '/bff/recharge/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/onboarding/welcome'
     | '/onboarding'
     | '/bff/cpr/$'
+    | '/bff/recharge/$'
   id:
     | '__root__'
     | '/'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/onboarding/welcome'
     | '/onboarding/'
     | '/bff/cpr/$'
+    | '/bff/recharge/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,6 +328,7 @@ export interface RootRouteChildren {
   TopUpRoute: typeof TopUpRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   BffCprSplatRoute: typeof BffCprSplatRoute
+  BffRechargeSplatRoute: typeof BffRechargeSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -481,6 +494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BffCprSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bff/recharge/$': {
+      id: '/bff/recharge/$'
+      path: '/bff/recharge/$'
+      fullPath: '/bff/recharge/$'
+      preLoaderRoute: typeof BffRechargeSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -529,6 +549,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   BffCprSplatRoute: BffCprSplatRoute,
+  BffRechargeSplatRoute: BffRechargeSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

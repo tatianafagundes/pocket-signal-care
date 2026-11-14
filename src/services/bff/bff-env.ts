@@ -45,6 +45,27 @@ export function readBffCprConfig(): BffCprConfig {
 }
 
 /**
+ * The recharge (CBEV/ECEV) config the recharge BFF forwards with. Same shape as CPR but a distinct
+ * base URL + token: recharge talks to the charging domain, not CPR. (cpr-recharge Task 5)
+ *
+ * D-recharge-token: `RECHARGE_TOKEN` is a server-only static bearer for the fake. Real recharge uses
+ * an OAuth2 client-credentials grant against Keycloak (grant + refresh) — a documented follow-up,
+ * NOT wired here. Swapping to the real grant is isolated to this reader + the proxy's header
+ * injection; the client contract (same-origin, no token) does not change.
+ */
+export interface BffRechargeConfig {
+  baseUrl: string | null;
+  token: string | null;
+}
+
+export function readBffRechargeConfig(): BffRechargeConfig {
+  return {
+    baseUrl: serverEnv("RECHARGE_BASE_URL"),
+    token: serverEnv("RECHARGE_TOKEN"),
+  };
+}
+
+/**
  * Resolve the app brand slug → the DXP tenant id (sent as X-Tenant-ID). Server-side twin of the
  * client-side resolver that used to live in cpr-http.ts; the brand→TEN map now lives in server env
  * (`CPR_TENANT_<BRAND>`), off the client. Falls back to the TEN_FAKE placeholder (the fake accepts
