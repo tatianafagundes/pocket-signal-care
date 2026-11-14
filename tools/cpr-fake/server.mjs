@@ -25,6 +25,8 @@ const requestRing = [];
 const parties = new Map(); // id -> party
 const customers = new Map(); // id -> customer
 const contracts = new Map(); // id -> contract
+const payments = new Map(); // paymentId -> payment (recharge: POST /payment/v4/payment)
+const usedAuthCodes = new Set(); // authorizationCodes seen — a reuse → DXP error 33028
 let seq = 0;
 const nextId = (prefix) => `${prefix}-fake-${String(++seq).padStart(4, "0")}`;
 
@@ -127,6 +129,8 @@ const server = http.createServer(async (req, res) => {
     parties.clear();
     customers.clear();
     contracts.clear();
+    payments.clear();
+    usedAuthCodes.clear();
     seq = 0;
     return send(res, 200, { ok: true });
   }
@@ -264,6 +268,44 @@ const server = http.createServer(async (req, res) => {
       if (!contract) return sendError(res, 404, 4044, "Not Found", "Contract not found");
       return send(res, 200, contract);
     }
+  }
+
+  // --- POST payment (recharge, direct capture — TMF676) ---
+  if (method === "POST" && path === "/payment/v4/payment") {
+    // DXP /payment/v4/payment is a DIRECT CAPTURE and REJECTS a reused authorizationCode (33028).
+    const authorizationCode = body?.authorizationCode;
+    if (authorizationCode && usedAuthCodes.has(authorizationCode)) {
+      return sendError(res, 409, 33028, "Conflict", "authorizationCode already used");
+    }
+    if (authorizationCode) usedAuthCodes.add(authorizationCode);
+    const id = nextId("pay");
+    const code = authorizationCode ?? `AUTH-${id}`;
+    const payment = {
+      id,
+      authorizationCode: code,
+      status: "SUCCESS",
+      paymentDate: nowIso(),
+      transactionDateTime: nowIso(),
+      amount: body?.amount ?? { unit: "EUR", value: 0 },
+    };
+    payments.set(id, payment);
+    return send(res, 201, payment);
+  }
+
+  // --- POST customerInteraction (recharge journey: monetaryRecharge) ---
+  if (method === "POST" && path === "/xCACcore/v1/customerInteraction") {
+    if (!body?.journeyId) {
+      return sendError(res, 400, 4002, "Bad Request", "Missing journeyId");
+    }
+    if (!body?.customerId) {
+      return sendError(res, 400, 4000, "Bad Request", "Missing customerId");
+    }
+    if (!body?.contractId) {
+      return sendError(res, 400, 4003, "Bad Request", "Missing contractId");
+    }
+    // PIN-style id, like the real partyInteractionId (PIN100000200051).
+    const partyInteractionId = `PIN-fake-${String(++seq).padStart(4, "0")}`;
+    return send(res, 200, { partyInteractionId });
   }
 
   // --- fall-through ---

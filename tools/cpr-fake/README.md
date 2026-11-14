@@ -39,6 +39,8 @@ the fake does not validate the token). Missing/malformed headers → `401` + the
 | POST | `/customerManagement/v1/contract` | `201 { id }` — requires an existing `customerId` + `communicationId` |
 | GET  | `/customerManagement/v1/contract/{id}` | full contract |
 | GET  | `/customerManagement/v1/customerview/{id}` | composite: customer + engagedParty + contracts (shape confirmed in Task 5.1) |
+| POST | `/payment/v4/payment` | `201 { id, authorizationCode, status:"SUCCESS", transactionDateTime, amount }` — direct capture; a REUSED `authorizationCode` → `409 { code:33028 }` (recharge spec) |
+| POST | `/xCACcore/v1/customerInteraction` | `200 { partyInteractionId }` — monetaryRecharge journey; requires `journeyId`+`customerId`+`contractId` (recharge spec) |
 | GET  | `/__debug/last?n=1` | last N requests (PII in memory) |
 | POST | `/__debug/reset` | clear all state |
 

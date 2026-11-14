@@ -125,6 +125,13 @@ journeyData.payment {merchantRefNum=paymentId, paymentGwTransactionId=authorizat
 (The xCAC journey-submit variant returns `{ partyInteractionId, relatedEntity:[{id,role:"order",…}] }`;
 the monetaryRecharge form returns at least `partyInteractionId`.)
 
+> **Fake (recharge spec Task 1):** `tools/cpr-fake` now serves both. `POST /payment/v4/payment` →
+> `201 { id:"pay-fake-N", authorizationCode, status:"SUCCESS", transactionDateTime, amount }`; a
+> REUSED `authorizationCode` → `409 { code:33028 }` (the direct-capture reuse rule, testable).
+> `POST /xCACcore/v1/customerInteraction` → `200 { partyInteractionId:"PIN-fake-N" }`, requiring
+> `journeyId`+`customerId`+`contractId` (missing → the `{code,reason,message}` envelope). These are
+> best-effort against the medium-confidence shapes above; reconcile at cluster cut-over.
+
 ---
 
 ## Error envelope (all CPR calls)
