@@ -331,24 +331,27 @@ function contactValue(media: TmfContactMedium[] | undefined, type: string): stri
   return medium?.contactMediumValue?.[0]?.value;
 }
 
-/** Pick the active prepaid contract from the customerview's contracts[] → domain Contract (or null). */
+/**
+ * Pick the ACTIVE prepaid contract from the customerview's contracts[] → domain Contract (or null).
+ * A line may carry several contracts over its life; only a `ContractActive` one can key a recharge,
+ * so if none is active we return null rather than fall back to an inactive contract (P3 — keying a
+ * recharge on a dead contract would fail at the real cluster anyway). Null too if the active one
+ * lacks an id or communicationId (can't key a recharge without both).
+ */
 function activeContractFrom(
   contracts: TmfContractView[] | undefined,
   customerId: string,
 ): Contract | null {
   if (!contracts || contracts.length === 0) return null;
-  // Prefer an active one; else the first. The real view may carry several over a line's life.
-  const chosen =
-    contracts.find((c) => c.statuses?.some((s) => s.status === "ContractActive")) ?? contracts[0];
-  if (!chosen?.id || !chosen.communicationId) return null; // can't key a recharge without both
-  const active = chosen.statuses?.some((s) => s.status === "ContractActive") ?? false;
+  const active = contracts.find((c) => c.statuses?.some((s) => s.status === "ContractActive"));
+  if (!active?.id || !active.communicationId) return null;
   return {
-    contractId: chosen.id,
-    customerId: chosen.customerId ?? customerId,
-    communicationId: chosen.communicationId,
+    contractId: active.id,
+    customerId: active.customerId ?? customerId,
+    communicationId: active.communicationId,
     paymentContext: "PREPAID",
-    status: active ? "active" : "inactive",
-    ...(chosen.externalId ? { externalId: chosen.externalId } : {}),
+    status: "active",
+    ...(active.externalId ? { externalId: active.externalId } : {}),
   };
 }
 

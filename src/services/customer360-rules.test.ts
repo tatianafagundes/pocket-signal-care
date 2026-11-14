@@ -89,6 +89,28 @@ describe("customer360-rules", () => {
       expect(c360.installedBase).toHaveLength(1);
     });
 
+    it("defaults contract to null when none is passed, and passes it through when given (Task 2b)", () => {
+      // Default: no contract → null (not undefined), so consumers never see a missing field.
+      const none = composeCustomer360({ customer, party, installedBase: [], balance: null });
+      expect(none.contract).toBeNull();
+      // Passed through verbatim.
+      const contract = {
+        contractId: "ct-1",
+        customerId: customer.customerId,
+        communicationId: "+4368100000001",
+        paymentContext: "PREPAID" as const,
+        status: "active" as const,
+      };
+      const withContract = composeCustomer360({
+        customer,
+        party,
+        contract,
+        installedBase: [],
+        balance: null,
+      });
+      expect(withContract.contract).toBe(contract);
+    });
+
     it("sorts the installed base plan > add-on > sim regardless of input order", () => {
       const c360 = composeCustomer360({
         customer,

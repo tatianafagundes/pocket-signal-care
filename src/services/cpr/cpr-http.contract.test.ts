@@ -244,6 +244,56 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
     expect(res.ok).toBe(true);
     if (res.ok) expect(res.data.customer.status).toBe("active");
   });
+
+  function viewWithContracts(contracts: unknown[]) {
+    return {
+      id: "cust-xyz",
+      engagedParty: {
+        id: "party-xyz",
+        partyNames: [{ givenName: "A", familyName: "B" }],
+        contactMedia: [
+          { contactMediumType: "EmailContact", contactMediumValue: [{ value: "a@b.io" }] },
+        ],
+      },
+      contracts,
+    };
+  }
+
+  it("getCustomerAndParty: surfaces the ACTIVE contract among inactive ones (P3)", async () => {
+    const view = viewWithContracts([
+      { id: "ct-old", communicationId: "+4300", statuses: [{ status: "ContractInactive" }] },
+      {
+        id: "ct-live",
+        communicationId: "+4368100000001",
+        statuses: [{ status: "ContractActive" }],
+      },
+    ]);
+    const { fetchImpl } = recordingFetch([jsonResponse(200, view)]);
+    const res = await createCprHttp(fetchImpl).getCustomerAndParty("cust-xyz");
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.data.contract?.contractId).toBe("ct-live");
+      expect(res.data.contract?.status).toBe("active");
+      expect(res.data.contract?.communicationId).toBe("+4368100000001");
+    }
+  });
+
+  it("getCustomerAndParty: null contract when none is ACTIVE (never key a recharge on a dead one)", async () => {
+    const view = viewWithContracts([
+      { id: "ct-old", communicationId: "+4300", statuses: [{ status: "ContractInactive" }] },
+    ]);
+    const { fetchImpl } = recordingFetch([jsonResponse(200, view)]);
+    const res = await createCprHttp(fetchImpl).getCustomerAndParty("cust-xyz");
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.contract).toBeNull();
+  });
+
+  it("getCustomerAndParty: null contract when there are none", async () => {
+    const { fetchImpl } = recordingFetch([jsonResponse(200, viewWithContracts([]))]);
+    const res = await createCprHttp(fetchImpl).getCustomerAndParty("cust-xyz");
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.data.contract).toBeNull();
+  });
 });
 
 describe("cpr-http contract — error mapping table (never throws)", () => {
