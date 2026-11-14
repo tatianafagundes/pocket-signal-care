@@ -25,7 +25,6 @@ const requestRing = [];
 const parties = new Map(); // id -> party
 const customers = new Map(); // id -> customer
 const contracts = new Map(); // id -> contract
-const payments = new Map(); // paymentId -> payment (recharge: POST /payment/v4/payment)
 const usedAuthCodes = new Set(); // authorizationCodes seen — a reuse → DXP error 33028
 let seq = 0;
 const nextId = (prefix) => `${prefix}-fake-${String(++seq).padStart(4, "0")}`;
@@ -129,7 +128,6 @@ const server = http.createServer(async (req, res) => {
     parties.clear();
     customers.clear();
     contracts.clear();
-    payments.clear();
     usedAuthCodes.clear();
     seq = 0;
     return send(res, 200, { ok: true });
@@ -273,23 +271,24 @@ const server = http.createServer(async (req, res) => {
   // --- POST payment (recharge, direct capture — TMF676) ---
   if (method === "POST" && path === "/payment/v4/payment") {
     // DXP /payment/v4/payment is a DIRECT CAPTURE and REJECTS a reused authorizationCode (33028).
+    // The real API likely REQUIRES authorizationCode (the collection always sends a unique,
+    // timestamp-based one). This fake is tolerant — it fabricates a fallback if absent — so a
+    // driver bug that omits it would not be caught here; the contract test asserts the driver
+    // sends it. Only the usedAuthCodes set matters for the 33028 path; no payment is stored.
     const authorizationCode = body?.authorizationCode;
     if (authorizationCode && usedAuthCodes.has(authorizationCode)) {
       return sendError(res, 409, 33028, "Conflict", "authorizationCode already used");
     }
     if (authorizationCode) usedAuthCodes.add(authorizationCode);
     const id = nextId("pay");
-    const code = authorizationCode ?? `AUTH-${id}`;
-    const payment = {
+    return send(res, 201, {
       id,
-      authorizationCode: code,
+      authorizationCode: authorizationCode ?? `AUTH-${id}`,
       status: "SUCCESS",
       paymentDate: nowIso(),
       transactionDateTime: nowIso(),
       amount: body?.amount ?? { unit: "EUR", value: 0 },
-    };
-    payments.set(id, payment);
-    return send(res, 201, payment);
+    });
   }
 
   // --- POST customerInteraction (recharge journey: monetaryRecharge) ---
@@ -303,9 +302,8 @@ const server = http.createServer(async (req, res) => {
     if (!body?.contractId) {
       return sendError(res, 400, 4003, "Bad Request", "Missing contractId");
     }
-    // PIN-style id, like the real partyInteractionId (PIN100000200051).
-    const partyInteractionId = `PIN-fake-${String(++seq).padStart(4, "0")}`;
-    return send(res, 200, { partyInteractionId });
+    // PIN-style id via the shared nextId helper (PIN-fake-N), like the real partyInteractionId.
+    return send(res, 200, { partyInteractionId: nextId("PIN") });
   }
 
   // --- fall-through ---
