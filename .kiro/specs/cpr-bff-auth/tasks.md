@@ -23,6 +23,11 @@ design-only (no Keycloak wiring). Requirement refs in (parens).
   - [ ] 1.3 Read `CPR_BASE_URL` + `CPR_TOKEN` (+ the brand→DXP tenant map) from the server-only
         source; add `Authorization: Bearer` + `X-Tenant-ID`; forward via server `fetch`; return the
         upstream status+body unchanged. No body logging. (1.2, 1.4, 1.5)
+        - Accessor discipline (H3): read via `globalThis.__env__` then `process.env`; NON-`VITE_`
+          keys only; NEVER fall back to `import.meta.env`; a missing secret → null (→ 1.4 envelope),
+          never a `Bearer undefined`.
+        - NO debug/echo mode in this real route (H5): the spike's /bff/ping echoed env values — the
+          real BFF must never expose env, even behind a flag.
   - [ ] 1.4 Unconfigured token / unreachable CPR → return the `{code,reason,message}` envelope with
         an appropriate status so `cpr-http` maps it to a normal SeamError. (1.4)
   - [ ] 1.5 Unit-test the route with an injected/stubbed upstream fetch: allowlist (forward vs 404),

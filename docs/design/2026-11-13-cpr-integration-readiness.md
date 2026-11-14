@@ -234,3 +234,19 @@ Evidence (throwaway `/bff/ping` route, since removed):
 Worker `env` — prefer a small server-only accessor that tries `globalThis.__env__` then
 `process.env` (covers Worker + dev), reading NON-`VITE_` keys only. Secrets are set as Cloudflare
 Worker vars/secrets (prod) and `.dev.vars` / shell env (dev), never `VITE_`. Task 1 can proceed.
+
+**Confidence / what was executed vs read (honesty, H1):**
+- **FACT (executed):** dev handler reads `process.env` of a non-`VITE_` var; `import.meta.env` does
+  not expose it; and the built client bundle (`.output/public`) does NOT contain the server-only
+  value. The security invariant — *a non-`VITE_` secret never reaches the client* — is verified by
+  running the build and grepping, not inferred.
+- **STRONG INFERENCE (read, not executed):** the prod-Worker mechanism (`globalThis.__env__ = env`
+  + `req.runtime.cloudflare.env`, with Nitro polyfilling `process.env`) was read from the generated
+  `.output/server/index.mjs`, NOT confirmed by running the Worker (`wrangler dev` could not be
+  installed here — download timed out). The Nitro cloudflare preset is mature and the generated
+  code is explicit, so confidence is high, but the final confirmation is a `wrangler dev` run or a
+  test deploy — a follow-up, outside this environment.
+- **Why this does not block Task 1:** even in the worst case (prod `process.env` behaves
+  differently), the secret still stays off the client (that part IS fact), and the only change would
+  be the accessor preferring `globalThis.__env__` — which the design already does. The BFF viability
+  does not hinge on the unexecuted part.
