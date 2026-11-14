@@ -134,6 +134,17 @@ the monetaryRecharge form returns at least `partyInteractionId`.)
 
 ---
 
+## GET /bae/bssTmf654PrepayBalanceManagement/v1/bucket  (prepaid balance read) — confidence medium
+Source: `docs/contracts/cbev-charging.md` (CBEV/DXP TMF654 Prepay Balance Management). Keyed by the
+MSISDN (`?communicationId=…`); returns the line's product buckets. Fields: `amount`
+(`{unit:"EUR", value}`) / `highPrecisionAmount`, `validFor` (`{endDateTime}`), `bucketType`
+(`ProductBucketBalance`). → `fromTmfBucket` maps `amount.value` (decimal EUR) → `amountMinor`
+(cents), `validFor.endDateTime` → `validUntil`; an empty list → `null` (never recharged).
+> **Fake (recharge Task 4b):** the monetaryRecharge journey credits a per-MSISDN wallet; this read
+> returns `[{ amount:{unit:"EUR",value}, validFor }]` reflecting the sum credited, or `[]` when
+> none. So a full-http top-up shows a real post-recharge balance. Medium confidence — reconcile the
+> bucket shape at cluster cut-over.
+
 ## Error envelope (all CPR calls)
 ```json
 { "code": 4041, "reason": "Bad Request", "message": "Duplicate partyId" }

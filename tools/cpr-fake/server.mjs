@@ -26,6 +26,9 @@ const parties = new Map(); // id -> party
 const customers = new Map(); // id -> customer
 const contracts = new Map(); // id -> contract
 const usedAuthCodes = new Set(); // authorizationCodes seen — a reuse → DXP error 33028
+// communicationId (MSISDN) -> credited balance in minor units. The monetaryRecharge journey adds;
+// the TMF654 bucket read returns it — so a full-http top-up shows a real post-recharge balance.
+const walletMinor = new Map();
 let seq = 0;
 const nextId = (prefix) => `${prefix}-fake-${String(++seq).padStart(4, "0")}`;
 
@@ -129,6 +132,7 @@ const server = http.createServer(async (req, res) => {
     customers.clear();
     contracts.clear();
     usedAuthCodes.clear();
+    walletMinor.clear();
     seq = 0;
     return send(res, 200, { ok: true });
   }
@@ -302,8 +306,37 @@ const server = http.createServer(async (req, res) => {
     if (!body?.contractId) {
       return sendError(res, 400, 4003, "Bad Request", "Missing contractId");
     }
+    // Credit the wallet so the TMF654 bucket read reflects the recharge (decimal EUR → minor).
+    const msisdn = body?.journeyData?.msisdn;
+    const amountDec = Number(body?.journeyData?.monetaryRechargeDetails?.amount ?? 0);
+    if (msisdn && Number.isFinite(amountDec) && amountDec > 0) {
+      const addMinor = Math.round(amountDec * 100);
+      walletMinor.set(msisdn, (walletMinor.get(msisdn) ?? 0) + addMinor);
+    }
     // PIN-style id via the shared nextId helper (PIN-fake-N), like the real partyInteractionId.
     return send(res, 200, { partyInteractionId: nextId("PIN") });
+  }
+
+  // --- GET TMF654 bucket (prepaid balance read) ---
+  // docs/contracts/cbev-charging.md: GET /bae/bssTmf654PrepayBalanceManagement/v1/bucket, keyed by
+  // the MSISDN (query ?communicationId=...). Returns a product bucket with amount + validFor. The
+  // fake's amount reflects the recharges it credited for that MSISDN.
+  if (method === "GET" && path === "/bae/bssTmf654PrepayBalanceManagement/v1/bucket") {
+    const communicationId = url.searchParams.get("communicationId");
+    if (!communicationId) {
+      return sendError(res, 400, 4001, "Bad Request", "Missing communicationId");
+    }
+    const minor = walletMinor.get(communicationId) ?? 0;
+    // Empty array when the line has no bucket yet (never recharged) — the mapper reads null.
+    if (minor === 0) return send(res, 200, []);
+    return send(res, 200, [
+      {
+        id: `bkt-fake-${communicationId}`,
+        bucketType: "ProductBucketBalance",
+        amount: { unit: "EUR", value: minor / 100 },
+        validFor: { endDateTime: "2026-12-31T23:59:59Z" },
+      },
+    ]);
   }
 
   // --- fall-through ---
