@@ -82,6 +82,14 @@ export async function runTopUp({
   // monetaryRecharge journey) behind api.recharge, not the mock's authorize→capture→credit. It
   // needs the contractId + MSISDN; without them we can't key the journey, so fail clearly rather
   // than fall back to the mock credit. The mock path below is unchanged (the committed default).
+  //
+  // ⚠️ IDEMPOTENCY DEBT (D-recharge-idempotency, Q1): unlike the mock path below, this does NOT
+  // persist progress or guard a resume. If api.recharge SUCCEEDS but its response is lost (network
+  // drop on the way back), a retry would call it again → a SECOND real charge. The 33028
+  // reused-authorizationCode check does NOT cover this (a retry sends a fresh authorizationCode).
+  // Real idempotency needs a server-side idempotency key (an Idempotency-Key on the BFF, or a
+  // DXP-idempotent journey resubmit) — out of scope here (this spec runs against the fake, no real
+  // money; see the Definition of Done). Do NOT ship this http path to real money without it.
   if (driverFor("ecev") === "http") {
     if (!contractId || !communicationId) {
       throw new SeamFailure({
@@ -98,13 +106,15 @@ export async function runTopUp({
       amountMinor,
       methodToken,
     });
+    // The monetaryRecharge journey returns a partyInteractionId, not an authorization ref — it
+    // stands in as the receipt's transaction reference (TopUpResult.authorizationRef is "the
+    // reference shown on the receipt"; Q4, a deliberate field reuse, not a payment auth ref).
     if (result.balance === null) {
       // The journey credited but the follow-up balance read was unavailable; fall back to a read.
       const existing = await api.getBalance(customerId);
       if (existing === null) throw new Error("runTopUp(recharge): credited but no balance record");
       return { balance: existing, authorizationRef: result.partyInteractionId };
     }
-    // The partyInteractionId stands in as the transaction reference on the receipt.
     return { balance: result.balance, authorizationRef: result.partyInteractionId };
   }
 

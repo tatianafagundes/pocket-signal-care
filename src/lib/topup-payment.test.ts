@@ -189,6 +189,22 @@ describe("runTopUp — three money moments, idempotent", () => {
       expect(result.balance.amountMinor).toBe(3240);
     });
 
+    it("falls back to getBalance when recharge returns a null balance (journey had no balance)", async () => {
+      mockApi.recharge.mockResolvedValueOnce({ partyInteractionId: "pin-9", balance: null });
+      const result = await runTopUp({
+        customerId: "cust-1",
+        amountMinor: 2000,
+        methodToken: "tok",
+        progress: emptyTopUpProgress(),
+        patch: () => {},
+        contractId: "contract-7",
+        communicationId: "+4368140000001",
+      });
+      expect(mockApi.getBalance).toHaveBeenCalledWith("cust-1");
+      expect(result.balance.amountMinor).toBe(3240); // from the getBalance fallback
+      expect(result.authorizationRef).toBe("pin-9");
+    });
+
     it("fails with a SeamFailure when the contract id / MSISDN is missing (can't key a recharge)", async () => {
       await expect(
         runTopUp({

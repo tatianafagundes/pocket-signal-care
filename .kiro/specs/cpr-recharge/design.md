@@ -174,6 +174,12 @@ was rejected because the standalone top-up is the main returning-customer rechar
   customer gets it from the 360 — Task 2b surfaces the active contract in `Customer360`. Not a debt.
 - **Debt — no cross-step compensation:** a captured payment + failed journey leaves a paid-but-not-
   credited state against the fake (resettable); real saga/refund is out of scope.
+- **D-recharge-idempotency (Q1):** the http recharge path in runTopUp/onboarding-submit makes ONE
+  api.recharge call with NO persisted resume/idempotency guard (unlike the mock's authorize→capture
+  →credit with progress). If api.recharge succeeds but its response is lost, a retry double-charges;
+  the 33028 reused-authorizationCode check does NOT catch it (a retry sends a fresh code). Real
+  idempotency needs a server-side key (Idempotency-Key on the BFF / a DXP-idempotent resubmit) —
+  out of scope here (fake, no real money). MUST be solved before the http path sees real money.
 - **Debt — no recurring scheduler:** auto-top-up still has only a DEV trigger; a real recurring
   recharge (CBEV expiry-driven) is a separate concern.
 - **Debt — medium-confidence shapes:** payment/journey bodies reconciled at cluster cut-over.
