@@ -269,7 +269,17 @@ Client-bundle safety (Task 4.2): the server token value is NOT in `.output/publi
 (`assertCprClientHasNoToken` throwing if a client token is set) — a guard, not a token read. There
 is no read of the server-only `CPR_TOKEN` in the client.
 
+**Executed vs inferred (honesty, L1 — same split as the §8 spike):**
+- **FACT (executed, dev):** the browser E2E ran against the DEV server (`vite dev`), where the BFF
+  read `CPR_TOKEN` from `process.env`. The client-sends-no-token invariant and the token-off-the-
+  client-bundle invariant are verified by execution + a build grep, and hold regardless of
+  dev/prod.
+- **STRONG INFERENCE (not executed in prod):** the SAME chain in the deployed Cloudflare Worker,
+  where the BFF reads `CPR_TOKEN` from `globalThis.__env__` (not `process.env`), was NOT run — the
+  prod-Worker env mechanism is read-verified from the generated bundle (§8 H1), not run-verified.
+  `serverEnv` tries `__env__` then `process.env`, so dev exercised only the second path. Final
+  confirmation is a `wrangler dev` run or a test deploy — a follow-up, outside this environment.
+
 **What this does NOT cover (unchanged debts / later specs):** real end-user auth (Phase 2 is
 design + open questions only — the committed Keycloak material is admin ROPC); the real brand→TEN
-map (placeholder TEN_FAKE); the prod-Worker `globalThis.__env__` mechanism is read-verified not
-run-verified (§8 H1, confirm with `wrangler dev` / a test deploy); recharge; the real cluster.
+map (placeholder TEN_FAKE); recharge; the real cluster.
