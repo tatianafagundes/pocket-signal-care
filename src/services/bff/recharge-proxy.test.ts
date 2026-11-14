@@ -124,6 +124,18 @@ describe("BFF recharge proxy — forwarding + token/tenant injection", () => {
     expect(fetchMock.mock.calls[0]![1].headers["X-Tenant-ID"]).toBe("TEN_DREIGO");
   });
 
+  it("passes an empty brand to resolveTenant when X-App-Brand is absent (F3 — mirrors the real path if the driver ever omits it)", async () => {
+    // The driver now always sends X-App-Brand (F1), but the BFF must not crash or guess when it is
+    // missing: it passes "" to the resolver, which lands on the documented TEN_FAKE fallback. This
+    // pins the contract so a regression where the header is dropped is caught at the BFF, not in prod.
+    const resolveTenant = vi.fn((brand: string) => (brand === "" ? "TEN_FAKE" : "TEN_REAL"));
+    const d = deps({ resolveTenant });
+    await handleBffRecharge(req("POST", "payment/v4/payment", { body: "{}" }), d); // no brand header
+    expect(resolveTenant).toHaveBeenCalledWith("");
+    const fetchMock = d.fetchUpstream as unknown as ReturnType<typeof vi.fn>;
+    expect(fetchMock.mock.calls[0]![1].headers["X-Tenant-ID"]).toBe("TEN_FAKE");
+  });
+
   it("passes the upstream status + body through unchanged (e.g. the 33028 conflict envelope)", async () => {
     const d = deps({
       fetchUpstream: vi.fn(async () =>

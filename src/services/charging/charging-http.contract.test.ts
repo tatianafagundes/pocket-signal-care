@@ -7,6 +7,7 @@ interface Rec {
   url: string;
   method: string;
   body: unknown;
+  headers: Record<string, string>;
 }
 function jsonResponse(status: number, body: unknown): Response {
   return { ok: status >= 200 && status < 300, status, json: async () => body } as Response;
@@ -19,6 +20,7 @@ function recordingFetch(responses: Response[]) {
       url: String(url),
       method: init?.method ?? "GET",
       body: init?.body ? JSON.parse(init.body as string) : undefined,
+      headers: (init?.headers ?? {}) as Record<string, string>,
     });
     const res = responses[i++];
     if (!res) throw new Error(`recordingFetch: no queued response for call ${i}`);
@@ -134,6 +136,23 @@ describe("charging-http — recharge (payment direct-capture → monetaryRecharg
         currency: "EUR",
         validUntil: "2026-12-31T23:59:59Z",
       });
+    }
+  });
+
+  it("sends the non-secret X-App-Brand header (and NO Authorization) on every BFF call (F1)", async () => {
+    // The BFF resolves X-App-Brand → the DXP X-Tenant-ID. Without this header the BFF would fall
+    // back to the TEN_FAKE placeholder — invisible against the fake, wrong against real DXP. The
+    // token stays server-side: the client must never send Authorization.
+    const { fetchImpl, calls } = recordingFetch([
+      jsonResponse(201, { id: "pay-1", authorizationCode: "A1", status: "SUCCESS" }),
+      jsonResponse(200, { partyInteractionId: "PIN-1" }),
+      jsonResponse(200, []),
+    ]);
+    await createChargingHttp(fetchImpl).recharge(INPUT);
+    expect(calls).toHaveLength(3);
+    for (const call of calls) {
+      expect(call.headers["X-App-Brand"]).toBe("drei"); // DEFAULT_TENANT (no VITE_CPR_ACTIVE_BRAND set)
+      expect(call.headers["Authorization"]).toBeUndefined(); // token is injected by the BFF, never here
     }
   });
 

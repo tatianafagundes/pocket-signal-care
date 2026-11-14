@@ -70,6 +70,13 @@ export function readBffRechargeConfig(): BffRechargeConfig {
  * client-side resolver that used to live in cpr-http.ts; the brand→TEN map now lives in server env
  * (`CPR_TENANT_<BRAND>`), off the client. Falls back to the TEN_FAKE placeholder (the fake accepts
  * any value); the real map is a documented debt.
+ *
+ * SHARED by CPR and recharge, deliberately (cpr-recharge F2). The reference Postman collection
+ * (Multi-tenant-customer) sends the SAME `X-Tenant-ID: {{tenantId}}` on every request in both the
+ * Customer folder (party/customer/contract) and the Recharge folder (payment/journey) — there is no
+ * per-domain tenant. The tenant is the CSP/brand identity, orthogonal to the API domain, so this is
+ * the single tenant resolver for the whole app. We intentionally do NOT introduce `RECHARGE_TENANT_*`:
+ * two parallel maps could drift and route a recharge to a different tenant than the customer record.
  */
 export function resolveDxpTenant(brand: string): string {
   const key = `CPR_TENANT_${brand.toUpperCase()}`;

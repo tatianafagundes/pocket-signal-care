@@ -8,6 +8,7 @@ import type {
 } from "@/services/model";
 import type { RechargeInput } from "@/schemas/charging";
 import type { ChargingDriver } from "@/services/charging/charging-driver";
+import { DEFAULT_TENANT, isTenantId, type TenantId } from "@/lib/tenant-rules";
 
 /*
  * Charging (ECEV) http driver. (recharge spec)
@@ -30,6 +31,17 @@ type FetchLike = typeof fetch;
 /** The same-origin recharge BFF prefix. FIXED (K1 lesson): the client never chooses the host. */
 const BFF_PREFIX = "/bff/recharge";
 const TIMEOUT_MS = 10_000;
+/**
+ * The brand this app build acts as. One app build = one brand, so it reuses the SAME env var as the
+ * cpr-http driver (VITE_CPR_ACTIVE_BRAND): the brand is a property of the app, not of the API domain,
+ * so recharge and CPR must resolve to the same brand → the recharge BFF turns it into the same DXP
+ * X-Tenant-ID. Carried as the non-secret X-App-Brand header (F1 fix); the BFF never trusts a client
+ * token or tenant. Default DEFAULT_TENANT. (mirrors cpr-http.activeBrand)
+ */
+function activeBrand(): TenantId {
+  const raw = import.meta.env["VITE_CPR_ACTIVE_BRAND"] as string | undefined;
+  return isTenantId(raw) ? raw : DEFAULT_TENANT;
+}
 
 /* ---- money mapping (the only place decimal↔minor lives) ---- */
 function decimalToMinor(value: number): number {
@@ -140,6 +152,7 @@ export function fromTmfBucket(json: unknown): Balance | null {
 
 export function createChargingHttp(injectedFetch?: FetchLike): ChargingDriver {
   const doFetch: FetchLike = injectedFetch ?? fetch;
+  const brand = activeBrand();
 
   const notConfigured = <T>(): SeamResult<T> =>
     err(
@@ -163,7 +176,13 @@ export function createChargingHttp(injectedFetch?: FetchLike): ChargingDriver {
       const res = await doFetch(`${BFF_PREFIX}${path}`, {
         ...init,
         signal: controller.signal,
-        headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
+        // NO Authorization here — the BFF injects the token server-side. The app brand travels as a
+        // non-secret header; the BFF resolves it to the DXP X-Tenant-ID (F1 fix).
+        headers: {
+          "Content-Type": "application/json",
+          "X-App-Brand": brand,
+          ...(init.headers ?? {}),
+        },
       });
       if (!res.ok) {
         let body: DxpError = {};
