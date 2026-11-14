@@ -288,6 +288,14 @@ export function createChargingMock(): ChargingDriver {
         // Mock: behave like a credit (the money moment), then mint the journey's interaction id.
         // The real http path does payment direct-capture → monetaryRecharge; the mock collapses
         // that to the same balance credit + a PIN-style id, so the demo top-up path is unchanged.
+        //
+        // O1: this credit (balance + extendValidity + recordActivity) DELIBERATELY mirrors topUp's.
+        // They are distinct ops (they diverge entirely on http: topUp stays notConfigured, recharge
+        // does payment+journey), so no shared helper — but if topUp's credit rule changes (e.g. the
+        // validity extension), change BOTH, or they drift silently.
+        // O3: the mock validates but IGNORES contractId/communicationId/methodToken — it has no
+        // journey or payment. The http driver USES them for real; a mock pass does not prove the
+        // http path. The empty-contractId test guards the validation, not the usage.
         const current = balances.get(input.customerId) ?? 0;
         const next = current + input.amountMinor;
         balances.set(input.customerId, next);
