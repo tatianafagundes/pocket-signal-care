@@ -66,10 +66,13 @@ export function authDriverOrThrow(): SeamDriver {
  *     when the CPR http driver is complete. Auth is exempt — authDriverOrThrow already hard-fails.
  */
 
-/** Env vars a seam's http client REQUIRES. Only CPR reads config today (see cpr-http readConfig). */
-const REQUIRED_HTTP_ENV: Partial<Record<SeamName, readonly string[]>> = {
-  cpr: ["VITE_CPR_BASE_URL", "VITE_CPR_TOKEN"],
-};
+/**
+ * Env vars a seam's http client REQUIRES at boot. CPR no longer requires any client var: the driver
+ * posts to the same-origin BFF (default `/bff/cpr`) and the token + base URL live SERVER-side (the
+ * Worker env, read by the BFF), so there is nothing client-side to validate here. (The BFF checks
+ * its own server config at request time → a 503 envelope.)
+ */
+const REQUIRED_HTTP_ENV: Partial<Record<SeamName, readonly string[]>> = {};
 
 /** Seams intended to run against a real backend in production (today: only CPR). Auth is handled
  *  separately by authDriverOrThrow. */
@@ -80,30 +83,20 @@ function warnConfig(detail: Record<string, unknown>): void {
   console.warn(JSON.stringify({ kind: "config-warning", ...detail }));
 }
 
-/** Hosts the client-token CPR http driver is allowed to reach (local fake only). */
-const LOCAL_CPR_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
-
 /**
- * R-F9 safety rail: refuse a non-localhost VITE_CPR_BASE_URL while the token is a client VITE var.
- * Throws so a real token can never be pointed at a real host before the BFF exists. An unparseable
- * URL is also refused (fail closed). Called only when CPR is on the http driver.
+ * Safety rail (cpr-bff-auth Task 3, replaces the old localhost rail): the CPR token now lives
+ * SERVER-side (the BFF injects it). A `VITE_CPR_TOKEN` in a build using the http driver would put a
+ * token back on the client — the exact thing the BFF removed. Throw so that misconfiguration can
+ * never ship. (The old rail checked localhost BECAUSE the token was on the client; that premise is
+ * gone, so the base URL — now a same-origin BFF prefix — is no longer constrained here.)
  */
-function assertCprBaseUrlIsLocal(): void {
-  const raw = (import.meta.env["VITE_CPR_BASE_URL"] as string | undefined) ?? "";
-  let host: string;
-  try {
-    host = new URL(raw).hostname;
-  } catch {
+function assertCprClientHasNoToken(): void {
+  const token = import.meta.env["VITE_CPR_TOKEN"] as string | undefined;
+  if (token !== undefined && token !== "") {
     throw new Error(
-      `VITE_CPR_BASE_URL is not a valid URL ("${raw}"). The CPR http driver only targets a local ` +
-        `fake until the BFF exists; set it to http://127.0.0.1:<port>.`,
-    );
-  }
-  if (!LOCAL_CPR_HOSTS.has(host)) {
-    throw new Error(
-      `VITE_CPR_BASE_URL host "${host}" is not local. VITE_CPR_TOKEN ships to the client, so the ` +
-        `CPR http driver must target ONLY a local fake (localhost/127.0.0.1) until auth moves ` +
-        `server-side (BFF). Point it at the fake, or keep VITE_CPR_DRIVER=mock.`,
+      "VITE_CPR_TOKEN is set, but the CPR token now lives server-side (the BFF injects it). A " +
+        "client token would undo the BFF. Remove VITE_CPR_TOKEN; set CPR_TOKEN as a server-only " +
+        "(non-VITE) var for the BFF instead.",
     );
   }
 }
@@ -165,12 +158,11 @@ export function assertDriverConfig(): void {
       }
     }
 
-    // 1b. CPR safety rail (R-F9): the CPR token ships to the client (VITE_CPR_TOKEN). Until the
-    //     BFF terminates auth server-side, the http driver must target ONLY a local fake — refuse
-    //     a non-localhost base URL so nobody points the client-token driver at a real host. Hard
-    //     failure: a real token + a real host is the exact mistake this guards against.
+    // 1b. CPR safety rail (Task 3): the token lives server-side (BFF). Refuse a client VITE_CPR_TOKEN
+    //     so a token can never be put back on the client. (Replaces the old localhost rail, whose
+    //     premise — token on the client — no longer holds.)
     if (seam === "cpr" && driver === "http") {
-      assertCprBaseUrlIsLocal();
+      assertCprClientHasNoToken();
     }
 
     // 2. Prod-readiness: a real-able seam still on mock in a prod build → warn (not auth; that

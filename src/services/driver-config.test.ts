@@ -55,61 +55,29 @@ describe("driver-config.assertDriverConfig (boot fail-fast)", () => {
     expect(() => assertDriverConfig()).not.toThrow();
   });
 
-  it("THROWS when CPR is http but its required config is missing (incoherent deploy)", () => {
+  it("passes when CPR is http with no client config (driver defaults to the same-origin BFF)", () => {
+    // The token + base URL moved server-side; the client needs nothing, so boot does not throw.
     vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_BASE_URL", "");
-    vi.stubEnv("VITE_CPR_TOKEN", "");
-    expect(() => assertDriverConfig()).toThrow(/VITE_CPR_BASE_URL/);
-  });
-
-  it("passes when CPR is http AND its config is present (local fake base URL)", () => {
-    vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_BASE_URL", "http://127.0.0.1:8787");
-    vi.stubEnv("VITE_CPR_TOKEN", "tok");
+    vi.stubEnv("VITE_CPR_ACTIVE_BRAND", "drei");
     expect(() => assertDriverConfig()).not.toThrow();
   });
 
-  it("R-F9: THROWS when CPR is http with a NON-localhost base URL (client token safety rail)", () => {
+  it("safety rail: THROWS when CPR is http AND a client VITE_CPR_TOKEN is set (token back on client)", () => {
     vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_BASE_URL", "https://cpr.real.example");
-    vi.stubEnv("VITE_CPR_TOKEN", "tok");
-    // The client token must never reach a real host until the BFF exists.
-    expect(() => assertDriverConfig()).toThrow(/not local/i);
+    vi.stubEnv("VITE_CPR_ACTIVE_BRAND", "drei");
+    vi.stubEnv("VITE_CPR_TOKEN", "a-client-token");
+    // A client token would undo the BFF — this misconfiguration must never ship.
+    expect(() => assertDriverConfig()).toThrow(/VITE_CPR_TOKEN/);
   });
 
-  it("R-F9: accepts localhost and ::1, rejects an unparseable base URL", () => {
-    vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_TOKEN", "tok");
-    vi.stubEnv("VITE_CPR_BASE_URL", "http://localhost:8787");
+  it("safety rail: does NOT throw on a client token when CPR is mock (rail is http-only)", () => {
+    vi.stubEnv("VITE_CPR_DRIVER", "mock");
+    vi.stubEnv("VITE_CPR_TOKEN", "a-client-token"); // harmless while the driver is mock
     expect(() => assertDriverConfig()).not.toThrow();
-    vi.stubEnv("VITE_CPR_BASE_URL", "not-a-url");
-    expect(() => assertDriverConfig()).toThrow(/not a valid URL/i);
-  });
-
-  it("R-F9: rejects 0.0.0.0 (binds all interfaces — not loopback) so it isn't mistaken for local", () => {
-    vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_TOKEN", "tok");
-    vi.stubEnv("VITE_CPR_BASE_URL", "http://0.0.0.0:8787");
-    expect(() => assertDriverConfig()).toThrow(/not local/i);
-  });
-
-  it("R-F9: is not fooled by host look-alikes (userinfo / subdomain / fragment)", () => {
-    vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_TOKEN", "tok");
-    for (const url of [
-      "http://127.0.0.1@evil.com/", // userinfo trick — real host is evil.com
-      "http://127.0.0.1.evil.com:8787", // subdomain trick
-      "https://evil.com#127.0.0.1", // fragment trick
-    ]) {
-      vi.stubEnv("VITE_CPR_BASE_URL", url);
-      expect(() => assertDriverConfig(), url).toThrow(/not local/i);
-    }
   });
 
   it("D1: WARNS when CPR is http but VITE_CPR_ACTIVE_BRAND is unset/invalid", () => {
     vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_BASE_URL", "http://127.0.0.1:8787");
-    vi.stubEnv("VITE_CPR_TOKEN", "tok");
     vi.stubEnv("VITE_CPR_ACTIVE_BRAND", ""); // unset
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     try {
@@ -123,8 +91,6 @@ describe("driver-config.assertDriverConfig (boot fail-fast)", () => {
 
   it("D1: does NOT warn when the active brand is valid", () => {
     vi.stubEnv("VITE_CPR_DRIVER", "http");
-    vi.stubEnv("VITE_CPR_BASE_URL", "http://127.0.0.1:8787");
-    vi.stubEnv("VITE_CPR_TOKEN", "tok");
     vi.stubEnv("VITE_CPR_ACTIVE_BRAND", "dreigo");
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     try {

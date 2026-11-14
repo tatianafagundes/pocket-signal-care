@@ -45,6 +45,14 @@ design-only (no Keycloak wiring). Requirement refs in (parens).
   - Verify + commit.
   - _Requirements: 2.1, 2.2, 2.3_
 
+> TRANSIENT INCOHERENCE (J1, review of Task 2): Tasks 2 and 3 are two halves of one contract
+> change. After Task 2 but BEFORE Task 3, turning on `VITE_CPR_DRIVER=http` THROWS at boot — the
+> stale localhost rail rejects the driver's new `/bff/cpr` default (relative URL → "not a valid
+> URL") and still demands `VITE_CPR_TOKEN` the driver no longer reads. This is by design (the split)
+> and harmless (mock is the committed default, so demo/CI never hit it), but the http path is
+> intentionally unreachable between these two tasks. Task 3 restores coherence — do it without a
+> pause. Do NOT ship a release cut between Task 2 and Task 3.
+
 - [ ] 3. Flip the config rail to the new trust model
   - [ ] 3.1 Replace `assertCprBaseUrlIsLocal()` with a "no CPR token on the client" rail: under
         `VITE_CPR_DRIVER=http`, a set `VITE_CPR_TOKEN` THROWS; a same-origin BFF base URL is allowed. (3.1, 3.2)
