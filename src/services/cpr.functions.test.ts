@@ -63,7 +63,29 @@ describe("cpr seam (mock driver)", () => {
         expect(simProduct.offer).toBeNull();
         // Usage (TMF654): the seeded buckets reach the 360, ordered data→voice→sms→roaming.
         expect(r.data.usage.map((b) => b.type)).toEqual(["data", "voice", "sms", "roaming"]);
+        // Task 2b: the seeded demo customer's prepaid contract is surfaced (carries the contractId
+        // the recharge journey needs). communicationId mirrors the party MSISDN.
+        expect(r.data.contract).not.toBeNull();
+        expect(r.data.contract?.contractId).toBe("contract-seed-drei-healthy");
+        expect(r.data.contract?.communicationId).toBe(r.data.party.msisdn);
       }
+    });
+
+    it("surfaces a null contract for a freshly onboarded customer with no contract yet", async () => {
+      // A party→customer onboarded WITHOUT a contract (contract step not run) → contract is null,
+      // not a fabricated one.
+      const party = await createParty({
+        tenantId: "drei",
+        givenName: "No",
+        familyName: "Contract",
+        email: "no.contract@drei.example",
+      });
+      if (!party.ok) throw new Error("setup party failed");
+      const customer = await createCustomer({ tenantId: "drei", partyId: party.data.partyId });
+      if (!customer.ok) throw new Error("setup customer failed");
+      const r = await getCustomer360(customer.data.customerId);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.data.contract).toBeNull();
     });
 
     it("defence-in-depth: refuses a cross-tenant 360 when expectedTenant mismatches", async () => {

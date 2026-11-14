@@ -313,6 +313,11 @@ export interface Customer360 {
   activity: ActivityItem[];
   /** Party interactions (TMF683), newest first — the activity timeline. Empty when none. */
   interactions: PartyInteraction[];
+  /**
+   * The line's active prepaid contract, or null. Carries the `contractId` the recharge journey
+   * needs for a returning customer (the standalone top-up reads it here). (Recharge spec Task 2b.)
+   */
+  contract: Contract | null;
 }
 
 /** Result of resolving a tenant against CPR (Fase 2 TODO wired to this in Fase 3.4). */

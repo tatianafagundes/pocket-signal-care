@@ -7,7 +7,7 @@ import type {
   CreateInteractionInput,
 } from "@/schemas/cpr";
 import { DEFAULT_TENANT, isTenantId, type TenantId } from "@/lib/tenant-rules";
-import type { CustomerStatus } from "@/services/model";
+import type { Contract, CustomerStatus } from "@/services/model";
 import type { CprDriver } from "@/services/cpr/cpr-driver";
 
 /*
@@ -301,10 +301,19 @@ interface TmfPartyView {
   partyNames?: { givenName?: string; familyName?: string }[];
   contactMedia?: TmfContactMedium[];
 }
+interface TmfContractView {
+  id?: string;
+  customerId?: string;
+  communicationId?: string;
+  paymentContext?: string;
+  statuses?: TmfStatus[];
+  externalId?: string;
+}
 interface TmfCustomerView {
   id?: string;
   statuses?: TmfStatus[];
   engagedParty?: TmfPartyView;
+  contracts?: TmfContractView[];
 }
 
 /** Collapse the DXP customer `statuses[]` to the domain CustomerStatus. */
@@ -322,12 +331,37 @@ function contactValue(media: TmfContactMedium[] | undefined, type: string): stri
   return medium?.contactMediumValue?.[0]?.value;
 }
 
+/** Pick the active prepaid contract from the customerview's contracts[] → domain Contract (or null). */
+function activeContractFrom(
+  contracts: TmfContractView[] | undefined,
+  customerId: string,
+): Contract | null {
+  if (!contracts || contracts.length === 0) return null;
+  // Prefer an active one; else the first. The real view may carry several over a line's life.
+  const chosen =
+    contracts.find((c) => c.statuses?.some((s) => s.status === "ContractActive")) ?? contracts[0];
+  if (!chosen?.id || !chosen.communicationId) return null; // can't key a recharge without both
+  const active = chosen.statuses?.some((s) => s.status === "ContractActive") ?? false;
+  return {
+    contractId: chosen.id,
+    customerId: chosen.customerId ?? customerId,
+    communicationId: chosen.communicationId,
+    paymentContext: "PREPAID",
+    status: active ? "active" : "inactive",
+    ...(chosen.externalId ? { externalId: chosen.externalId } : {}),
+  };
+}
+
 /**
- * DXP customerview -> domain { customer, party }. Throws (→ cpr.http.badResponse) if the ids or the
- * email are missing, since the 360 cannot render a customer without them. `tenantId` is stamped
- * from the active brand (the view carries none; see getCustomerAndParty).
+ * DXP customerview -> domain { customer, party, contract }. Throws (→ cpr.http.badResponse) if the
+ * ids or the email are missing, since the 360 cannot render a customer without them. `tenantId` is
+ * stamped from the active brand (the view carries none; see getCustomerAndParty). The active
+ * contract is surfaced for the returning-customer recharge (null when none).
  */
-function fromTmfCustomerView(json: unknown, brand: TenantId): { customer: Customer; party: Party } {
+function fromTmfCustomerView(
+  json: unknown,
+  brand: TenantId,
+): { customer: Customer; party: Party; contract: Contract | null } {
   const view = (json ?? {}) as TmfCustomerView;
   const customerId = view.id;
   const party = view.engagedParty;
@@ -358,5 +392,6 @@ function fromTmfCustomerView(json: unknown, brand: TenantId): { customer: Custom
       email,
       ...(msisdn ? { msisdn } : {}),
     },
+    contract: activeContractFrom(view.contracts, customerId),
   };
 }

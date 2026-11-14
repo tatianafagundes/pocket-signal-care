@@ -2,6 +2,7 @@ import type {
   ActivityItem,
   Balance,
   BucketState,
+  Contract,
   Customer,
   Customer360,
   EnrichedProduct,
@@ -25,6 +26,8 @@ import type {
 export interface Customer360Parts {
   customer: Customer;
   party: Party;
+  /** The line's active prepaid contract (or null) — carries the contractId for recharge. */
+  contract?: Contract | null;
   /** Installed base from the order seam; empty for a brand-new customer. */
   installedBase: Product[];
   /** Balance from the charging seam; null when the customer has no prepaid balance yet. */
@@ -66,6 +69,7 @@ export function composeCustomer360(parts: Customer360Parts): Customer360 {
   return {
     customer: parts.customer,
     party: parts.party,
+    contract: parts.contract ?? null,
     // Stable order: plan first, then add-ons, then the SIM — so the Home/Account view reads the
     // same way every time — then enrich each product with its catalogue offer (null when none).
     installedBase: [...parts.installedBase]

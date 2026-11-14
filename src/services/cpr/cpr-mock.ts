@@ -78,6 +78,15 @@ function seedVariant(tenantId: TenantId, variant: DemoVariant): void {
     createdAt: "2026-01-15T10:00:00Z",
   };
   store.set(customerId, { party, customer });
+  // The demo customer onboarded once — seed its prepaid contract too, so the 360 surfaces a
+  // contractId and a demo recharge has one (parity with a freshly onboarded line).
+  contracts.set(customerId, {
+    contractId: `contract-seed-${tenantId}-${variant}`,
+    customerId,
+    communicationId: party.msisdn ?? "",
+    paymentContext: "PREPAID",
+    status: "active",
+  });
   // The demo customer onboarded once — seed the matching Party Interaction so the 360 timeline
   // has the same history a freshly onboarded customer gets (a completed onboarding interaction).
   interactions.set(customerId, [
@@ -176,13 +185,19 @@ export function createCprMock(): CprDriver {
 
     getCustomerAndParty(
       customerId: string,
-    ): Promise<SeamResult<{ customer: Customer; party: Party }>> {
+    ): Promise<SeamResult<{ customer: Customer; party: Party; contract: Contract | null }>> {
       return withMock("cpr.getCustomerAndParty", () => {
         const rec = store.get(customerId);
         if (!rec) {
           return err(seamError("cpr.customer.notFound", "notFound", "contactSupport"));
         }
-        return ok({ customer: rec.customer, party: rec.party });
+        // The contracts map (filled by createContract) is now READ here — surfacing the active
+        // contract so a returning customer's recharge has the contractId. null when none created.
+        return ok({
+          customer: rec.customer,
+          party: rec.party,
+          contract: contracts.get(customerId) ?? null,
+        });
       });
     },
 

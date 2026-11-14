@@ -27,10 +27,14 @@ export interface CprDriver {
   createCustomer(input: CustomerInput): Promise<SeamResult<{ customerId: string }>>;
   /** Create the prepaid contract keyed by the reserved MSISDN. Requires an existing customer. */
   createContract(input: CreateContractInput): Promise<SeamResult<{ contractId: string }>>;
-  /** The customer and its party — CPR's half of the 360. The seam adds installed base + balance. */
+  /**
+   * The customer, its party, and its active prepaid contract (or null) — CPR's half of the 360.
+   * The contract carries the `contractId` the recharge journey needs for a returning customer.
+   * The seam adds installed base + balance.
+   */
   getCustomerAndParty(
     customerId: string,
-  ): Promise<SeamResult<{ customer: Customer; party: Party }>>;
+  ): Promise<SeamResult<{ customer: Customer; party: Party; contract: Contract | null }>>;
   /** Record a Party Interaction (TMF683) — e.g. onboarding fulfilment. Tenant comes from input. */
   createInteraction(input: CreateInteractionInput): Promise<SeamResult<PartyInteraction>>;
   /** The customer's party interactions, newest first — the activity timeline / CSR history. */

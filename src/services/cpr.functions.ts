@@ -159,6 +159,7 @@ export function getCustomer360(
       data: composeCustomer360({
         customer: cpr.data.customer,
         party: cpr.data.party,
+        contract: cpr.data.contract,
         installedBase: rawInstalledBase,
         balance,
         usage,
