@@ -63,6 +63,13 @@ before coding, so the mock path and the real path share one honest contract.
 3. WHERE the credit response is `{partyInteractionId}` (not a Balance) THEN the design SHALL state
    how the existing `TopUpResult.balance` contract is satisfied (e.g. a follow-up `getBalance`),
    without pretending the journey returned a balance.
+4. WHERE there are TWO credit sites — `runTopUp` (standalone top-up) AND the onboarding first
+   top-up, which calls `api.topUp` DIRECTLY in `runOnboardingSubmit` (not via runTopUp) — the design
+   SHALL address BOTH. Turning the charging seam http (`VITE_ECEV_DRIVER=http`) must NOT regress the
+   onboarding http path already shipped: the onboarding first top-up SHALL either also go through
+   the recharge op (it has `state.contractId` + the MSISDN), OR be explicitly scoped out with a
+   documented consequence. A recharge that silently breaks onboarding under the same flag is not
+   acceptable.
 
 ### Requirement 1 — Real payment (direct capture) over http
 

@@ -32,16 +32,22 @@ between tasks, as in the previous two specs.
   - Verify + commit `feat(charging): add recharge op (mock)`.
   - _Requirements: 0.1, 0.2, 5.2_
 
-- [ ] 3. runTopUp forks to recharge on the http path (mock default unchanged)
-  - [ ] 3.1 In `runTopUp` (or a sibling `runRecharge` if the fork is awkward — decide + document),
-        the http path calls `api.recharge(...)` instead of authorize→capture→credit; the mock path
-        is byte-for-byte unchanged. (0.2)
-  - [ ] 3.2 Thread `contractId` + `communicationId` from the caller (onboarding state / top-up
-        context) into the recharge input; missing contractId → clear SeamError. (2.2, 0.2)
-  - [ ] 3.3 Tests: mock path unchanged (existing top-up/auto-top-up green); a unit test of the http
-        fork calling api.recharge with the right input. (4.1, 5.2)
+- [ ] 3. BOTH credit sites fork to recharge on the http path (mock default unchanged)
+  - [ ] 3.1 `runTopUp` (or a sibling `runRecharge` if the fork is awkward — decide + document): the
+        http path calls `api.recharge(...)` instead of authorize→capture→credit; mock path
+        byte-for-byte unchanged. (0.2)
+  - [ ] 3.2 **Onboarding first top-up (M1/D-two-credit-sites):** the credit step in
+        `runOnboardingSubmit` (today `api.topUp` direct, ~line 274) ALSO branches by driver — http →
+        `api.recharge({ customerId, contractId: state.contractId, communicationId:
+        state.reservedMsisdn, amountMinor: planPriceMinor, methodToken })`; mock → `api.topUp`
+        unchanged. If the branch duplicates runTopUp's, factor one shared helper. (0.4, 0.2)
+  - [ ] 3.3 Thread `contractId` + `communicationId` from each caller into the recharge input;
+        missing contractId → clear SeamError. (2.2, 0.2)
+  - [ ] 3.4 Tests: mock path unchanged (existing top-up/auto-top-up AND onboarding green); unit
+        tests of BOTH http forks calling api.recharge with the right input; assert onboarding http
+        does NOT regress (no api.topUp on the http path). (4.1, 5.2)
   - Verify + commit.
-  - _Requirements: 0.2, 2.2_
+  - _Requirements: 0.2, 0.4, 2.2_
 
 - [ ] 4. HTTP recharge driver: payment (direct capture) + journey + money mapping
   - [ ] 4.1 Http `recharge`: `POST {bff}/payment/v4/payment` with `toTmfPayment` (minor→decimal),

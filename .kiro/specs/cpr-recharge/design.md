@@ -47,6 +47,27 @@ still call `runTopUp`; only `runTopUp`'s internals fork. (If the fork inside `ru
 awkward, the fallback is a separate `runRecharge` the http callers use — decide in implementation,
 record it.)
 
+### D-two-credit-sites (M1) — onboarding first top-up ALSO forks to recharge
+There are TWO places that credit a balance, not one:
+- `runTopUp` (standalone top-up: top-up.tsx, auto-top-up.tsx, DEV trigger).
+- `runOnboardingSubmit` credits the FIRST top-up by calling `api.topUp({customerId, amountMinor})`
+  **directly** (onboarding-submit.ts ~line 274), NOT via runTopUp.
+
+If only `runTopUp` forked to `recharge`, then under `VITE_ECEV_DRIVER=http` the onboarding first
+top-up's `api.topUp` would hit the charging http driver — `notConfigured` in this spec — and the
+onboarding http path shipped by the previous spec would REGRESS (the first top-up would fail).
+
+Decision: the onboarding first top-up ALSO goes through the recharge op on the http path. Onboarding
+already has `state.contractId` (created in step 3b) and the reserved MSISDN, so it can build the
+same `RechargeInput`. Concretely, the onboarding "credit" step branches by driver like runTopUp:
+mock → `api.topUp` (unchanged); http → `api.recharge({ customerId, contractId, communicationId,
+amountMinor: planPriceMinor, methodToken })`. The mock path and the committed default are unchanged.
+This widens Task 3 to touch `onboarding-submit.ts`'s credit step as well — in scope, because the
+alternative is a flag that breaks onboarding.
+
+(If wiring the fork into both `runTopUp` and `onboarding-submit` proves to duplicate logic, factor
+the driver-branch into one helper both call — decide in implementation, record it.)
+
 ### D-credit-returns-no-balance (Req 0.3)
 The journey returns `{partyInteractionId}`, not a Balance. The recharge op does a follow-up
 `getBalance(customerId)` after the journey and returns `{ partyInteractionId, balance }`, so
@@ -66,6 +87,12 @@ a contract lookup by customerId+MSISDN. In THIS spec, require the caller to pass
 - `RechargeInput` schema: `{ customerId, contractId, communicationId (E.164), amountMinor (+int),
   methodToken }`. `RechargeResult` type: `{ partyInteractionId: string; balance: Balance | null }`.
 - These live beside the existing charging schemas/types; money stays minor units in-domain.
+- **`methodToken` is mock-only (M3):** it exists because the mock payment path expects a tokenized
+  method (and `tokenizeCardMock` produces it). The REAL `/payment/v4/payment` uses
+  `paymentMethod.@type:"cash"` + the payment refs, NOT a tokenized card — so `toTmfPayment` MUST NOT
+  put `methodToken` on the wire. It stays in the domain input for the mock; the http mapper ignores
+  it (or uses it only for a local decline check if the fake models one). Documented so the mapper
+  doesn't send a field DXP doesn't expect.
 
 ### 2. Charging driver — new `recharge` op (mock + http)
 - `ChargingDriver.recharge(input): Promise<SeamResult<RechargeResult>>`.
