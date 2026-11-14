@@ -1,4 +1,5 @@
-import { api } from "@/services/api";
+import { api, SeamFailure } from "@/services/api";
+import { driverFor } from "@/services/driver-config";
 import type { Balance } from "@/services/model";
 import type { TopUpProgress } from "@/lib/topup-progress";
 
@@ -41,6 +42,13 @@ export interface RunTopUpDeps {
   progress: TopUpProgress;
   /** Persist a progress change the instant a milestone completes (sessionStorage, by the caller). */
   patch: (next: TopUpProgress) => void;
+  /**
+   * The prepaid contract id + MSISDN the real recharge journey needs. Read from the 360
+   * (`data.contract?.contractId` / `data.party.msisdn`). Only used on the http path; the mock path
+   * ignores them. Absent on http → a clear SeamFailure (can't key a recharge). (Recharge Task 3.)
+   */
+  contractId?: string | null;
+  communicationId?: string | null;
 }
 
 /** What a completed top-up yields — enough for the success receipt. */
@@ -61,11 +69,43 @@ export async function runTopUp({
   methodToken,
   progress,
   patch,
+  contractId,
+  communicationId,
 }: RunTopUpDeps): Promise<TopUpResult> {
   // Money boundary: a non-positive amount must never reach authorize/topUp. The amount screen gates
   // this, but this is the reusable-function backstop so no caller can authorize a €0 top-up.
   if (!Number.isInteger(amountMinor) || amountMinor <= 0) {
     throw new Error("runTopUp: amountMinor must be a positive integer (minor units)");
+  }
+
+  // HTTP PATH (recharge Task 3): the real DXP recharge is ONE call (direct-capture payment →
+  // monetaryRecharge journey) behind api.recharge, not the mock's authorize→capture→credit. It
+  // needs the contractId + MSISDN; without them we can't key the journey, so fail clearly rather
+  // than fall back to the mock credit. The mock path below is unchanged (the committed default).
+  if (driverFor("ecev") === "http") {
+    if (!contractId || !communicationId) {
+      throw new SeamFailure({
+        code: "charging.recharge.noContract",
+        category: "validation",
+        retryable: false,
+        customerFacing: { key: "pages.topUp.error", nextAction: "contactSupport" },
+      });
+    }
+    const result = await api.recharge({
+      customerId,
+      contractId,
+      communicationId,
+      amountMinor,
+      methodToken,
+    });
+    if (result.balance === null) {
+      // The journey credited but the follow-up balance read was unavailable; fall back to a read.
+      const existing = await api.getBalance(customerId);
+      if (existing === null) throw new Error("runTopUp(recharge): credited but no balance record");
+      return { balance: existing, authorizationRef: result.partyInteractionId };
+    }
+    // The partyInteractionId stands in as the transaction reference on the receipt.
+    return { balance: result.balance, authorizationRef: result.partyInteractionId };
   }
 
   // Local working copy; each milestone updates it AND persists via patch.

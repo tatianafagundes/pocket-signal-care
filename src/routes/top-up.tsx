@@ -112,6 +112,9 @@ function Page() {
         methodToken: tokenizeCardMock(DEMO_CARD_NUMBER),
         progress: start,
         patch: (next) => saveTopUpProgress(tenant, customerId, amountMinor, next),
+        // The http recharge path needs the contract id + MSISDN (from the 360); the mock ignores them.
+        contractId: query.data?.contract?.contractId ?? null,
+        communicationId: query.data?.party.msisdn ?? null,
       });
       clearTopUpProgress();
       setFailed(null);

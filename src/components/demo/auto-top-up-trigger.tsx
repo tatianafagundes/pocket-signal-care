@@ -64,6 +64,10 @@ export function AutoTopUpTrigger({
         methodToken: tokenizeCardMock("5555 5555 5555 7310"),
         progress: { captured: false, credited: false },
         patch: () => {},
+        // DEV-only mock-demo trigger: the mock ignores these. On the http path it would fail with a
+        // clear SeamFailure (no contract here) — intended, this is a mock-demo aid, not the http path.
+        contractId: null,
+        communicationId: null,
       });
       await queryClient.invalidateQueries({ queryKey: queryKeys.customer360(tenant, customerId) });
       toast.success(

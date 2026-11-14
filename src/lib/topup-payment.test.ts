@@ -1,9 +1,33 @@
 import { runTopUp } from "@/lib/topup-payment";
 import { emptyTopUpProgress, type TopUpProgress } from "@/lib/topup-progress";
 
-// Mock the api seam surface runTopUp calls.
+// Mock the api seam surface runTopUp calls. SeamFailure is provided (runTopUp throws one on the
+// http path when the contract/MSISDN is missing), mirroring the real class shape.
 vi.mock("@/services/api", () => ({
+  SeamFailure: class SeamFailure extends Error {
+    code: string;
+    category: string;
+    retryable: boolean;
+    customerKey: string;
+    constructor(e: {
+      code: string;
+      category: string;
+      retryable: boolean;
+      customerFacing?: { key?: string };
+    }) {
+      super(e.code);
+      this.name = "SeamFailure";
+      this.code = e.code;
+      this.category = e.category;
+      this.retryable = e.retryable;
+      this.customerKey = e.customerFacing?.key ?? e.code;
+    }
+  },
   api: {
+    recharge: vi.fn(async () => ({
+      partyInteractionId: "pin-9",
+      balance: { amountMinor: 3240, currency: "EUR" as const },
+    })),
     authorizePayment: vi.fn(async () => ({
       authorizationRef: "auth-1",
       amountMinor: 2000,
@@ -32,7 +56,7 @@ vi.mock("@/services/api", () => ({
 import { api } from "@/services/api";
 
 const mockApi = api as unknown as Record<
-  "authorizePayment" | "capturePayment" | "topUp" | "getBalance",
+  "authorizePayment" | "capturePayment" | "topUp" | "getBalance" | "recharge",
   ReturnType<typeof vi.fn>
 >;
 
@@ -134,5 +158,50 @@ describe("runTopUp — three money moments, idempotent", () => {
       }),
     ).rejects.toThrow(/positive integer/);
     expect(mockApi.authorizePayment).not.toHaveBeenCalled();
+  });
+
+  describe("http path (recharge Task 3)", () => {
+    beforeEach(() => vi.stubEnv("VITE_ECEV_DRIVER", "http"));
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("credits via api.recharge (one call), NOT authorize/capture/topUp", async () => {
+      const result = await runTopUp({
+        customerId: "cust-1",
+        amountMinor: 2000,
+        methodToken: "tok",
+        progress: emptyTopUpProgress(),
+        patch: () => {},
+        contractId: "contract-7",
+        communicationId: "+4368140000001",
+      });
+      expect(mockApi.recharge).toHaveBeenCalledWith({
+        customerId: "cust-1",
+        contractId: "contract-7",
+        communicationId: "+4368140000001",
+        amountMinor: 2000,
+        methodToken: "tok",
+      });
+      expect(mockApi.authorizePayment).not.toHaveBeenCalled();
+      expect(mockApi.capturePayment).not.toHaveBeenCalled();
+      expect(mockApi.topUp).not.toHaveBeenCalled();
+      // partyInteractionId stands in as the receipt's transaction reference.
+      expect(result.authorizationRef).toBe("pin-9");
+      expect(result.balance.amountMinor).toBe(3240);
+    });
+
+    it("fails with a SeamFailure when the contract id / MSISDN is missing (can't key a recharge)", async () => {
+      await expect(
+        runTopUp({
+          customerId: "cust-1",
+          amountMinor: 2000,
+          methodToken: "tok",
+          progress: emptyTopUpProgress(),
+          patch: () => {},
+          contractId: null,
+          communicationId: null,
+        }),
+      ).rejects.toMatchObject({ name: "SeamFailure", code: "charging.recharge.noContract" });
+      expect(mockApi.recharge).not.toHaveBeenCalled();
+    });
   });
 });

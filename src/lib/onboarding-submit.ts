@@ -1,4 +1,5 @@
 import { api, SeamFailure } from "@/services/api";
+import { driverFor } from "@/services/driver-config";
 import type { OnboardingPatch, OnboardingState } from "@/lib/onboarding-context";
 import type { TenantId } from "@/lib/tenant-rules";
 import type { AllowanceGrant } from "@/services/charging/charging-driver";
@@ -269,9 +270,31 @@ export async function runOnboardingSubmit({
   // 7. Credit — the first top-up lands on the prepaid balance (the plan price). Same persisted-flag
   //    guard as capture (reads `state.credited`): a retry after credit already ran skips it, so the
   //    balance is never credited twice.
+  //    HTTP PATH (recharge Task 3 / D-two-credit-sites): on the http charging driver, api.topUp is
+  //    notConfigured — the real credit is the recharge op (payment direct-capture → monetaryRecharge
+  //    journey), keyed by the contract created in step 3b + the reserved MSISDN. Branch by driver so
+  //    turning on VITE_ECEV_DRIVER=http does not regress onboarding. Mock path is unchanged.
   if (!state.credited) {
     onStep("credit");
-    await api.topUp({ customerId, amountMinor: planPriceMinor });
+    if (driverFor("ecev") === "http") {
+      if (!contractId || !state.reservedMsisdn) {
+        throw new SeamFailure({
+          code: "onboarding.recharge.noContract",
+          category: "validation",
+          retryable: false,
+          customerFacing: { key: "onboarding.review.terminalError", nextAction: "contactSupport" },
+        });
+      }
+      await api.recharge({
+        customerId,
+        contractId,
+        communicationId: state.reservedMsisdn,
+        amountMinor: planPriceMinor,
+        methodToken,
+      });
+    } else {
+      await api.topUp({ customerId, amountMinor: planPriceMinor });
+    }
     patch({ credited: true });
   }
 

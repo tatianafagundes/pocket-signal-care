@@ -41,6 +41,8 @@ vi.mock("@/services/api", () => ({
     createParty: vi.fn(async () => ({ partyId: "party-1" })),
     createCustomer: vi.fn(async () => ({ customerId: "cust-1" })),
     createContract: vi.fn(async () => ({ contractId: "contract-1" })),
+    recharge: vi.fn(async () => ({ partyInteractionId: "pin-1", balance: null })),
+    getBalance: vi.fn(async () => ({ amountMinor: 1000, currency: "EUR" as const })),
     createAddress: vi.fn(async () => ({
       addressId: "addr-1",
       address: {} as DeliveryAddress,
@@ -95,6 +97,8 @@ const mockApi = api as unknown as Record<
   | "createInteraction"
   | "capturePayment"
   | "topUp"
+  | "recharge"
+  | "getBalance"
   | "grantAllowance",
   ReturnType<typeof vi.fn>
 >;
@@ -467,6 +471,33 @@ describe("runOnboardingSubmit — three money moments + idempotency (Fase 7.4)",
       await runOnboardingSubmit(deps(completeState({ contractId: "contract-1" }), steps, []));
       expect(steps).not.toContain("createContract");
       expect(mockApi.createContract).toHaveBeenCalledTimes(1); // only the first run
+    });
+
+    it("http path: credits via api.recharge (not api.topUp), keyed by contract + MSISDN (Task 3)", async () => {
+      vi.stubEnv("VITE_ECEV_DRIVER", "http");
+      try {
+        await runOnboardingSubmit(
+          deps(completeState({ reservedMsisdn: "+4368140000001" }), [], []),
+        );
+        // The real credit is the recharge op; api.topUp must NOT run on the http path (it's
+        // notConfigured there — calling it would regress onboarding).
+        expect(mockApi.topUp).not.toHaveBeenCalled();
+        expect(mockApi.recharge).toHaveBeenCalledWith({
+          customerId: "cust-1",
+          contractId: "contract-1",
+          communicationId: "+4368140000001",
+          amountMinor: 1000,
+          methodToken: "tok-visa-4242",
+        });
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it("mock path (default): credits via api.topUp, never api.recharge", async () => {
+      await runOnboardingSubmit(deps(completeState(), [], []));
+      expect(mockApi.topUp).toHaveBeenCalledWith({ customerId: "cust-1", amountMinor: 1000 });
+      expect(mockApi.recharge).not.toHaveBeenCalled();
     });
 
     it("fails with a SeamFailure (terminal path) when the MSISDN is missing, never an empty contract", async () => {

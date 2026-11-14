@@ -150,6 +150,9 @@ function Page() {
           methodToken: tokenizeCardMock(DEMO_CARD_NUMBER),
           progress: { captured: false, credited: false },
           patch: () => {},
+          // http recharge needs the contract id + MSISDN (from the 360); the mock ignores them.
+          contractId: query.data?.contract?.contractId ?? null,
+          communicationId: query.data?.party.msisdn ?? null,
         });
         setFirstCharge({
           balance: result.balance,
