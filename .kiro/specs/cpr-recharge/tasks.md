@@ -32,10 +32,27 @@ between tasks, as in the previous two specs.
   - Verify + commit `feat(charging): add recharge op (mock)`.
   - _Requirements: 0.1, 0.2, 5.2_
 
+- [ ] 2b. Surface the contract in Customer360 (the returning-customer lookup — prerequisite for Task 3)
+  - Chosen path (2) over scope-reduction: the standalone top-up (top-up.tsx / auto-top-up) has
+    customerId + MSISDN but NO contractId — the 360 doesn't carry it today. Recharge on http needs
+    it, so surface it now rather than failing the standalone path.
+  - [ ] 2b.1 Extend `CprDriver.getCustomerAndParty` to also return the active contract:
+        `{ customer, party, contract: Contract | null }`. Mock: read its `contracts` map (today
+        write-only — now read it); http: map the customerview's `contracts[]` (captured in
+        onboarding Task 5.1, deliberately left unmapped then) → the active `Contract`.
+  - [ ] 2b.2 Thread `contract` through `Customer360Parts` + `getCustomer360` fan-out +
+        `composeCustomer360` → add `contract: Contract | null` to the `Customer360` type.
+  - [ ] 2b.3 Tests: the 360 for an onboarded/seeded customer exposes the contract; a customer
+        without one gets `null`. Mock + the existing 360 tests stay green.
+  - Verify + commit `feat(cpr): surface the active contract in Customer360`.
+  - _Requirements: 2.2_
+
 - [ ] 3. BOTH credit sites fork to recharge on the http path (mock default unchanged)
   - [ ] 3.1 `runTopUp` (or a sibling `runRecharge` if the fork is awkward — decide + document): the
         http path calls `api.recharge(...)` instead of authorize→capture→credit; mock path
-        byte-for-byte unchanged. (0.2)
+        byte-for-byte unchanged. The standalone caller (top-up.tsx) now reads `contractId` from the
+        360 (`data.contract?.contractId`, Task 2b) + `data.party.msisdn`; a null contract → clear
+        SeamError (not a silent half-recharge). (0.2, 2.2)
   - [ ] 3.2 **Onboarding first top-up (M1/D-two-credit-sites):** the credit step in
         `runOnboardingSubmit` (today `api.topUp` direct, ~line 274) ALSO branches by driver — http →
         `api.recharge({ customerId, contractId: state.contractId, communicationId:

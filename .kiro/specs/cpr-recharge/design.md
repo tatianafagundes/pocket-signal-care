@@ -75,11 +75,13 @@ The journey returns `{partyInteractionId}`, not a Balance. The recharge op does 
 (charging http not wired for reads in this spec), the balance is the mock's — documented honestly.
 
 ### D-contractId-source (Req 2.2)
-The journey needs `contractId`. Source: the contract created at onboarding, persisted as
-`state.contractId`; for a returning customer (no onboarding state) it comes from the customer360 /
-a contract lookup by customerId+MSISDN. In THIS spec, require the caller to pass `contractId`
-(onboarding has it); the returning-customer lookup is a recorded follow-up. Missing contractId →
-`SeamError` (validation), never an empty reference.
+The journey needs `contractId`. Source: onboarding has it as `state.contractId`. The returning
+customer (standalone top-up, no onboarding state) does NOT — the 360 does not carry a contract
+today. **RESOLVED (decision: do the lookup now, path 2 over scope-reduction):** Task 2b surfaces the
+active contract in `Customer360` (`getCustomerAndParty` → `{customer, party, contract}` → the 360),
+so the standalone caller reads `data.contract?.contractId`. A null contract → `SeamError`
+(validation), never an empty reference. (The alternative — fail the standalone http path and defer —
+was rejected because the standalone top-up is the main returning-customer recharge case.)
 
 ## Components & changes
 
@@ -168,8 +170,8 @@ a contract lookup by customerId+MSISDN. In THIS spec, require the caller to pass
 - **D-recharge-token:** BFF injects a server-only static `RECHARGE_TOKEN` for the fake; the real
   client-credentials/Keycloak grant + refresh is a follow-up (the doc's "ours to add").
 - **D-credit-no-balance:** balance via follow-up getBalance, not the journey response.
-- **D-contractId-source:** caller passes contractId (onboarding has it); returning-customer lookup
-  is a follow-up.
+- **D-contractId-source (RESOLVED):** onboarding has `state.contractId`; the standalone/returning
+  customer gets it from the 360 — Task 2b surfaces the active contract in `Customer360`. Not a debt.
 - **Debt — no cross-step compensation:** a captured payment + failed journey leaves a paid-but-not-
   credited state against the fake (resettable); real saga/refund is out of scope.
 - **Debt — no recurring scheduler:** auto-top-up still has only a DEV trigger; a real recurring
@@ -178,4 +180,4 @@ a contract lookup by customerId+MSISDN. In THIS spec, require the caller to pass
 
 ## Out of scope
 Real money; real cluster; the client-credentials token grant; refunds/voids; the recurring
-auto-recharge scheduler; the returning-customer contract lookup.
+auto-recharge scheduler. (The returning-customer contract lookup is now IN scope — Task 2b.)
