@@ -27,37 +27,30 @@ import type { CprDriver } from "@/services/cpr/cpr-driver";
  * SCOPE (Task 4): party/customer/contract create + the error envelope. getCustomerAndParty
  * (customerview) is Task 5; createInteraction/listInteractions stay notConfigured (later spec).
  *
- * ⚠️ AUTH: VITE_CPR_TOKEN is bundled into client JS — acceptable ONLY against the local fake. A
- * real token must terminate server-side (BFF) before any non-localhost host; Task 7 adds a guard
- * that refuses a non-localhost base URL while the token is a client VITE var.
+ * TOKEN IS OFF THE CLIENT (cpr-bff-auth Task 2): the driver calls the same-origin BFF
+ * (`/bff/cpr/*`), which holds the CPR token + resolves the DXP tenant server-side. This driver
+ * carries NO token and NO Authorization header. It passes the app brand as a non-secret
+ * `X-App-Brand` header; the BFF turns that into `X-Tenant-ID`.
  */
 
 interface CprHttpConfig {
+  /** The same-origin BFF prefix the driver posts to (default `/bff/cpr`). No token here. */
   baseUrl: string;
-  token: string;
   timeoutMs: number;
 }
 
 /** Injectable fetch — production uses the global; the contract test passes a recording shim. */
 type FetchLike = typeof fetch;
 
-function readConfig(): CprHttpConfig | null {
-  const baseUrl = import.meta.env["VITE_CPR_BASE_URL"] as string | undefined;
-  const token = import.meta.env["VITE_CPR_TOKEN"] as string | undefined;
-  if (!baseUrl || !token) return null;
-  return { baseUrl, token, timeoutMs: 10_000 };
-}
-
 /**
- * Resolve the app's brand slug (TenantId) to the DXP platform tenant id sent as X-Tenant-ID.
- * The brand (`drei`/`dreigo`) is NOT the DXP tenant (`TEN100000200008`). Read it from
- * VITE_CPR_TENANT_<BRAND>; fall back to the TEN_FAKE placeholder (the fake accepts any value).
- * The real brand→TEN map is a documented follow-up (D-tenant-placeholder).
+ * Config for the http driver. The driver is active only when VITE_CPR_DRIVER=http (chosen in
+ * cpr.functions.ts). The base URL is the same-origin BFF prefix; VITE_CPR_BASE_URL may override it
+ * for tests/local, but it is NO LONGER a real CPR URL and there is NO client token.
  */
-function resolveDxpTenant(brand: TenantId): string {
-  const key = `VITE_CPR_TENANT_${brand.toUpperCase()}`;
-  const value = import.meta.env[key] as string | undefined;
-  return value && value !== "" ? value : "TEN_FAKE";
+function readConfig(): CprHttpConfig {
+  const override = import.meta.env["VITE_CPR_BASE_URL"] as string | undefined;
+  const baseUrl = override && override !== "" ? override : "/bff/cpr";
+  return { baseUrl, timeoutMs: 10_000 };
 }
 
 /**
@@ -104,14 +97,14 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
   const config = readConfig();
   const doFetch: FetchLike = injectedFetch ?? fetch;
 
-  // Until the real endpoint is configured, fail loudly-but-safely with a SeamError (no throw).
+  // For ops still out of scope on http (tenant lookup, interactions): a clear, non-throwing error.
   const notConfigured = <T>(): SeamResult<T> =>
     err(
       seamError(
         "cpr.http.notConfigured",
         "unavailable",
         "contactSupport",
-        "CPR http driver selected but VITE_CPR_BASE_URL/TOKEN are not set.",
+        "This CPR operation is not wired on the http driver yet (out of scope).",
       ),
     );
 
@@ -121,7 +114,6 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
     init: RequestInit,
     mapResponse: (json: unknown) => T,
   ): Promise<SeamResult<T>> {
-    if (!config) return notConfigured<T>();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), config.timeoutMs);
     try {
@@ -130,9 +122,9 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
         signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${config.token}`,
-          // The DXP tenant (resolved from the brand), pinned on every CPR call.
-          "X-Tenant-ID": resolveDxpTenant(brand),
+          // NO Authorization here — the BFF injects the token server-side. The app brand travels
+          // as a non-secret header; the BFF resolves it to the DXP X-Tenant-ID.
+          "X-App-Brand": brand,
           ...(init.headers ?? {}),
         },
       });
@@ -175,7 +167,7 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
     async createParty(input: PartyInput) {
       return request(
         input.tenantId,
-        `/customerManagement/v1/party`,
+        `/party`,
         { method: "POST", body: JSON.stringify(toTmfParty(input)) },
         (json) => fromTmfPartyCreate(json),
       );
@@ -183,7 +175,7 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
     async createCustomer(input: CustomerInput) {
       return request(
         input.tenantId,
-        `/customerManagement/v1/customer`,
+        `/customer`,
         { method: "POST", body: JSON.stringify(toTmfCustomer(input)) },
         (json) => fromTmfCustomerCreate(json),
       );
@@ -191,7 +183,7 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
     async createContract(input: CreateContractInput) {
       return request(
         input.tenantId,
-        `/customerManagement/v1/contract`,
+        `/contract`,
         { method: "POST", body: JSON.stringify(toTmfContract(input)) },
         (json) => fromTmfContractCreate(json),
       );
@@ -210,11 +202,8 @@ export function createCprHttp(injectedFetch?: FetchLike): CprDriver {
       // (D-360-tenant-on-http). getCustomer360's cross-tenant check still holds: it compares this
       // stamped tenant to expectedTenant.
       const brand = activeBrand();
-      return request(
-        brand,
-        `/customerManagement/v1/customerview/${customerId}`,
-        { method: "GET" },
-        (json) => fromTmfCustomerView(json, brand),
+      return request(brand, `/customerview/${customerId}`, { method: "GET" }, (json) =>
+        fromTmfCustomerView(json, brand),
       );
     },
     async createInteraction(_input: CreateInteractionInput): Promise<SeamResult<PartyInteraction>> {

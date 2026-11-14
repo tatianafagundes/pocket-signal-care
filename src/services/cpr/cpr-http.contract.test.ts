@@ -11,7 +11,8 @@ import { createCprHttp } from "@/services/cpr/cpr-http";
  * directly, never selected via VITE_CPR_DRIVER (which resolves once at module load).
  *
  * These lock BOTH halves of the contract:
- *   1. request fidelity — path, method, headers (resolved X-Tenant-ID + Bearer), body shape
+ *   1. request fidelity — same-origin BFF path, method, headers (X-App-Brand, NO Authorization),
+ *      body shape (the token + X-Tenant-ID are injected by the BFF, not the driver)
  *   2. response mapping — parsed domain result, and the whole error-mapping table (never throws)
  *
  * The fixture bodies mirror docs/contracts/postman/response-shapes.md + the customerview shape
@@ -57,13 +58,11 @@ function recordingFetch(responses: Response[]) {
   return { fetchImpl, calls };
 }
 
-const BASE = "http://127.0.0.1:8787";
+// The driver now posts to the same-origin BFF prefix; no token, no tenant resolution client-side.
+const BASE = "/bff/cpr";
 
 beforeEach(() => {
   vi.stubEnv("VITE_CPR_BASE_URL", BASE);
-  vi.stubEnv("VITE_CPR_TOKEN", "fake-token");
-  // Brand → DXP tenant resolution (drei → the placeholder); the header must carry the resolved id.
-  vi.stubEnv("VITE_CPR_TENANT_DREI", "TEN_FAKE_DREI");
   vi.stubEnv("VITE_CPR_ACTIVE_BRAND", "drei");
 });
 
@@ -72,7 +71,7 @@ afterEach(() => {
 });
 
 describe("cpr-http contract — request fidelity + response mapping", () => {
-  it("createParty: POST /customerManagement/v1/party with resolved tenant + bearer, parses .id", async () => {
+  it("createParty: POST the same-origin BFF path with X-App-Brand and NO token, parses .id", async () => {
     const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { id: "party-xyz" })]);
     const driver = createCprHttp(fetchImpl);
 
@@ -83,13 +82,14 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
       email: "ada@x.io",
     });
 
-    // Request fidelity.
+    // Request fidelity — same-origin BFF, brand header, and crucially NO token/Authorization.
     expect(calls).toHaveLength(1);
     const req = calls[0]!;
     expect(req.method).toBe("POST");
-    expect(req.url).toBe(`${BASE}/customerManagement/v1/party`);
-    expect(req.headers["X-Tenant-ID"]).toBe("TEN_FAKE_DREI"); // brand → DXP tenant resolved
-    expect(req.headers["Authorization"]).toBe("Bearer fake-token");
+    expect(req.url).toBe(`${BASE}/party`);
+    expect(req.headers["X-App-Brand"]).toBe("drei"); // brand → the BFF resolves the DXP tenant
+    expect(req.headers["Authorization"]).toBeUndefined(); // token is server-side now
+    expect(req.headers["X-Tenant-ID"]).toBeUndefined(); // resolved by the BFF, not the client
     expect(req.headers["Content-Type"]).toBe("application/json");
     // Body = the collection shape: partyNames + EmailContact contact medium.
     expect(req.body).toMatchObject({
@@ -130,7 +130,7 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
 
     const res = await driver.createCustomer({ tenantId: "drei", partyId: "party-xyz" });
 
-    expect(calls[0]!.url).toBe(`${BASE}/customerManagement/v1/customer`);
+    expect(calls[0]!.url).toBe(`${BASE}/customer`);
     expect(calls[0]!.body).toMatchObject({
       engagedPartyId: "party-xyz",
       engagedPartyType: "Individual",
@@ -151,7 +151,7 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
       paymentContext: "PREPAID",
     });
 
-    expect(calls[0]!.url).toBe(`${BASE}/customerManagement/v1/contract`);
+    expect(calls[0]!.url).toBe(`${BASE}/contract`);
     expect(calls[0]!.body).toMatchObject({
       customerId: "cust-xyz",
       communicationId: "+4368100000001",
@@ -162,8 +162,9 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
     if (res.ok) expect(res.data).toEqual({ contractId: "contract-xyz" });
   });
 
-  it("resolves X-Tenant-ID per brand: dreigo → its own DXP tenant (not a constant)", async () => {
-    vi.stubEnv("VITE_CPR_TENANT_DREIGO", "TEN_FAKE_DREIGO");
+  it("forwards the brand verbatim as X-App-Brand (the BFF — not the driver — resolves the tenant)", async () => {
+    // Tenant resolution moved to the BFF (see cpr-proxy.test.ts). The driver's job is only to pass
+    // the brand through; it must NOT resolve or send an X-Tenant-ID.
     const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { id: "p" })]);
     await createCprHttp(fetchImpl).createParty({
       tenantId: "dreigo",
@@ -171,20 +172,8 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
       familyName: "B",
       email: "a@b.io",
     });
-    // Proves resolveDxpTenant is per-brand — a constant header would make drei's test pass too.
-    expect(calls[0]!.headers["X-Tenant-ID"]).toBe("TEN_FAKE_DREIGO");
-  });
-
-  it("falls back to the TEN_FAKE placeholder when the brand's tenant env is unset", async () => {
-    vi.stubEnv("VITE_CPR_TENANT_DREIGO", ""); // unset → placeholder
-    const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { id: "p" })]);
-    await createCprHttp(fetchImpl).createParty({
-      tenantId: "dreigo",
-      givenName: "A",
-      familyName: "B",
-      email: "a@b.io",
-    });
-    expect(calls[0]!.headers["X-Tenant-ID"]).toBe("TEN_FAKE");
+    expect(calls[0]!.headers["X-App-Brand"]).toBe("dreigo");
+    expect(calls[0]!.headers["X-Tenant-ID"]).toBeUndefined();
   });
 
   it("getCustomerAndParty: GET /customerview/{id}, maps to { customer, party }", async () => {
@@ -214,7 +203,7 @@ describe("cpr-http contract — request fidelity + response mapping", () => {
     const res = await driver.getCustomerAndParty("cust-xyz");
 
     expect(calls[0]!.method).toBe("GET");
-    expect(calls[0]!.url).toBe(`${BASE}/customerManagement/v1/customerview/cust-xyz`);
+    expect(calls[0]!.url).toBe(`${BASE}/customerview/cust-xyz`);
     expect(res.ok).toBe(true);
     if (res.ok) {
       expect(res.data.customer).toEqual({
@@ -340,18 +329,19 @@ describe("cpr-http contract — error mapping table (never throws)", () => {
     if (!res.ok) expect(res.error.category).toBe("unavailable");
   });
 
-  it("not configured (no base URL / token) → notConfigured, no fetch call", async () => {
+  it("defaults to the same-origin /bff/cpr prefix when no base URL override is set", async () => {
+    // There is no client token anymore; "not configured" is now the BFF's concern (missing server
+    // token → 503 envelope → the driver maps it to unavailable, like any upstream failure). With no
+    // VITE_CPR_BASE_URL, the driver still targets the default same-origin BFF prefix.
     vi.stubEnv("VITE_CPR_BASE_URL", "");
-    vi.stubEnv("VITE_CPR_TOKEN", "");
-    const { fetchImpl, calls } = recordingFetch([]);
+    const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { id: "p" })]);
     const res = await createCprHttp(fetchImpl).createParty({
       tenantId: "drei",
       givenName: "A",
       familyName: "B",
       email: "a@b.io",
     });
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error.code).toBe("cpr.http.notConfigured");
-    expect(calls).toHaveLength(0); // never reached fetch
+    expect(res.ok).toBe(true);
+    expect(calls[0]!.url).toBe("/bff/cpr/party"); // default prefix, same origin
   });
 });
