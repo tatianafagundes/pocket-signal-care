@@ -73,12 +73,12 @@ design-only (no Keycloak wiring). Requirement refs in (parens).
   - Commit (docs/evidence).
   - _Requirements: 1.1–1.4, 2.1_
 
-- [ ] 5. Phase 2 — real auth groundwork (design + open questions ONLY, no Keycloak wiring)
-  - [ ] 5.1 Write the Phase-2 design: Auth Code + PKCE, httpOnly-cookie session set by a server
+- [x] 5. Phase 2 — real auth groundwork (design + open questions ONLY, no Keycloak wiring)
+  - [x] 5.1 Write the Phase-2 design: Auth Code + PKCE, httpOnly-cookie session set by a server
         route, authenticated-user → CPR customerId mapping replacing `fallbackCustomerId(tenant)`. (4.1)
-  - [ ] 5.2 List the open questions for the customer (non-admin end-user flow? realm/client? how to
+  - [x] 5.2 List the open questions for the customer (non-admin end-user flow? realm/client? how to
         get the CPR customerId? service token vs user token / CBEV client-credentials?). (4.2)
-  - [ ] 5.3 Confirm `auth-http.ts` stays a stub; flag the committed `Dxp_CLI@1234` for rotation. (4.3, 5.3)
+  - [x] 5.3 Confirm `auth-http.ts` stays a stub; flag the committed `Dxp_CLI@1234` for rotation. (4.3, 5.3)
   - Commit `docs(auth): phase-2 design + open questions (not built)`.
   - _Requirements: 4.1, 4.2, 4.3, 5.3_
 
