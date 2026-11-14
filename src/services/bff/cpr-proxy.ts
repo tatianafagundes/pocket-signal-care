@@ -84,9 +84,11 @@ export async function handleBffCpr(request: Request, deps: BffCprDeps): Promise<
     const upstream = await deps.fetchUpstream(`${baseUrl}/customerManagement/v1/${subPath}`, init);
     // Return the upstream status + body unchanged (same shape the driver's error mapping expects).
     const body = await upstream.text();
-    return new Response(body, {
+    // Preserve an empty body as empty (e.g. a 204): forcing a JSON content-type on "" would make
+    // the driver's res.json() throw → a spurious badResponse. Only label a non-empty body as JSON.
+    return new Response(body === "" ? null : body, {
       status: upstream.status,
-      headers: { "content-type": "application/json" },
+      ...(body === "" ? {} : { headers: { "content-type": "application/json" } }),
     });
   } catch {
     // Upstream unreachable → unavailable envelope (retryable at the seam). Never leak the error.

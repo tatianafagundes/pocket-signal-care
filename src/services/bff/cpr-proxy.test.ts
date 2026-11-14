@@ -57,6 +57,38 @@ describe("BFF CPR proxy — forwarding + token/tenant injection", () => {
     expect(init.body).toBe('{"type":"Individual"}');
   });
 
+  it("does NOT let the client forge the security headers (Authorization / X-Tenant-ID)", async () => {
+    // A malicious client sends its own Authorization + X-Tenant-ID. The BFF must ignore them and
+    // use ONLY the server token + the brand-resolved tenant — the invariant that the client never
+    // controls the security headers. (Guards against a future refactor that spreads request.headers.)
+    const d = deps();
+    const forged = new Request("https://app.example/bff/cpr/party", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "X-App-Brand": "drei",
+        Authorization: "Bearer FORGED-client-token",
+        "X-Tenant-ID": "TEN_SOMEONE_ELSE",
+      },
+      body: "{}",
+    });
+    await handleBffCpr(forged, d);
+    const init = (d.fetchUpstream as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![1];
+    expect(init.headers["Authorization"]).toBe("Bearer server-secret-token"); // server token, not forged
+    expect(init.headers["X-Tenant-ID"]).toBe("TEN_DREI"); // brand-resolved, not the forged tenant
+  });
+
+  it("preserves an empty upstream body (204) as empty — no JSON content-type, no badResponse", async () => {
+    const d = deps({
+      fetchUpstream: vi.fn(async () => ({ status: 204, text: async () => "" }) as Response),
+    });
+    const res = await handleBffCpr(req("POST", "contract", { brand: "drei", body: "{}" }), d);
+    expect(res.status).toBe(204);
+    expect(await res.text()).toBe("");
+    // No JSON content-type forced on an empty body, so the driver won't res.json("").
+    expect(res.headers.get("content-type") ?? "").not.toContain("application/json");
+  });
+
   it("resolves the tenant per brand (dreigo → its own DXP tenant)", async () => {
     const d = deps();
     await handleBffCpr(req("POST", "customer", { brand: "dreigo", body: "{}" }), d);
