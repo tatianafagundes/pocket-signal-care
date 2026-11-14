@@ -66,6 +66,23 @@ between tasks, as in the previous two specs.
   - Verify + commit.
   - _Requirements: 0.2, 0.4, 2.2_
 
+- [ ] 4b. HTTP getBalance (TMF654 bucket read — prerequisite for Task 4's balance-after-recharge)
+  - Decision (path 1 over faking the journey response): the monetaryRecharge journey returns only a
+    partyInteractionId, and TopUpResult/SuccessData.balance are required, so recharge needs a real
+    balance read. The DXP balance-read shape IS documented (docs/contracts/cbev-charging.md):
+    `GET /bae/bssTmf654PrepayBalanceManagement/v1/bucket` → a product bucket with `amount`/
+    `highPrecisionAmount` + `validFor`, keyed by `relatedParty`/`communicationId`. (NOT a guess —
+    unlike resolveTenant; medium confidence from the CBEV KB, reconcile at cluster cut-over.)
+  - [ ] 4b.1 Fake: `GET /bae/bssTmf654PrepayBalanceManagement/v1/bucket?...` → a bucket reflecting
+        the recharges it received for that MSISDN/customer (sum credited), so a full-http top-up
+        shows a real post-recharge balance. (5.1)
+  - [ ] 4b.2 Http charging `getBalance`: GET the bucket via the recharge BFF + `fromTmfBucket`
+        (amount decimal → minor, validFor → validUntil) → `Balance`; notConfigured no longer. (0.3)
+  - [ ] 4b.3 Contract test for getBalance (bucket → Balance; empty → null) + the fake bucket shape
+        in response-shapes.md.
+  - Verify + commit `feat(charging): http getBalance via TMF654 bucket read`.
+  - _Requirements: 0.3, 5.1, 5.2_
+
 - [ ] 4. HTTP recharge driver: payment (direct capture) + journey + money mapping
   - [ ] 4.1 Http `recharge`: `POST {bff}/payment/v4/payment` with `toTmfPayment` (minor→decimal),
         parse id + authorizationCode; 33028 → conflict SeamError (not retryable). (1.1, 1.2, 1.3)

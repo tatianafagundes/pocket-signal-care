@@ -71,8 +71,13 @@ the driver-branch into one helper both call — decide in implementation, record
 ### D-credit-returns-no-balance (Req 0.3)
 The journey returns `{partyInteractionId}`, not a Balance. The recharge op does a follow-up
 `getBalance(customerId)` after the journey and returns `{ partyInteractionId, balance }`, so
-`TopUpResult.balance` is satisfied by a real read, not fabricated. If `getBalance` is still mock
-(charging http not wired for reads in this spec), the balance is the mock's — documented honestly.
+`TopUpResult.balance` is satisfied by a real read, not fabricated. Since `TopUpResult.balance` /
+`SuccessData.balance` are REQUIRED, the http path needs a real balance read — so Task 4b wires an
+http `getBalance` against the documented TMF654 bucket read
+(`GET /bae/bssTmf654PrepayBalanceManagement/v1/bucket`, per docs/contracts/cbev-charging.md — a
+documented shape, not a guess). Chosen over faking the balance in the journey response (which would
+be unfaithful to the real DXP). If the read is unavailable, recharge returns `balance: null` and
+`runTopUp`'s getBalance fallback applies.
 
 ### D-contractId-source (Req 2.2)
 The journey needs `contractId`. Source: onboarding has it as `state.contractId`. The returning
