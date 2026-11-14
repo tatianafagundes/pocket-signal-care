@@ -250,3 +250,26 @@ Worker vars/secrets (prod) and `.dev.vars` / shell env (dev), never `VITE_`. Tas
   differently), the secret still stays off the client (that part IS fact), and the only change would
   be the accessor preferring `globalThis.__env__` — which the design already does. The BFF viability
   does not hinge on the unexecuted part.
+
+## 9. BFF Phase 1 — DONE (cpr-bff-auth Tasks 1–4, 2026-11-14)
+
+The CPR token is OFF the client. Proven end-to-end through the browser (manual E2E, Task 4.1):
+with `VITE_CPR_DRIVER=http` + the fake as the BFF's upstream (`CPR_BASE_URL` set server-side only),
+driving onboarding created **party + customer + contract against the fake, through the BFF**:
+- `CREATED via BFF: {party:true, customer:true, contract:true}`.
+- Every client `/bff/cpr/*` request carried **no token** (`Authorization: null` on all three POSTs).
+- Every upstream call the fake received had `Authorization: Bearer …` (the BFF injected it) +
+  `X-Tenant-ID: TEN_FAKE` (brand→tenant resolved server-side). Contract `communicationId` =
+  the real reserved MSISDN (`+4368140000001`).
+- The flow still stops at `cpr.createInteraction` (out of scope → notConfigured) → graceful
+  terminal error; party/customer/contract are created first. Same honest partial state as before.
+
+Client-bundle safety (Task 4.2): the server token value is NOT in `.output/public/assets`
+(grepped). The only `VITE_CPR_TOKEN` reference in the client is the **safety rail** itself
+(`assertCprClientHasNoToken` throwing if a client token is set) — a guard, not a token read. There
+is no read of the server-only `CPR_TOKEN` in the client.
+
+**What this does NOT cover (unchanged debts / later specs):** real end-user auth (Phase 2 is
+design + open questions only — the committed Keycloak material is admin ROPC); the real brand→TEN
+map (placeholder TEN_FAKE); the prod-Worker `globalThis.__env__` mechanism is read-verified not
+run-verified (§8 H1, confirm with `wrangler dev` / a test deploy); recharge; the real cluster.
