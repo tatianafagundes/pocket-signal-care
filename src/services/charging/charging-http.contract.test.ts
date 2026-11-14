@@ -147,6 +147,20 @@ describe("charging-http — recharge (payment direct-capture → monetaryRecharg
     expect(calls).toHaveLength(1); // stopped at payment; the journey never ran (no double-apply)
   });
 
+  it("payment succeeds but the journey fails → error surfaces, bucket NOT read (paid-but-not-credited)", async () => {
+    // The non-transactional reality: the payment captured, the journey failed. The error propagates
+    // (the user sees failure) and we do NOT read a balance for a recharge that did not complete.
+    // The orphan charge is the recorded cross-step-compensation / idempotency debt.
+    const { fetchImpl, calls } = recordingFetch([
+      jsonResponse(201, { id: "pay-9", authorizationCode: "AUTH-9" }),
+      jsonResponse(503, { code: 5000, reason: "Unavailable", message: "journey svc down" }),
+    ]);
+    const res = await createChargingHttp(fetchImpl).recharge(INPUT);
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.category).toBe("unavailable");
+    expect(calls).toHaveLength(2); // payment + journey; the bucket read never ran
+  });
+
   it("a failed bucket read after a successful journey → balance null (runTopUp falls back)", async () => {
     const { fetchImpl } = recordingFetch([
       jsonResponse(201, { id: "pay-9", authorizationCode: "AUTH-9" }),

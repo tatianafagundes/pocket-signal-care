@@ -196,8 +196,10 @@ export function createChargingHttp(injectedFetch?: FetchLike): ChargingDriver {
 
     async recharge(input: RechargeInput): Promise<SeamResult<RechargeResult>> {
       // 1. Direct-capture payment. A fresh authorizationCode per call (the real API rejects a reused
-      //    one with 33028). This is the charge — not a reserve. On conflict/rejection, stop.
-      const authorizationCode = `Payer-AuthCode_${Date.now()}`;
+      //    one with 33028). Date.now() + a random suffix so two recharges in the same millisecond
+      //    (a burst) don't collide into a spurious 33028. This is the charge — not a reserve. On
+      //    conflict/rejection, stop.
+      const authorizationCode = `Payer-AuthCode_${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
       const paymentRes = await request(
         `/payment/v4/payment`,
         { method: "POST", body: JSON.stringify(toTmfPayment(input, authorizationCode)) },
