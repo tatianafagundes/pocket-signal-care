@@ -74,8 +74,18 @@ export function authDriverOrThrow(): SeamDriver {
  */
 const REQUIRED_HTTP_ENV: Partial<Record<SeamName, readonly string[]>> = {};
 
-/** Seams intended to run against a real backend in production (today: only CPR). Auth is handled
- *  separately by authDriverOrThrow. */
+/**
+ * Seams intended to run against a real backend in production (today: only CPR). Auth is handled
+ * separately by authDriverOrThrow.
+ *
+ * ecev (recharge) is DELIBERATELY NOT here (cpr-recharge Task 6.2, review G2). Recharge is real-ABLE
+ * through its BFF, but the spec scopes it to run against the local fake — it is not a production
+ * readiness target for the demo, and its real path still carries the D-recharge-idempotency debt
+ * (a lost response → double charge). So a PROD build on the mock recharge driver is a legitimate
+ * interim state, not a misconfig to warn about. Promote ecev into this list when the real recharge
+ * backend + idempotency land. (Consequence: setting RECHARGE_* server vars without
+ * VITE_ECEV_DRIVER=http boots silently on mock — the same gap CPR has; acceptable while mock-scoped.)
+ */
 const PROD_SHOULD_BE_HTTP: readonly SeamName[] = ["cpr"];
 
 function warnConfig(detail: Record<string, unknown>): void {
