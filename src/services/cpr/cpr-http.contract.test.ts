@@ -58,11 +58,11 @@ function recordingFetch(responses: Response[]) {
   return { fetchImpl, calls };
 }
 
-// The driver now posts to the same-origin BFF prefix; no token, no tenant resolution client-side.
+// The driver always posts to the fixed same-origin BFF prefix (no env override); no token, no
+// client-side tenant resolution.
 const BASE = "/bff/cpr";
 
 beforeEach(() => {
-  vi.stubEnv("VITE_CPR_BASE_URL", BASE);
   vi.stubEnv("VITE_CPR_ACTIVE_BRAND", "drei");
 });
 
@@ -329,11 +329,11 @@ describe("cpr-http contract — error mapping table (never throws)", () => {
     if (!res.ok) expect(res.error.category).toBe("unavailable");
   });
 
-  it("defaults to the same-origin /bff/cpr prefix when no base URL override is set", async () => {
-    // There is no client token anymore; "not configured" is now the BFF's concern (missing server
-    // token → 503 envelope → the driver maps it to unavailable, like any upstream failure). With no
-    // VITE_CPR_BASE_URL, the driver still targets the default same-origin BFF prefix.
-    vi.stubEnv("VITE_CPR_BASE_URL", "");
+  it("always targets the fixed same-origin /bff/cpr prefix — an env override cannot redirect it (K1)", async () => {
+    // There is no client token anymore; "not configured" is the BFF's concern (missing server
+    // token → 503 → the driver maps it to unavailable). Crucially, even a VITE_CPR_BASE_URL set to
+    // an arbitrary host MUST be ignored: the client never chooses the host, so it can't bypass the BFF.
+    vi.stubEnv("VITE_CPR_BASE_URL", "https://evil.example");
     const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { id: "p" })]);
     const res = await createCprHttp(fetchImpl).createParty({
       tenantId: "drei",
@@ -342,6 +342,6 @@ describe("cpr-http contract — error mapping table (never throws)", () => {
       email: "a@b.io",
     });
     expect(res.ok).toBe(true);
-    expect(calls[0]!.url).toBe("/bff/cpr/party"); // default prefix, same origin
+    expect(calls[0]!.url).toBe("/bff/cpr/party"); // fixed same-origin prefix, override ignored
   });
 });

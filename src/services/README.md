@@ -91,14 +91,21 @@ Seams that are not uniform (know before you touch them):
 
 Example: turn on the real CPR. Same shape for any seam.
 
-1. **Set env** (copy `.env.example` → `.env`):
+1. **Set env** (copy `.env.example` → `.env`). The CPR http driver goes through the same-origin
+   BFF, so the CLIENT needs only the flag + brand — the token + real CPR URL are SERVER-ONLY
+   (non-`VITE_`, read by the BFF from the Worker env). NEVER set `VITE_CPR_TOKEN` (the rail throws).
    ```
+   # client (bundled)
    VITE_CPR_DRIVER=http
-   VITE_CPR_BASE_URL=https://<cpr-host>
-   VITE_CPR_TOKEN=<token>
+   VITE_CPR_ACTIVE_BRAND=drei
+   # server-only (NOT VITE_ — never shipped to the browser; read by the BFF)
+   CPR_BASE_URL=https://<cpr-host>   # or the local fake
+   CPR_TOKEN=<token>
+   CPR_TENANT_DREI=<TEN…>
    ```
    `driverFor("cpr")` now returns `"http"`, so `cpr.functions.ts` builds `createCprHttp()` instead
-   of the mock. **No seam/UI code changes for the switch itself.**
+   of the mock; the driver posts to `/bff/cpr/*` and the BFF injects the token. **No seam/UI code
+   changes for the switch itself.**
 
 2. **Edit ONE file: `src/services/cpr/cpr-http.ts`.** This is where the real REST/TMF lives:
    - Confirm the endpoint paths against the contract KB. ⚠️ The current scaffold uses generic

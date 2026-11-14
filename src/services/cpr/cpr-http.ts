@@ -42,15 +42,18 @@ interface CprHttpConfig {
 /** Injectable fetch — production uses the global; the contract test passes a recording shim. */
 type FetchLike = typeof fetch;
 
+/** The same-origin BFF prefix. FIXED, not configurable: the client must never choose the host —
+ *  it only ever talks to the BFF, which owns the real CPR URL + token server-side (K1). */
+const BFF_PREFIX = "/bff/cpr";
+
 /**
  * Config for the http driver. The driver is active only when VITE_CPR_DRIVER=http (chosen in
- * cpr.functions.ts). The base URL is the same-origin BFF prefix; VITE_CPR_BASE_URL may override it
- * for tests/local, but it is NO LONGER a real CPR URL and there is NO client token.
+ * cpr.functions.ts). The base URL is ALWAYS the same-origin BFF prefix — there is no env override,
+ * so a build can never point the browser at an arbitrary CPR host (that would bypass the BFF). No
+ * client token, ever.
  */
 function readConfig(): CprHttpConfig {
-  const override = import.meta.env["VITE_CPR_BASE_URL"] as string | undefined;
-  const baseUrl = override && override !== "" ? override : "/bff/cpr";
-  return { baseUrl, timeoutMs: 10_000 };
+  return { baseUrl: BFF_PREFIX, timeoutMs: 10_000 };
 }
 
 /**
