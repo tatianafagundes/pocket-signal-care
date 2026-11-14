@@ -4,12 +4,12 @@ Each task small, verifiable, ends green (`bun run build && npx tsc --noEmit && b
 bun run lint` at baseline) + a commit. Mock stays the committed default throughout. Phase 2 is
 design-only (no Keycloak wiring). Requirement refs in (parens).
 
-- [ ] 0. BLOCKING spike — can a server route read a server-only secret? (Req 0)
-  - [ ] 0.1 Add a throwaway `/bff/ping` server route (`createFileRoute(...).server.handlers.ANY`)
+- [x] 0. BLOCKING spike — can a server route read a server-only secret? (Req 0)
+  - [x] 0.1 Add a throwaway `/bff/ping` server route (`createFileRoute(...).server.handlers.ANY`)
         that reports whether a known server-only value (Worker `env` / `.dev.vars` / non-VITE env)
         is readable at request time. Try the candidate mechanisms from design §0 in order.
-  - [ ] 0.2 Prove the value is NOT in the client bundle (grep the built client assets / network).
-  - [ ] 0.3 Record the working mechanism (or "none") in the readiness doc. IF none works from a
+  - [x] 0.2 Prove the value is NOT in the client bundle (grep the built client assets / network).
+  - [x] 0.3 Record the working mechanism (or "none") in the readiness doc. IF none works from a
         route handler → STOP and revise the design before Task 1 (do not use process.env).
   - Remove the throwaway route after recording. Commit the finding (docs only).
   - _Requirements: 0.1, 0.2_

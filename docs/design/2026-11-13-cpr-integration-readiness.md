@@ -208,3 +208,29 @@ dev only, still never-deploy.
 - `createInteraction` / `listInteractions` / `resolveTenant` on http are `notConfigured` (later specs).
 - Recharge (payment + monetaryRecharge) is a separate spec; the contract created here is what it
   will reference.
+
+## 8. BFF Worker-env spike result — PASSES (cpr-bff-auth Task 0, 2026-11-14)
+
+Question: can a TanStack Start server route handler (`createFileRoute(...).server.handlers.ANY`)
+read a server-only secret WITHOUT it being bundled into client JS, on this app's
+Cloudflare-Worker (`cloudflare-module`) runtime? **Answer: yes.**
+
+Evidence (throwaway `/bff/ping` route, since removed):
+- **Dev:** the handler read `process.env.SPIKE_SECRET` (a NON-`VITE_` var). `import.meta.env`
+  did NOT expose `SPIKE_SECRET` (only `VITE_SPIKE_SECRET`). Handler ctx keys:
+  `request, context, params, pathname, handlerType, next` (`context` empty without middleware).
+- **Client-bundle safety (the core check):** after `bun run build`, the server-only value
+  (`SPIKE_SECRET`) was **NOT** found anywhere in `.output/public` (client assets); the `VITE_`
+  value WAS (`.output/public/assets/index-*.js`). So a non-`VITE_` var stays off the client; only
+  `VITE_` leaks. This is the invariant the BFF relies on.
+- **Prod Worker mechanism (from the built `.output/server/index.mjs`):** Nitro's cloudflare preset
+  wires the Worker `env` on every request: `globalThis.__env__ = env` AND
+  `req.runtime.cloudflare = { env, context }`. So in the deployed Worker a handler reads a secret
+  via `globalThis.__env__.CPR_TOKEN` or `request.runtime.cloudflare.env.CPR_TOKEN`; Nitro also
+  polyfills `process.env` from `__env__` (why dev's `process.env` worked). NOT `process.env` as the
+  Node idiom, and NEVER `import.meta.env` for a secret.
+
+**Design implication:** the BFF route reads `CPR_TOKEN` / `CPR_BASE_URL` / the tenant map from the
+Worker `env` — prefer a small server-only accessor that tries `globalThis.__env__` then
+`process.env` (covers Worker + dev), reading NON-`VITE_` keys only. Secrets are set as Cloudflare
+Worker vars/secrets (prod) and `.dev.vars` / shell env (dev), never `VITE_`. Task 1 can proceed.
