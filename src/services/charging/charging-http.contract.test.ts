@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest";
 
 import { createChargingHttp, fromTmfBucket } from "@/services/charging/charging-http";
 
+/* A recording fetch that returns queued responses in order. */
+interface Rec {
+  url: string;
+  method: string;
+  body: unknown;
+}
+function jsonResponse(status: number, body: unknown): Response {
+  return { ok: status >= 200 && status < 300, status, json: async () => body } as Response;
+}
+function recordingFetch(responses: Response[]) {
+  const calls: Rec[] = [];
+  let i = 0;
+  const fetchImpl = (async (url: string | URL, init?: RequestInit) => {
+    calls.push({
+      url: String(url),
+      method: init?.method ?? "GET",
+      body: init?.body ? JSON.parse(init.body as string) : undefined,
+    });
+    const res = responses[i++];
+    if (!res) throw new Error(`recordingFetch: no queued response for call ${i}`);
+    return res;
+  }) as unknown as typeof fetch;
+  return { fetchImpl, calls };
+}
+
+const INPUT = {
+  customerId: "cust-1",
+  contractId: "ct-1",
+  communicationId: "+4368140000001",
+  amountMinor: 1101,
+  methodToken: "tok-visa-4242",
+};
+
 /*
  * charging-http Task 4b: the TMF654 bucket-read MAPPER is the deliverable here (the transport +
  * readBalanceByMsisdn land in Task 4 with the recharge op that uses them). Test the mapper
@@ -51,5 +84,97 @@ describe("charging-http — bare getBalance stays notConfigured", () => {
     const res = await createChargingHttp().getBalance("cust-1");
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error.code).toBe("charging.http.notConfigured");
+  });
+});
+
+describe("charging-http — recharge (payment direct-capture → monetaryRecharge → bucket)", () => {
+  it("runs payment → journey → bucket read, mapping money minor↔decimal and threading refs", async () => {
+    const { fetchImpl, calls } = recordingFetch([
+      jsonResponse(201, { id: "pay-9", authorizationCode: "AUTH-9", status: "SUCCESS" }),
+      jsonResponse(200, { partyInteractionId: "PIN-9" }),
+      jsonResponse(200, [
+        {
+          amount: { unit: "EUR", value: 11.01 },
+          validFor: { endDateTime: "2026-12-31T23:59:59Z" },
+        },
+      ]),
+    ]);
+    const res = await createChargingHttp(fetchImpl).recharge(INPUT);
+
+    // Three calls in order, all same-origin /bff/recharge.
+    expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
+      "POST /bff/recharge/payment/v4/payment",
+      "POST /bff/recharge/xCACcore/v1/customerInteraction",
+      "GET /bff/recharge/bae/bssTmf654PrepayBalanceManagement/v1/bucket?communicationId=%2B4368140000001",
+    ]);
+    // Payment body: MSISDN account, customerId payer, decimal EUR amount, cash method; NO methodToken.
+    expect(calls[0]!.body).toMatchObject({
+      account: { id: "+4368140000001" },
+      payer: { id: "cust-1" },
+      amount: { unit: "EUR", value: 11.01 },
+      paymentMethod: { "@type": "cash" },
+    });
+    expect(JSON.stringify(calls[0]!.body)).not.toContain("tok-visa-4242"); // methodToken never on the wire
+    // Journey body threads the payment refs + contract.
+    expect(calls[1]!.body).toMatchObject({
+      customerId: "cust-1",
+      contractId: "ct-1",
+      journeyId: "monetaryRecharge",
+      journeyData: {
+        msisdn: "+4368140000001",
+        payment: { merchantRefNum: "pay-9", paymentGwTransactionId: "AUTH-9" },
+      },
+    });
+    // Result: the journey's partyInteractionId + the bucket-read balance.
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.data.partyInteractionId).toBe("PIN-9");
+      expect(res.data.balance).toEqual({
+        amountMinor: 1101,
+        currency: "EUR",
+        validUntil: "2026-12-31T23:59:59Z",
+      });
+    }
+  });
+
+  it("a reused-authorizationCode payment (409/33028) → conflict, journey NOT attempted", async () => {
+    const { fetchImpl, calls } = recordingFetch([
+      jsonResponse(409, { code: 33028, reason: "Conflict", message: "reused" }),
+    ]);
+    const res = await createChargingHttp(fetchImpl).recharge(INPUT);
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.category).toBe("conflict");
+    expect(calls).toHaveLength(1); // stopped at payment; the journey never ran (no double-apply)
+  });
+
+  it("a failed bucket read after a successful journey → balance null (runTopUp falls back)", async () => {
+    const { fetchImpl } = recordingFetch([
+      jsonResponse(201, { id: "pay-9", authorizationCode: "AUTH-9" }),
+      jsonResponse(200, { partyInteractionId: "PIN-9" }),
+      jsonResponse(503, { code: 5000, reason: "Unavailable", message: "balance svc down" }),
+    ]);
+    const res = await createChargingHttp(fetchImpl).recharge(INPUT);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.data.partyInteractionId).toBe("PIN-9"); // the recharge still succeeded
+      expect(res.data.balance).toBeNull(); // balance unavailable → null
+    }
+  });
+
+  it("a payment response missing the id → badResponse, journey NOT attempted", async () => {
+    const { fetchImpl, calls } = recordingFetch([jsonResponse(201, { status: "SUCCESS" })]);
+    const res = await createChargingHttp(fetchImpl).recharge(INPUT);
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe("charging.http.badResponse");
+    expect(calls).toHaveLength(1);
+  });
+
+  it("a thrown fetch (network) → unavailable, never a crash", async () => {
+    const fetchImpl = (async () => {
+      throw new Error("down");
+    }) as unknown as typeof fetch;
+    const res = await createChargingHttp(fetchImpl).recharge(INPUT);
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.category).toBe("unavailable");
   });
 });
